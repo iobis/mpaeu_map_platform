@@ -49,3 +49,6 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 /.quarto/
+
+#data/
+backup/

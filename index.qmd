@@ -1,0 +1,1136 @@
+---
+title: "Iris K-Means Clustering"
+format: 
+  html:
+    page-layout: custom
+    header-includes: |
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+      <style> @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap'); #title-block-header { display: none;} #quarto-content>* {padding-top: 0px;} </style>
+mainfont: Montserrat
+server: shiny
+---
+
+<!-- Add the top grid (map on the left, tabs on the right) --->
+
+::: {.grid .column-screen .gridalt}
+
+::: {.g-col-md-8 .g-col-12}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Load other packages that will be used
+library(shiny)
+library(plotly)
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.extras2)
+library(leaflet.providers)
+
+includeCSS("styles.css")
+includeScript("addons.js")
+# 
+shiny_busy <- function() {
+  # use &nbsp; for some alignment, if needed
+  HTML(paste0(
+    '<div class = "busyDiv" data-display-if="',
+    '$(&#39;html&#39;).attr(&#39;class&#39;)==&#39;shiny-busy&#39;',
+    '">',"Loading/processing data...",
+    '<i class="fa fa-spinner fa-pulse fa-fw" style="color:#1a759f"></i>',
+    '</div>'
+  ))
+}
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#| out-width: 100%
+# Create a div to show messages if busy
+shiny_busy()
+
+# Create a sample graph div with a close button
+graph_div <- htmltools::tags$div(
+  id = "graphDiv",
+  class = "graphDiv",
+  htmltools::tags$button(
+    onclick = "hideGraphDiv()",
+    class = "graphDivButton",
+    htmltools::tags$span(class="material-symbols-outlined", "close")),
+    htmltools::tags$div(
+      style = "width: 200px; height: 300px;",
+      htmltools::tags$div(
+        htmlOutput("contextMapText"),
+        plotOutput("contextMap"))
+      )
+  )
+
+check_div <- htmltools::tags$div(
+  id = "checkDiv",
+  class = "checkDiv",
+  conditionalPanel("input.scenarioSelect != 'Current'",
+                 tags$div(
+                     id = "sideside_box",
+                     class = "sideside_class",
+                     checkboxInput(
+                       inputId = "sideSelect",
+                       label = "Split map viewer"
+      )))
+)
+  
+# Combine Leaflet map and graph div
+combined <- htmltools::tags$div(
+  style = "position: relative;",
+  htmltools::browsable(leafletOutput("mainMap", height = 600)),
+  graph_div,
+  check_div
+)
+
+combined
+```
+:::
+
+::: {.g-col-md-4 .g-col-12 .colordiv}
+::: {.panel-tabset}
+
+## SPECIES
+
+::: {.tabdiv}
+
+```{r}
+# Load/set options ----
+# Load group options
+group_options <- c("All", "Others")
+
+# Load species options
+sp_options <- c("Select one"= "", "Actinia equina", "Actinia fragacea", "Melanostomias tentaculatus", "Arbacia lixula")
+
+#
+model_options <- c("Lasso" = "lassonaive", "Random Forest" = "rf")
+scenario_options <- c("Current", paste0("SSP", 1:5))
+period_options <- c(2050, 2100)
+
+# Add selectors ----
+# Group selector
+selectInput(
+   inputId = "groupSelect",
+   label = "Select group", 
+   choices = group_options
+)
+
+# Species selector
+tags$div(
+  id = 'italic_div',
+  class = 'itdiv_class',
+  selectInput(
+    inputId = "speciesSelect",
+    label = "Search species",
+    choices = sp_options,
+  )
+)
+
+# Add contextual information ----
+tags$div(
+  id = "species_title",
+  class = "rtitle_class",
+  textOutput("selectedSpecies")
+)
+
+tags$div(
+  id = "context_info",
+  class = "context_info",
+  htmlOutput("contextSpecies")
+)
+```
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-5}
+```{r}
+tags$div(
+  id = "scenario_box",
+  class = "scenario_class",
+selectInput(
+        inputId = "modelSelect",
+        label = "Model",
+        choices = model_options
+      ))
+```
+:::
+
+::: {.g-col-4}
+```{r}
+conditionalPanel("input.speciesSelect != ''",
+                 tags$div(
+                    id = "scenario_box",
+                    class = "scenario_class",
+                     selectInput(
+                       inputId = "scenarioSelect",
+                       label = "Scenario",
+                       choices = scenario_options
+                     )))
+```
+
+:::
+
+::: {.g-col-3}
+```{r}
+conditionalPanel("input.scenarioSelect != 'Current'",
+                 tags$div(
+                     id = "scenario_box",
+                     class = "scenario_class",
+                     selectInput(
+                       inputId = "periodSelect",
+                       label = "Period",
+                       choices = period_options
+      )))
+```
+
+:::
+
+:::
+</div>
+
+<div class="context-icons">
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+
+</div>
+
+
+:::
+
+## THERMAL RANGE
+
+::: {.tabdiv}
+
+```{r}
+# Load/set options ----
+
+# Add selectors ----
+# Group selector
+selectInput(
+   inputId = "groupSelectThermal",
+   label = "Select group", 
+   choices = group_options
+)
+
+# Species selector
+tags$div(
+  id = 'italic_div_thermal',
+  class = 'itdiv_class',
+  selectInput(
+    inputId = "speciesSelectThermal",
+    label = "Search species",
+    choices = sp_options
+  )
+)
+
+# Add contextual information ----
+tags$div(
+  id = "thermal_species_title",
+  class = "rtitle_class",
+  textOutput("selectedSpeciesThermal")
+)
+
+tags$div(
+  id = "context_info_thermal",
+  class = "context_info",
+  textOutput("contextSpeciesThermal")
+)
+```
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-5}
+```{r}
+tags$div(
+  id = "scenario_box_thermal",
+  class = "scenario_class",
+selectInput(
+        inputId = "modelSelectThermal",
+        label = "Model",
+        choices = model_options
+      ))
+```
+:::
+
+::: {.g-col-4}
+```{r}
+tags$div(
+  id = "scenario_box_thermal",
+  class = "scenario_class",
+      selectInput(
+        inputId = "scenarioSelectThermal",
+        label = "Scenario",
+        choices = scenario_options
+      ))
+```
+
+:::
+
+::: {.g-col-3}
+```{r}
+tags$div(
+  id = "scenario_box_thermal",
+  class = "scenario_class",
+      selectInput(
+        inputId = "periodSelectThermal",
+        label = "Period",
+        choices = period_options
+      ))
+```
+
+:::
+
+:::
+</div>
+
+<div class="context-icons">
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+
+</div>
+
+:::
+
+
+## HABITAT
+
+::: {.tabdiv}
+
+```{r}
+# Load/set options ----
+# Load habitat options
+hab_options <- c("All", "Algae")
+
+# Add selectors ----
+# Filter selector
+selectInput(
+   inputId = "habitatSelect",
+   label = "Filter by type", 
+   choices = hab_options
+)
+
+# Add contextual information ----
+tags$div(
+  id = "habitat_title",
+  class = "rtitle_class",
+  textOutput("selectedHabitat")
+)
+
+tags$div(
+  id = "context_info_hab",
+  class = "context_info",
+  textOutput("contextHabitat")
+)
+```
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-5}
+```{r}
+tags$div(
+  id = "scenario_box_habitat",
+  class = "scenario_class",
+selectInput(
+        inputId = "modelSelectHabitat",
+        label = "Model",
+        choices = model_options
+      ))
+```
+:::
+
+::: {.g-col-4}
+```{r}
+tags$div(
+  id = "scenario_box_habitat",
+  class = "scenario_class",
+      selectInput(
+        inputId = "scenarioSelectHabitat",
+        label = "Scenario",
+        choices = scenario_options
+      ))
+```
+
+:::
+
+::: {.g-col-3}
+```{r}
+tags$div(
+  id = "scenario_box_thermal",
+  class = "scenario_class",
+      selectInput(
+        inputId = "periodSelectHabitat",
+        label = "Period",
+        choices = period_options
+      ))
+```
+
+:::
+
+:::
+</div>
+
+<div class="context-icons">
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+
+</div>
+
+:::
+
+
+## DIVERSITY
+
+::: {.tabdiv}
+
+```{r}
+# Load/set options ----
+# Load metrics options
+metrics_options <- c("Richness", "E50")
+
+# Add selectors ----
+# Filter selector
+selectInput(
+   inputId = "habitatSelect",
+   label = "Select metric", 
+   choices = metrics_options
+)
+
+# Add contextual information ----
+tags$div(
+  id = "diversity_title",
+  class = "rtitle_class",
+  textOutput("selectedMetric")
+)
+
+tags$div(
+  id = "context_info_div",
+  class = "context_info",
+  textOutput("contextMetric")
+)
+```
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-5}
+```{r}
+tags$div(
+  id = "scenario_box_diversity",
+  class = "scenario_class",
+selectInput(
+        inputId = "modelSelectDiversity",
+        label = "Model",
+        choices = model_options
+      ))
+```
+:::
+
+::: {.g-col-4}
+```{r}
+tags$div(
+  id = "scenario_box_diversity",
+  class = "scenario_class",
+      selectInput(
+        inputId = "scenarioSelectDiversity",
+        label = "Scenario",
+        choices = scenario_options
+      ))
+```
+
+:::
+
+::: {.g-col-3}
+```{r}
+tags$div(
+  id = "scenario_box_diversity",
+  class = "scenario_class",
+      selectInput(
+        inputId = "periodSelectDiversity",
+        label = "Period",
+        choices = period_options
+      ))
+```
+
+:::
+
+:::
+</div>
+
+<div class="context-icons">
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+
+</div>
+
+:::
+
+
+
+:::
+:::
+
+:::
+
+
+<!-- HERE STARTS THE SECOND SECTION - GRAPHS, AND ETC -->
+<div class="body-section">
+::: {.grid}
+
+<!-- Table 1 --->
+::: {.g-col-md-6 .g-col-12}
+`r tags$div(id="table1-title", class="body-title", textOutput("tableATitle"))`
+
+```{r}
+DT::dataTableOutput("tableA")
+```
+
+:::
+
+<!-- Graphic 1 -->
+::: {.g-col-md-6 .g-col-12}
+`r tags$div(id="graph-title", class="body-title", textOutput("graphTitle"))`
+
+```{r}
+plotlyOutput("plotA")
+```
+
+:::
+
+<!-- Table 2 --->
+::: {.g-col-md-6 .g-col-12}
+`r tags$div(id="table1-title", class="body-title", textOutput("tableBTitle"))`
+
+```{r}
+DT::dataTableOutput("tableB")
+```
+
+:::
+
+<!-- Text 1 -->
+::: {.g-col-md-6 .g-col-12}
+`r tags$div(id="text-title", class="body-title", textOutput("textTitle"))`
+
+`r tags$div(id="text-title", class="body-text", textOutput("textModel"))`
+:::
+
+:::
+</div>
+
+<!-- HERE STARTS THE METHODS SECTION -->
+::: {.methods-div}
+
+## How models were created?
+
+Try adding this chunk option to one of the code chunks in your document that produces a plot and save. When the document is rendered, you’ll see that a new folder has been created in your working directory with the same name as your document and the suffix _cache. This folder contains the cached results. You can find out more about caching in Quarto documents in the Cache documentation.
+
+## How should I use this information?
+
+Try adding this chunk option to one of the code chunks in your document that produces a plot and save. When the document is rendered, you’ll see that a new folder has been created in your working directory with the same name as your document and the suffix _cache. This folder contains the cached results. You can find out more about caching in Quarto documents in the Cache documentation.
+
+:::
+
+<!-- HERE STARTS THE FOOTER -->
+<div id="footer-div" class="footer-div">
+
+## MPA Europe project
+
+Try adding this chunk option to one of the code chunks in your document that produces a plot and save. When the document is rendered, you’ll see that a new folder has been created in your working directory with the same name as your document and the suffix _cache. This folder contains the cached results. You can find out more about caching in Quarto documents in the Cache documentation.
+
+::: {.grid}
+
+::: {.g-col-md-3 .g-col-12 #footer-links}
+### Explore more
+
+[<span class="material-symbols-outlined" style="font-size: 12px; vertical-align: middle !important;">chevron_right</span>MPA Europe](https://mpa-europe.eu/)  
+[<span class="material-symbols-outlined" style="font-size: 12px; vertical-align: middle !important;">chevron_right</span>OBIS](https://obis.org)
+
+Product created by the [Ocean Biodiversity Information System](https://obis.org)
+
+![](www/obis_logo.png){width=100%}
+:::
+
+::: {.g-col-md-9 .g-col-12 #footer-credits}
+### Support
+
+Grant Agreement 101059988 – MPA Europe | 
+MPA Europe project has been approved under HORIZON-CL6-2021-BIODIV-01-12 — Improved science based maritime spatial planning and identification of marine protected areas.
+
+Co-funded by the European Union. Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or UK Research and Innovation. Neither the European Union nor the granting authority can be held responsible for them.
+
+![](www/euuk_logo.png){width=50%}
+:::
+
+:::
+
+<div style="font-size: 8px; color: white; text-align: center;">All data shown in this website is under a CC-0 licence.</div>
+
+</div>
+
+```{r}
+#| context: server
+# TODO: 
+# Remove reprojection - do reprojection beforehand
+# change selectInput for server-side selectize: https://shiny.posit.co/r/articles/build/selectize/
+# improve code (clean up)
+# Use geo optimized ploting (see draft)
+
+#### Load needed packages ----
+library(plotly)
+library(geojsonsf)
+library(ggplot2)
+library(terra)
+library(leaflet)
+library(leafem)
+library(leafpm)
+#library(leaflet.extras)
+library(leaflet.extras2)
+library(leaflet.providers)
+library(dplyr)
+
+debug = F
+
+#### Server function ----
+# Create debug function
+  mdebug <- function(text, toprint = debug) {
+    if (toprint) {
+      message(text)
+    }
+    return(invisible(NULL))
+  }
+  
+  # Create base map ----
+  # Load study area
+  #study_area <- rjson::fromJSON(file = "data/studyarea.geojson")
+  study_area <- sf::read_sf("data/studyarea.geojson")
+  
+  m <- leaflet() %>% 
+    addTiles(group = "Open Street Maps", layerId = "baseid") %>%
+    addProviderTiles(providers$CartoDB.Positron, group = "CartoDB") %>%
+    addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark") %>%
+    # addFullscreenControl() %>%
+    # addResetMapButton() %>%
+    # addDrawToolbar(
+    #   targetGroup = "draw",
+    #   singleFeature = T,
+    #   markerOptions = FALSE,
+    #   polylineOptions = FALSE,
+    #   circleMarkerOptions = FALSE,
+    #   editOptions = editToolbarOptions(
+    #     edit = FALSE,
+    #     selectedPathOptions = selectedPathOptions()
+    #   )
+    # )  %>%
+    # addPmToolbar(
+    #   toolbarOptions = pmToolbarOptions(drawMarker = FALSE,
+    #                                     drawPolyline = FALSE,
+    #                                     cutPolygon = FALSE,
+    #                                     position = "topleft"),
+    #   drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
+    #   editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE)
+    # ) %>%
+    addLayersControl(
+      overlayGroups = c("Points"),
+      baseGroups = c("Open Street Maps", "CartoDB", "CartoDB Dark"),
+      #overlayGroups = c("Projection"),
+      options = layersControlOptions(collapsed = T),
+      position = "bottomright"
+    ) %>%
+    addEasyprint(options = easyprintOptions(
+      title = 'Print map',
+      position = 'bottomleft',
+      exportOnly = TRUE)) %>%
+    setView(lng = 0.35, lat = 65, zoom = 3)
+  
+  # Create a reactive to receive the map
+  current_map <- reactiveVal(
+    m %>%
+      addPolygons(data = study_area, highlightOptions = F,
+                  color = "#184e77")
+  )
+  
+  
+  # Start by ploting/printing placeholders ----
+  output$mainMap <- renderLeaflet({
+    mdebug("Rendering Leaflet map")
+    current_map()}) %>%
+    bindEvent(current_map())
+  
+  output$tableATitle <- renderText({ "Select a map to start" })
+  
+  
+  
+  # Tab actions ----
+  # Set first tab
+  active_tab <- reactiveValues()
+  active_tab$current <- "species"
+  
+  # Observe tab changes
+  observeEvent(input$jsValue, {
+    mdebug("New tab active")
+    # If there is a new value:
+    if (active_tab$current != input$jsValue$id) {
+      # output$mainMap <- renderLeaflet({eval(parse(text = paste0("map_", 
+      #                                                          input$jsValue$id)))})
+      
+      # Update current status
+      active_tab$current <- input$jsValue$id
+      
+      # Temporary workaround while other features will be added!
+      if (active_tab$current != "species") {
+        shinyalert::shinyalert("Feature not available", "For now only species distribution maps are available.", type = "info")
+        active_tab$current <- "species"
+        session$sendCustomMessage("backToTab", "nothing")
+      }
+      #
+    }
+  })
+  
+  # Observe first input change
+  input_state <- reactiveValues(status = 0)
+  bindEvent(observe({input_state$status <- 1}), input$speciesSelect,
+            once = TRUE, ignoreInit = TRUE)
+  bindEvent(observe({input_state$status <- 2}), input$speciesSelectThermal,
+            once = TRUE, ignoreInit = TRUE)
+  # bindEvent(observe({input_state$status <- 3}), input$speciesSelect,
+  #           once = TRUE, ignoreInit = TRUE)
+  # bindEvent(observe({input_state$status <- 4}), input$speciesSelectThermal,
+  #           once = TRUE, ignoreInit = TRUE)
+  
+  # Create a reactive for titles
+  title_state <- reactiveValues()
+  title_state$current <- "empty"
+  
+  base_list <- list(
+    tableA = "Select a map to start",
+    graph = "",
+    tableB = "",
+    modelTitle = ""
+  )
+  
+  observe({
+    session$sendCustomMessage("showContext", "nothing")
+  }) %>%
+    bindEvent(input$mainMap_draw_new_feature)
+
+  observe({
+    if (title_state$current != active_tab$current) {
+      session$sendCustomMessage("removeContext", "nothing")
+      # Species condition
+      if (active_tab$current == "species") {
+        if (input$speciesSelect != "") {
+          title_state$current <- "species"
+          title_state$to_print <- list(
+            tableA = "Model metrics",
+            graph = "Response curves",
+            tableB = "Variables importance",
+            modelTitle = "Model explanation"
+          )
+        } else {
+          title_state$to_print <- base_list
+        }
+      }
+      
+      # Thermal condition
+      if (active_tab$current == "thermal") {
+        if (input$speciesSelectThermal != "") {
+          title_state$current <- "thermal"
+          title_state$to_print <- list(
+            tableA = "Area",
+            graph = "Response curves thermal",
+            tableB = "Variables importance",
+            modelTitle = "Model explanation"
+          )
+        } else {
+          title_state$to_print <- base_list
+        }
+      }
+      
+      # Habitat condition
+      if (active_tab$current == "habitat") {
+        if (input$speciesSelect != "") {
+          title_state$current <- "species"
+          title_state$to_print <- list(
+            tableA = "Model metrics",
+            graph = "Response curves",
+            tableB = "Variables importance",
+            modelTitle = "Model explanation"
+          )
+        } else {
+          title_state$to_print <- base_list
+        }
+      }
+      
+      # Diversity condition
+      if (active_tab$current == "diversity") {
+        if (input$speciesSelect != "") {
+          title_state$current <- "species"
+          title_state$to_print <- list(
+            tableA = "Model metrics",
+            graph = "Response curves",
+            tableB = "Variables importance",
+            modelTitle = "Model explanation"
+          )
+        } else {
+          title_state$to_print <- base_list
+        }
+      }
+    }
+  }) %>%
+    bindEvent(c(input_state$status, active_tab$current))
+  
+  
+  
+  # Print titles ----
+  output$tableATitle <- renderText({title_state$to_print$tableA})
+  output$graphTitle <- renderText({title_state$to_print$graph})
+  output$tableBTitle <- renderText({title_state$to_print$tableB})
+  output$textTitle <- renderText({title_state$to_print$modelTitle})
+  
+  
+  
+  # Add maps and content ----
+  
+  # Add title/text species
+  speciesinfo <- read.csv("data/all_splist_20231017.csv")
+  
+  ## Species ----
+  # Title/context text
+  output$selectedSpecies <- renderText({
+    input$speciesSelect
+  }) %>%
+    bindEvent(input$speciesSelect)
+  
+  output$contextSpecies <- renderText({
+    selinf <- speciesinfo[speciesinfo$species == input$speciesSelect,]
+    nrec <- 100
+    neval <- 0
+    glue::glue(
+      "<b>Phylum:</b> {selinf$phylum} > <b>Order:</b> {selinf$order} > <b>Family:</b> {selinf$family} <br>
+      <b>AphiaID:</b> <a style = 'text-decoration: none; color: #07A5F0;' target='_blank' href = 'https://www.marinespecies.org/aphia.php?p=taxdetails&id={selinf$key}'>{selinf$key}</a><br><br>
+      <b>Number of records:</b> {nrec} <br>
+      <b>Number of records for independent evaluation:</b> {neval}"
+    )
+  }) %>%
+    bindEvent(input$speciesSelect)
+  
+  # Load raster (this will be used for all stuff)
+  speciesrast <- reactiveValues(raster = NULL,
+                                status = 0)
+  
+  observe({
+    
+    mdebug("Loading species raster")
+    
+    spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
+    
+    all_f <- list.files("data/maps/species",
+                        recursive = TRUE, full.names = TRUE)
+    all_f <- all_f[grepl(paste0("key", spkey), all_f)]
+    all_f <- all_f[grepl("\\.tif", all_f)]
+    all_f <- all_f[!grepl("aux", all_f)]
+    
+    spr <- rast(all_f)
+    
+    names(spr) <- gsub("\\.tif", "",  basename(all_f))
+    
+    spr <- projectRasterForLeaflet(spr, method = "bilinear")
+    
+    speciesrast$raster <- spr
+    
+    pts <- arrow::read_parquet("data/example_pts.parquet")[,1:2]
+    colnames(pts) <- c("longitude", "latitude")
+    speciesrast$pts <- pts
+    
+    speciesrast$status <- speciesrast$status + 1
+  }) %>%
+    bindEvent(input$speciesSelect, ignoreInit = T)
+  
+  # Select the layer for current use
+  speciesselrast <- reactive({
+    mdebug("Selecting layer")
+    
+    side_select <- input$sideSelect
+    
+    model_sel <- input$modelSelect
+    scenario_sel <- tolower(input$scenarioSelect)
+    period_sel <- ifelse(scenario_sel == "current", "nothing",
+                         ifelse(input$periodSelect == "2050", "dec50", "dec100"))
+    
+    sel_rast <- speciesrast$raster[[grepl(model_sel, names(speciesrast$raster))]]
+    sel_rast <- sel_rast[[grepl(scenario_sel, names(sel_rast))]]
+    
+    if (period_sel != "nothing") {
+      sel_rast <- sel_rast[[grepl(period_sel, names(sel_rast))]]
+    }
+    sel_rast[sel_rast < 0.05] <- NA
+    
+    if (scenario_sel != "current" & side_select) {
+      current_rast <- speciesrast$raster[[grepl(model_sel, names(speciesrast$raster))]]
+      current_rast <- current_rast[[grepl("current", names(current_rast))]]
+      current_rast[current_rast < 0.05] <- NA
+      sel_rast <- c(sel_rast, current_rast)
+    }
+    sel_rast
+  })  %>%
+    bindEvent(c(speciesrast$status, input$modelSelect, input$scenarioSelect, input$periodSelect, input$sideSelect),
+              ignoreInit = TRUE)
+  
+  # Change the MAP reactive
+  speciesmap <- reactive({
+    mdebug(paste("In use layer", names(speciesselrast()), collapse = ","))
+    
+    side_select <- input$sideSelect
+    scenario_sel <- tolower(input$scenarioSelect)
+    
+    m <- m %>%
+      addCircleMarkers(data = speciesrast$pts,
+                       clusterOptions = markerClusterOptions(),
+                       group = "Points",
+                       weight = 2,
+                       radius = 5,
+                       opacity = 1,
+                       fillOpacity = 0.1,
+                       color = "black") %>% 
+      hideGroup("Points")
+    
+    if (scenario_sel != "current" & side_select) {
+      
+      m %>%
+        addMapPane("left", zIndex = 0) %>%
+        addMapPane("right", zIndex = 0) %>%
+        removeTiles("baseid") %>%
+        removeLayersControl() %>%
+        addTiles(group = "Open Street", layerId = "leftbaseid",
+                 options = pathOptions(pane = "left")) %>%
+        addGeoRaster(x = stars::st_as_stars(speciesselrast()[[2]]), project = FALSE,
+                     colorOptions = colorOptions(
+                       palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
+                       na.color = NA
+                     ),
+                     options = pathOptions(pane = "left"), autozoom = F) %>%
+        addTiles(group = "Open Street B", layerId = "rightbaseid",
+                 options = pathOptions(pane = "right")) %>%
+        addGeoRaster(x = stars::st_as_stars(speciesselrast()[[1]]), project = FALSE,
+                     colorOptions = colorOptions(
+                       palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
+                       na.color = NA
+                     ),
+                     options = pathOptions(pane = "right"), autozoom = F) %>%
+        addSidebyside(layerId = "sidecontrols",
+                      rightId = "rightbaseid",
+                      leftId = "leftbaseid")
+    } else {
+      m %>%
+        addRasterImage(x = speciesselrast(), project = FALSE,
+                       colors = colorNumeric(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")), domain = NULL,
+                                             na.color = NA)) %>%
+        addPmToolbar(
+          toolbarOptions = pmToolbarOptions(drawMarker = FALSE,
+                                            drawPolyline = FALSE,
+                                            drawCircle = FALSE,
+                                            cutPolygon = FALSE,
+                                            position = "topleft"),
+          drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
+          editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE)
+        )
+    }
+    
+  }) %>%
+    bindEvent(speciesselrast())
+  
+  # Set the new rendered map
+  observe({
+    mdebug("Setting new map")
+    current_map(speciesmap())
+  }) %>%
+    bindEvent(speciesmap())
+  
+  
+  
+  # Thermal
+  output$selectedSpeciesThermal <- renderText({
+    input$speciesSelectThermal
+  }) %>%
+    bindEvent(input$speciesSelectThermal, ignoreInit = T)
+  
+  
+  # # Create reactives for species/tab info
+  # react_species <- reactiveValues(status = 0)
+  # react_thermal <- reactiveValues(status = 0)
+  # react_habitat <- reactiveValues(status = 0)
+  # react_diversity <- reactiveValues(status = 0)
+  # 
+  # observe({
+  #   react_species$plot_raster <- rast("data/maps/species/key=100803/mv1_pr/lasso_naive/predictions/mv1_pr_lasso_naive_key100803_basevars_current.tif")
+  #   react_species$status <- react_species$status + 1
+  # }) %>%
+  #   bindEvent(input$speciesSelect, ignoreInit = TRUE)
+  
+  # TODO: add habitat and diversity
+  
+ # context_leaf_info <- reactiveValues(haveinfo = FALSE)
+  
+  
+  
+  ## Contextual info ----
+  continfo <- reactiveValues()
+  
+  observe({
+    
+    if (active_tab$current == "species") {
+      
+      spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
+      
+      # Table 1
+      metrics <- read.csv(
+        paste0("data/context/species/mv1_pr_", ifelse(input$modelSelect == "lassonaive", "lasso_naive", input$modelSelect),"_key", spkey, "_basevars_cvmetrics.csv")
+      )
+      metrics_mean <- metrics %>%
+        mutate(across(1:ncol(metrics), mean)) %>%
+        slice_head(n=1)
+      metrics_mean <- metrics_mean %>%
+        tidyr::pivot_longer(cols = 1:ncol(metrics_mean), names_to = "Metric", values_to = "Mean of 5 folds") %>%
+        mutate(Metric = toupper(Metric))
+      metrics_mean <- metrics_mean %>%
+        filter(Metric %in% c("AUC", "CBI", "PR", "TSS_P10"))
+      metrics_mean$`Mean of 5 folds` <- round(metrics_mean$`Mean of 5 folds`, 2)
+      continfo$tableA <- metrics_mean
+      
+      # Graph
+      response_curves <- read.csv(
+        paste0("data/context/species/mv1_pr_", ifelse(input$modelSelect == "lassonaive", "lasso_naive", input$modelSelect),"_key", spkey, "_basevars_respcurves.csv")
+      )
+      response_curves <- response_curves %>%
+        group_by(variable) %>%
+        mutate(base = scale(base))
+      pa <- ggplot(response_curves) +
+        geom_line(aes(x = base, y = response, color = variable)) +
+        theme_light() +
+        xlab("Value (scaled)") + ylab("Response")
+      
+      continfo$plotA <- plotly::ggplotly(pa)
+      
+      # Text
+      continfo$text[[1]] <- paste("Model explanation -", ifelse(
+        input$modelSelect == "lassonaive", "Lasso", "Random Forest"
+      ))
+      
+      continfo$text[[2]] <- ifelse(input$modelSelect == "lassonaive",
+                                   "Given the complexity of the task, which involves generating distribution models for a large number 
+                                   of species in a semi-automated manner...",
+                                   "Given the complexity of the task, which involves generating distribution models for a large number 
+                                   of species in a semi-automated manner... Random Forest...")
+      
+    }
+    
+  }) %>%
+    bindEvent(c(input$speciesSelect, input$modelSelect), ignoreInit = TRUE)
+  
+  output$tableA <- DT::renderDT({
+    continfo$tableA
+  }) %>%
+    bindEvent(continfo$tableA)
+  
+  output$plotA <- renderPlotly({
+    continfo$plotA
+  }) %>%
+    bindEvent(continfo$plotA)
+  
+  output$tableB <- DT::renderDT({
+    continfo$tableA
+  }) %>%
+    bindEvent(continfo$tableA)
+  
+  output$textTitle <- renderText({
+    continfo$text[[1]]
+  }) %>%
+    bindEvent(continfo$text)
+  
+  output$textModel <- renderText({
+    continfo$text[[2]]
+  }) %>%
+    bindEvent(continfo$text)
+  
+  ### Drawing context info ----
+  continfo_leaf <- reactiveValues()
+  
+  observe({
+    
+    coords <- lapply(input$mainMap_draw_new_feature$geometry$coordinates[[1]], function(x){
+      paste(x, collapse = " ")
+    })
+    
+    wkt <- paste("POLYGON ((", paste(coords, collapse = ","),"))")
+    
+    vect_obj <- terra::vect(wkt)
+    
+    terra::crs(vect_obj) <- "EPSG:4326"
+    
+    if (active_tab$current == "species") {
+      mdebug(paste("Active tab for data extraction:", active_tab$current))
+      vals <- terra::extract(speciesselrast(), vect_obj)
+      vals <- vals[,2]
+      vals <- vals[!is.na(vals)]
+      
+      if (any(is.null(vals)) | any(is.na(vals))) {
+        vals <- 0
+      }
+      
+      p <- ggplot(data.frame(ROR = vals)) +
+        geom_density(aes(x = ROR), fill = "#1a759f", color = NA) +
+        xlab("Relative Occurrence Rate") +
+        ylab(NULL) +
+        theme_classic() +
+        theme(axis.line.x = element_blank(),
+              axis.line.y = element_blank(),
+              axis.ticks.y = element_blank(),
+              axis.text.y = element_blank())
+      
+      continfo_leaf$density <- p
+      
+      continfo_leaf$text <- glue::glue(
+        "<span style='font-size:larger;'><b>Selected area</b></span> <br> 
+      <b>Mean Relative Occurrence Rate:</b> {round(mean(vals), 2)} <br>
+      <b>Standard deviation ROR:</b> {round(sd(vals), 2)} <br>
+      <b>Total area:</b> {round(terra::expanse(vect_obj, unit = 'km'), 2)}km² <br><br>"
+      )
+    }
+    
+    
+  }) %>%
+    bindEvent(input$mainMap_draw_new_feature)
+
+  output$contextMap <- renderPlot({
+    continfo_leaf$density
+  }, height = 200, width = 200) %>%
+    bindEvent(continfo_leaf$density)
+  
+  output$contextMapText <- renderText({
+    continfo_leaf$text
+  }) %>%
+    bindEvent(continfo_leaf$text)
+    
+  outputOptions(output, "contextMap", suspendWhenHidden = FALSE)
+```
+

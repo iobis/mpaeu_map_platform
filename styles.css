@@ -329,6 +329,17 @@ a.A4Portrait, a.A4Landscape, a.CurrentSize {
   cursor: pointer;
 }
 
+.checkDiv {
+  position: absolute;
+  bottom: 1px;
+  left: 50px;
+  z-index: 900;
+  padding: 1px;
+  border-radius: 8px;
+  color: white;
+  font-size: 12px;
+}
+
 
 /* Waiting div */
 .busyDiv {

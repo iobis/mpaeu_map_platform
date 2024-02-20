@@ -40,11 +40,20 @@ document.addEventListener('DOMContentLoaded', function() {
               div.style.color = '#1a759f'; 
             });
             colorChangingDiv.style.backgroundColor = '#1a759f'; 
+            
+            // Change value in the app
+            var active_tab = {id: "habitat", nonce: Math.random()};
+            Shiny.onInputChange("jsValue", active_tab)
+            
           } else if (tab.id === 'tabset-1-4-tab') {
             divs.forEach(function(div) {
               div.style.color = '#168aad'; 
             });
             colorChangingDiv.style.backgroundColor = '#168aad'; 
+            
+            // Change value in the app
+            var active_tab = {id: "diversity", nonce: Math.random()};
+            Shiny.onInputChange("jsValue", active_tab)
           }
         }
       });
@@ -68,4 +77,27 @@ document.addEventListener('DOMContentLoaded', function() {
       if (graphDiv.style.display === 'block') {
         graphDiv.style.display = 'none';
       }
+  };
+  
+  //TEMPORARY!!!
+  Shiny.addCustomMessageHandler('backToTab', backTotabtemp);
+  function backTotabtemp(message) {
+    
+    var tab1 = document.getElementById('tabset-1-1-tab');
+    var tab2 = document.getElementById('tabset-1-2-tab');
+    var tab3 = document.getElementById('tabset-1-3-tab');
+    var tab4 = document.getElementById('tabset-1-4-tab');
+    
+    // Set the first tab as active
+    tab1.classList.add('active');
+    tab1.setAttribute('aria-selected', 'true');
+
+    // Remove active state from the second tab
+    tab2.classList.remove('active');
+    tab2.setAttribute('aria-selected', 'false');
+    tab3.classList.remove('active');
+    tab3.setAttribute('aria-selected', 'false');
+    tab4.classList.remove('active');
+    tab4.setAttribute('aria-selected', 'false');
+    
   };
