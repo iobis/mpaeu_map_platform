@@ -102,10 +102,8 @@ combined
 group_options <- c("All", "Others")
 
 # Set model option
-model_options <- c("BRT" = "brt", "Random Forest" = "rf_classification_ds", "MAXENT" = "maxnet", "XGBoost" = "xgboost",
-                    "Elasticnet" = "elasticnet", "Ensemble" = "ensemble")
-scenario_options <- c("Current", "SSP1" = "ssp126", "SSP2" = "ssp245",
-                      "SSP3" = "ssp370", "SSP4" = "ssp460", "SSP5" = "ssp585")
+model_options <- c("Lasso" = "lassonaive", "Random Forest" = "rf")
+scenario_options <- c("Current", paste0("SSP", 1:5))
 period_options <- c(2050, 2100)
 
 # Add selectors ----
@@ -542,11 +540,11 @@ DT::dataTableOutput("tableB")
 
 ## How models were created?
 
-Models were created using a point-process framework. Details on the modelling framework adopted by MPA Europe, including the full documentation are available [in this link.](https://iobis.github.io/mpaeu_docs/)
+Try adding this chunk option to one of the code chunks in your document that produces a plot and save. When the document is rendered, you’ll see that a new folder has been created in your working directory with the same name as your document and the suffix _cache. This folder contains the cached results. You can find out more about caching in Quarto documents in the Cache documentation.
 
 ## How should I use this information?
 
-Species Distribution Models (SDMs) provide valuable insights for both research and conservation efforts. These maps depict the relative and potential suitability of habitats for a particular species, aiding researchers and conservationists in understanding where a species could potentially occur. It is important to note that SDMs show suitability rather than presence, meaning the species may not actually occur throughout the entire extent indicated on the map. Additionally, there is inherent uncertainty associated with all SDM maps, stemming from various factors such as data quality, model assumptions, and environmental variability. Therefore, while SDMs offer valuable information, their results should be interpreted critically, considering the limitations and uncertainties associated with the models. 
+Try adding this chunk option to one of the code chunks in your document that produces a plot and save. When the document is rendered, you’ll see that a new folder has been created in your working directory with the same name as your document and the suffix _cache. This folder contains the cached results. You can find out more about caching in Quarto documents in the Cache documentation.
 
 :::
 
@@ -555,7 +553,7 @@ Species Distribution Models (SDMs) provide valuable insights for both research a
 
 ## MPA Europe project
 
-Using a holistic range of measures that include the range of biodiversity from species to ecosystems, including habitats, areas will be prioritised using systematic conservation planning software. This enables alternative weighting of variables and multiple scenarios and thus support wider marine spatial planning.
+Try adding this chunk option to one of the code chunks in your document that produces a plot and save. When the document is rendered, you’ll see that a new folder has been created in your working directory with the same name as your document and the suffix _cache. This folder contains the cached results. You can find out more about caching in Quarto documents in the Cache documentation.
 
 ::: {.grid}
 
@@ -588,8 +586,13 @@ Co-funded by the European Union. Views and opinions expressed are however those 
 </div>
 
 ```{r}
-#| context: server-start
-#| include: false
+#| context: server
+
+# This is the code that is executed on the server
+
+# TODO: 
+# change selectInput for server-side selectize: https://shiny.posit.co/r/articles/build/selectize/
+# improve code (clean up)
 
 # Load needed packages ----
 library(leaflet)
@@ -597,14 +600,7 @@ library(leafem)
 library(leafpm)
 library(leaflet.extras2)
 library(leaflet.providers)
-# Add maps and content ----
-library(dplyr)
-library(terra)
-library(plotly)
-library(ggplot2)
-library(stars)
-# Source functions
-source("functions.R")
+
 
 # Settings ----
 debug = T # Set here to TRUE to see debugging messages
@@ -617,7 +613,11 @@ mdebug <- function(text, toprint = debug) {
   return(invisible(NULL))
 }
 
+
 # Create leaflet object ----
+# Load study area
+#study_area <- sf::read_sf("data/studyarea.geojson")
+
 m <- leaflet() %>% 
   addTiles(group = "Open Street Maps", layerId = "baseid") %>%
   addProviderTiles(providers$CartoDB.Positron, group = "CartoDB") %>%
@@ -634,24 +634,14 @@ m <- leaflet() %>%
     exportOnly = TRUE)) %>%
   setView(lng = 0.35, lat = 65, zoom = 3)
 
-# Add title/text species
-speciesinfo <- read.csv("data/all_splist_20231017.csv")
-```
-
-```{r}
-#| context: server
-# This is the code that is executed on the server
-
-# TODO: 
-# change selectInput for server-side selectize: https://shiny.posit.co/r/articles/build/selectize/
-# improve code (clean up)
-
-
-##### PART 1 - SPECIES ######
-
+  
 # Set reactive for the map ----
-current_map <- reactiveVal()
-
+current_map <- reactiveVal(
+  m %>%
+    leafem::addFgb(file = "data/studyarea.fgb", fillColor = "#184e77", fill = T)
+    # addPolygons(data = study_area, highlightOptions = F,
+    #             color = "#184e77")
+)
 
 # Start by ploting/printing placeholders ----
 output$mainMap <- renderLeaflet({
@@ -662,9 +652,8 @@ output$tableATitle <- renderText({ "Select a map to start" })
 
 
 # Create species selectize ----
-sp_options <- c("", "Actinia equina", "Actinia fragacea", "Melanostomias tentaculatus", "Arbacia lixula", "Phocoena phocoena")
+sp_options <- c("", "Actinia equina", "Actinia fragacea", "Melanostomias tentaculatus", "Arbacia lixula")
 updateSelectizeInput(session, "speciesSelect", choices = sp_options, server = TRUE)
-
 
 # Tab actions ----
 # Set first tab
@@ -794,190 +783,170 @@ output$tableBTitle <- renderText({title_state$to_print$tableB})
 output$textTitle <- renderText({title_state$to_print$modelTitle})
 
 
+# Add maps and content ----
+library(dplyr)
+library(terra)
+library(plotly)
+library(ggplot2)
+library(stars)
+# Source functions
+source("functions.R")
 
+# Add title/text species
+speciesinfo <- read.csv("data/all_splist_20231017.csv")
 
 ## Species ----
 # Title/context text
 output$selectedSpecies <- renderText({
   input$speciesSelect
-})
+}) %>%
+  bindEvent(input$speciesSelect)
 
 output$contextSpecies <- renderText({
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelect,]
-  if (input$speciesSelect != "") {
-    spmodinfo <- jsonlite::read_json(glue::glue("data/maps/taxonid={selinf$key}/model=wwf/taxonid={selinf$key}_model=wwf_what=log.json"))
-  } else {
-    spmodinfo <- NULL
-  }
-  nrec <- unlist(spmodinfo$model_fit_points)
-  neval <- unlist(spmodinfo$model_eval_points)
-  tenvstat <- unlist(spmodinfo$model_posteval[["maxent"]]$thermal_envelope[[1]]$status)
-  tenvstat <- ifelse(grepl("inside", tenvstat), "Yes", "No")
-  tenvval <- unlist(spmodinfo$model_posteval[["maxent"]]$thermal_envelope[[1]]$percentage)
-  glue::glue(
+  nrec <- 100
+  neval <- 0
+    glue::glue(
       "<b>Phylum:</b> {selinf$phylum} > <b>Order:</b> {selinf$order} > <b>Family:</b> {selinf$family} <br>
       <b>AphiaID:</b> <a style = 'text-decoration: none; color: #07A5F0;' target='_blank' href = 'https://www.marinespecies.org/aphia.php?p=taxdetails&id={selinf$key}'>{selinf$key}</a><br><br>
     <b>Number of records:</b> {nrec} <br>
-    <b>Number of records for independent evaluation:</b> {neval} <br><br>
-    <b>Additional info:</b> All inside thermal envelope? {tenvstat} ({tenvval}%)"
+    <b>Number of records for independent evaluation:</b> {neval}"
   )
-})
+}) %>%
+  bindEvent(input$speciesSelect)
 
-speciespts <- reactive({
-  spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
-  pts <- arrow::read_parquet(paste0("data/maps/taxonid=", spkey, "/model=wwf/taxonid=", spkey, "_model=wwf_what=fitocc.parquet"))[,1:2]
-  colnames(pts) <- c("longitude", "latitude")
-  pts
-})
+# Load raster (this will be used for all stuff)
+speciesrast <- reactiveValues(raster = NULL,
+                              status = 0)
 
-maskstate <- reactiveVal(FALSE)
 observe({
-  maskstate(!maskstate())
-}) %>% bindEvent(input$jsMask)
+  
+  mdebug("Loading species raster")
+  
+  spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
+  
+  all_f <- list.files("data/maps/species",
+                      recursive = TRUE, full.names = TRUE)
+  all_f <- all_f[grepl(paste0("key", spkey), all_f)]
+  all_f <- all_f[grepl("\\.tif", all_f)]
+  all_f <- all_f[!grepl("aux", all_f)]
+  
+  spr <- rast(all_f)
+  
+  names(spr) <- gsub("\\.tif", "",  basename(all_f))
+  
+  #spr <- projectRasterForLeaflet(spr, method = "bilinear")
+  
+  speciesrast$raster <- spr
+  
+  pts <- arrow::read_parquet("data/example_pts.parquet")[,1:2]
+  colnames(pts) <- c("longitude", "latitude")
+  speciesrast$pts <- pts
+  
+  speciesrast$status <- speciesrast$status + 1
+}) %>%
+  bindEvent(input$speciesSelect, ignoreInit = T)
+
+# Select the layer for current use
+speciesselrast <- reactive({
+  mdebug("Selecting layer")
+  
+  side_select <- input$sideSelect
+  
+  model_sel <- input$modelSelect
+  scenario_sel <- tolower(input$scenarioSelect)
+  period_sel <- ifelse(scenario_sel == "current", "nothing",
+                       ifelse(input$periodSelect == "2050", "dec50", "dec100"))
+  
+  sel_rast <- speciesrast$raster[[grepl(model_sel, names(speciesrast$raster))]]
+  sel_rast <- sel_rast[[grepl(scenario_sel, names(sel_rast))]]
+  
+  if (period_sel != "nothing") {
+    sel_rast <- sel_rast[[grepl(period_sel, names(sel_rast))]]
+  }
+  sel_rast[sel_rast < 0.05] <- NA
+  
+  if (scenario_sel != "current" & side_select) {
+    current_rast <- speciesrast$raster[[grepl(model_sel, names(speciesrast$raster))]]
+    current_rast <- current_rast[[grepl("current", names(current_rast))]]
+    current_rast[current_rast < 0.05] <- NA
+    sel_rast <- c(sel_rast, current_rast)
+  }
+  sel_rast
+})  %>%
+  bindEvent(c(speciesrast$status, input$modelSelect, input$scenarioSelect, input$periodSelect, input$sideSelect),
+            ignoreInit = TRUE)
 
 # Change the MAP reactive
 speciesmap <- reactive({
-  
-  sp_info <- list(
-    species = input$speciesSelect,
-    model = input$modelSelect,
-    scenario = tolower(input$scenarioSelect),
-    decade = ifelse(is.null(input$periodSelect), NULL,
-                ifelse(input$periodSelect == 2050, "dec50", "dec100")),
-    spkey = speciesinfo$key[speciesinfo$species == input$speciesSelect]
-  )
-
-  basepath <- paste0("data/maps/taxonid=", sp_info$spkey, "/model=wwf/predictions/")
-
-  mdebug(paste("In use species", sp_info$species, sp_info$model, sp_info$scenario, collapse = ","))
-  mdebug(paste0(basepath, "taxonid=", sp_info$spkey, "_model=wwf", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif"))
+  mdebug(paste("In use layer", names(speciesselrast()), collapse = ","))
   
   side_select <- input$sideSelect
-
-  if (sp_info$scenario == "current") {
-    file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=wwf", "_method=", sp_info$model, "_scen=current_cog.tif")
-    file_b <- NULL
-  } else {
-    if (side_select) {
-      file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=wwf", "_method=", sp_info$model, "_scen=current_cog.tif")
-      file_b <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=wwf", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
-    } else {
-      file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=wwf", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
-      file_b <- NULL
-    }
-  }
+  scenario_sel <- tolower(input$scenarioSelect)
   
-  #Add mask if requested
-  if (maskstate()) {
-     mdebug("Mask active")
-
-     # Load mask
-     mask_layer <- terra::rast(paste0("data/maps/taxonid=137117/model=wwf/predictions/taxonid=137117_model=wwf_mask_cog.tif"))
-
-     # Create temp files
-     temp_f_a <- tempfile(fileext = ".tif")
-     temp_f_b <- tempfile(fileext = ".tif")
-
-     # mask and save
-     writeRaster(terra::mask(terra::rast(file_a), crop(mask_layer$native_ecoregions, terra::rast(file_a))), temp_f_a, overwrite = T)
-     file_a <- temp_f_a
-     if (!is.null(file_b)) {
-       writeRaster(terra::mask(terra::rast(file_b), crop(mask_layer$native_ecoregions, terra::rast(file_b))), temp_f_b, overwrite = T)
-       file_b <- temp_f_b
-     }
-
-  } else {
-     mdebug("Mask deactivated")
-     print(file_a);print(file_b)
-  }
+  m <- m %>%
+    addCircleMarkers(data = speciesrast$pts,
+                     clusterOptions = markerClusterOptions(),
+                     group = "Points",
+                     weight = 2,
+                     radius = 5,
+                     opacity = 1,
+                     fillOpacity = 0.1,
+                     color = "black") %>% 
+    hideGroup("Points")
   
-
-  if (sp_info$species == "") {
-    m %>%
-      leafem::addFgb(file = "data/studyarea.fgb", fillColor = "#184e77", fill = T)
-  } else {
-      m <- m %>%
-      addCircleMarkers(data = speciespts(),
-                       clusterOptions = NULL,#markerClusterOptions(),
-                       group = "Points",
-                       weight = 2,
-                       radius = 5,
-                       opacity = 1,
-                       fillOpacity = 0.1,
-                       color = "black") %>% 
-      hideGroup("Points") %>%
-      addEasyButton(easyButton(
-         icon = "fa-eye", title = "Activate/deactivate native mask",
-         onClick = JS('
-          function(btn, map) {
-            var new_state = {id: "newstate", nonce: Math.random()};
-            Shiny.onInputChange("jsMask", new_state);
-          }
-        '))
-      )
-      
-      if (maskstate()) {
-        m <- m %>% 
-            addControl(tags$div(HTML('<span style="font-weight: bold; color: #184e77;">Mask active</span>')),
-                       position = "topright")
-      }
+  if (scenario_sel != "current" & side_select) {
     
-    if (sp_info$scenario != "current" & side_select) {
-      
-      m %>%
-        addMapPane("left", zIndex = 0) %>%
-        addMapPane("right", zIndex = 0) %>%
-        removeTiles("baseid") %>%
-        removeLayersControl() %>%
-        addTiles(group = "Open Street", layerId = "leftbaseid",
-                 options = pathOptions(pane = "left")) %>%
-        addGeotiff(file = file_a,
-                     opacity = 1,
-                     colorOptions = colorOptions(
-                       palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                       domain = c(0, 100),
-                       na.color = NA
-                     ),
-                     options = pathOptions(pane = "left"), autozoom = F) %>%
-        addTiles(group = "Open Street B", layerId = "rightbaseid",
-                 options = pathOptions(pane = "right")) %>%
-        addGeotiff(file = file_b,
-                     opacity = 1,
-                     colorOptions = colorOptions(
-                       palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                       domain = c(0, 100),
-                       na.color = NA
-                     ),
-                     options = pathOptions(pane = "right"), autozoom = F) %>%
-        addSidebyside(layerId = "sidecontrols",
-                      rightId = "rightbaseid",
-                      leftId = "leftbaseid")
-
-    } else {
-      
-      m %>%
-        addGeotiff(file = file_a,
-                     opacity = 1,
-                     colorOptions = colorOptions(
-                       palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                       domain = c(0, 100),
-                       na.color = NA
-                     ), autozoom = F) %>%
-        addPmToolbar(
-          toolbarOptions = pmToolbarOptions(drawMarker = FALSE,
-                                            drawPolyline = FALSE,
-                                            drawCircle = FALSE,
-                                            cutPolygon = FALSE,
-                                            position = "topleft"),
-          drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
-          editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE)
-        )
-    }
+    m %>%
+      addMapPane("left", zIndex = 0) %>%
+      addMapPane("right", zIndex = 0) %>%
+      removeTiles("baseid") %>%
+      removeLayersControl() %>%
+      addTiles(group = "Open Street", layerId = "leftbaseid",
+               options = pathOptions(pane = "left")) %>%
+      addGeoRaster(x = stars::st_as_stars(speciesselrast()[[2]]),
+                   opacity = 1,
+                   colorOptions = colorOptions(
+                     palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
+                     domain = c(0, 1),
+                     na.color = NA
+                   ),
+                   options = pathOptions(pane = "left"), autozoom = F) %>%
+      addTiles(group = "Open Street B", layerId = "rightbaseid",
+               options = pathOptions(pane = "right")) %>%
+      addGeoRaster(x = stars::st_as_stars(speciesselrast()[[1]]), 
+                   opacity = 1,
+                   colorOptions = colorOptions(
+                     palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
+                     domain = c(0, 1),
+                     na.color = NA
+                   ),
+                   options = pathOptions(pane = "right"), autozoom = F) %>%
+      addSidebyside(layerId = "sidecontrols",
+                    rightId = "rightbaseid",
+                    leftId = "leftbaseid")
+  } else {
+    m %>%
+      addGeoRaster(x = stars::st_as_stars(speciesselrast()),
+                   opacity = 1,
+                   colorOptions = colorOptions(
+                     palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
+                     domain = c(0, 1),
+                     na.color = NA
+                   ), autozoom = F) %>%
+      addPmToolbar(
+        toolbarOptions = pmToolbarOptions(drawMarker = FALSE,
+                                          drawPolyline = FALSE,
+                                          drawCircle = FALSE,
+                                          cutPolygon = FALSE,
+                                          position = "topleft"),
+        drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
+        editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE)
+      )
   }
   
-  
-  
-})
+}) %>%
+  bindEvent(speciesselrast())
 
 # Set the new rendered map
 observe({
@@ -1022,14 +991,13 @@ observe({
     
     spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
     
-    basepath <- paste0("data/maps/taxonid=", spkey, "/model=wwf/metrics/")
-    
     # Table 1
-    metrics <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", spkey, "_model=wwf_method=", input$modelSelect, "_what=cvmetrics.parquet")
+    metrics <- read.csv(
+      paste0("data/context/species/mv1_pr_", ifelse(input$modelSelect == "lassonaive", "lasso_naive", input$modelSelect),"_key", spkey, "_basevars_cvmetrics.csv")
     )
     metrics_mean <- metrics %>%
-      summarise(across(1:ncol(metrics), mean))
+      mutate(across(1:ncol(metrics), mean)) %>%
+      slice_head(n=1)
     metrics_mean <- metrics_mean %>%
       tidyr::pivot_longer(cols = 1:ncol(metrics_mean), names_to = "Metric", values_to = "Mean of 5 folds") %>%
       mutate(Metric = toupper(Metric))
@@ -1039,8 +1007,8 @@ observe({
     continfo$tableA <- metrics_mean
     
     # Graph
-    response_curves <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", spkey, "_model=wwf_method=", input$modelSelect, "_what=respcurves.parquet")
+    response_curves <- read.csv(
+      paste0("data/context/species/mv1_pr_", ifelse(input$modelSelect == "lassonaive", "lasso_naive", input$modelSelect),"_key", spkey, "_basevars_respcurves.csv")
     )
     # response_curves <- response_curves %>%
     #   group_by(variable) %>%
@@ -1110,23 +1078,7 @@ observe({
   
   if (active_tab$current == "species") {
     mdebug(paste("Active tab for data extraction:", active_tab$current))
-    
-    sp_info <- list(
-        species = input$speciesSelect,
-        model = input$modelSelect,
-        scenario = tolower(input$scenarioSelect),
-        decade = ifelse(is.null(input$periodSelect), NULL,
-                    ifelse(input$periodSelect == 2050, "dec50", "dec100")),
-        spkey = speciesinfo$key[speciesinfo$species == input$speciesSelect]
-    )
-
-    if (sp_info$scenario == "current") {
-        file_a <- paste0("data/maps/species/cogmv1pr_", sp_info$model, "_key", sp_info$spkey, "_basevars_", sp_info$scenario, ".tif")
-    } else {
-        file_a <- paste0("data/maps/species/cogmv1pr_", sp_info$model, "_key", sp_info$spkey, "_basevars_", sp_info$scenario, "_", sp_info$decade, ".tif")
-    }
-
-    vals <- terra::extract(terra::rast(file_a), vect_obj)
+    vals <- terra::extract(speciesselrast(), vect_obj)
     vals <- vals[,2]
     vals <- vals[!is.na(vals)]
     
@@ -1169,15 +1121,4 @@ output$contextMapText <- renderText({
   bindEvent(continfo_leaf$text)
   
 outputOptions(output, "contextMap", suspendWhenHidden = FALSE)
-
-
-
-# Add mask to map ----
-# observe({
-#   mdebug("Mascara ativa")
-#   print(input$jsMask)
-#   leafletProxy("mainMap") %>%
-#     removeTiles("baseid")
-# }) %>%
-#   bindEvent(input$jsMask)
 ```

@@ -50,5 +50,9 @@ po/*~
 rsconnect/
 /.quarto/
 
-#data/
+data/
 backup/
+
+*_bundle/
+
+index_files/

@@ -351,3 +351,9 @@ a.A4Portrait, a.A4Landscape, a.CurrentSize {
   color: #545454;
   font-size: 12px;
 }
+
+a {
+  text-decoration: none !important;
+  color: #168aad;
+}
+
