@@ -645,7 +645,7 @@ m <- leaflet() %>%
   addProviderTiles(providers$CartoDB.Positron, group = "CartoDB") %>%
   addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark") %>%
   addLayersControl(
-    overlayGroups = c("Points", "Native ecoregions"),
+    overlayGroups = c("Points"),
     baseGroups = c("Open Street Maps", "CartoDB", "CartoDB Dark"),
     options = layersControlOptions(collapsed = T),
     position = "bottomright"
@@ -857,16 +857,16 @@ observe({
   maskstate(!maskstate())
 }) %>% bindEvent(input$jsMask)
 
-maskshape <- reactive({
-    spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
-    mask_layer <- terra::rast(paste0("data/maps/taxonid=", spkey, "/model=wwf/predictions/taxonid=", spkey, "_model=wwf_mask_cog.tif"))
-    mask_layer <- mask_layer$native_ecoregions
-    mask_layer <- as.polygons(mask_layer, values = T)
-    mask_layer <- simplifyGeom(mask_layer)
-    tfile <- tempfile(fileext = ".fgb")
-    sf::st_write(sf::st_as_sf(mask_layer), tfile, append = F, quiet = T)
-    tfile
-})
+# maskshape <- reactive({
+#     spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
+#     mask_layer <- terra::rast(paste0("data/maps/taxonid=", spkey, "/model=wwf/predictions/taxonid=", spkey, "_model=wwf_mask_cog.tif"))
+#     mask_layer <- mask_layer$native_ecoregions
+#     mask_layer <- as.polygons(mask_layer, values = T)
+#     mask_layer <- simplifyGeom(mask_layer)
+#     tfile <- tempfile(fileext = ".fgb")
+#     sf::st_write(sf::st_as_sf(mask_layer), tfile, append = F, quiet = T)
+#     tfile
+# })
 
 files_inuse <- reactiveValues(file_a = NULL,
                               file_b = NULL)
@@ -904,27 +904,27 @@ speciesmap <- reactive({
   }
   
   #Add mask if requested
-  if (maskstate()) {
-     mdebug("Mask active")
-
-     # Load mask
-     mask_layer <- terra::rast(paste0("data/maps/taxonid=", sp_info$spkey, "/model=wwf/predictions/taxonid=", sp_info$spkey, "_model=wwf_mask_cog.tif"))
-
-     # Create temp files
-     temp_f_a <- tempfile(fileext = ".tif")
-     temp_f_b <- tempfile(fileext = ".tif")
-
-     # mask and save
-     writeRaster(terra::mask(terra::rast(file_a), crop(mask_layer$native_ecoregions, terra::rast(file_a))), temp_f_a, overwrite = T)
-     file_a <- temp_f_a
-     if (!is.null(file_b)) {
-       writeRaster(terra::mask(terra::rast(file_b), crop(mask_layer$native_ecoregions, terra::rast(file_b))), temp_f_b, overwrite = T)
-       file_b <- temp_f_b
-     }
-
-  } else {
-     mdebug("Mask deactivated")
-  }
+  # if (maskstate()) {
+  #    mdebug("Mask active")
+  # 
+  #    # Load mask
+  #    mask_layer <- terra::rast(paste0("data/maps/taxonid=", sp_info$spkey, "/model=wwf/predictions/taxonid=", sp_info$spkey, "_model=wwf_mask_cog.tif"))
+  # 
+  #    # Create temp files
+  #    temp_f_a <- tempfile(fileext = ".tif")
+  #    temp_f_b <- tempfile(fileext = ".tif")
+  # 
+  #    # mask and save
+  #    writeRaster(terra::mask(terra::rast(file_a), crop(mask_layer$native_ecoregions, terra::rast(file_a))), temp_f_a, overwrite = T)
+  #    file_a <- temp_f_a
+  #    if (!is.null(file_b)) {
+  #      writeRaster(terra::mask(terra::rast(file_b), crop(mask_layer$native_ecoregions, terra::rast(file_b))), temp_f_b, overwrite = T)
+  #      file_b <- temp_f_b
+  #    }
+  # 
+  # } else {
+  #    mdebug("Mask deactivated")
+  # }
   
   files_inuse$file_a <- file_a
   files_inuse$file_b <- file_b
@@ -943,10 +943,10 @@ speciesmap <- reactive({
                        fillOpacity = 0.1,
                        color = "black") %>% 
       hideGroup("Points") %>%
-      leafem::addFgb(file = maskshape(),
-              fillColor = "#57D8FF", fill = T, fillOpacity = 0.1, weigth = 0.2,
-              color = "#57D8FF", group = "Native ecoregions") %>%
-      hideGroup("Native ecoregions") %>%
+      # leafem::addFgb(file = maskshape(),
+      #         fillColor = "#57D8FF", fill = T, fillOpacity = 0.1, weigth = 0.2,
+      #         color = "#57D8FF", group = "Native ecoregions") %>%
+      # hideGroup("Native ecoregions") %>%
       addEasyButton(easyButton(
          icon = "fa-eye", title = "Activate/deactivate native mask",
          onClick = JS('
@@ -955,13 +955,18 @@ speciesmap <- reactive({
             Shiny.onInputChange("jsMask", new_state);
           }
         '))
-      )
+      ) %>%
+      htmlwidgets::onRender('
+                            LeafletWidget.methods.removeImage = function(layerId) {
+                      this.layerManager.removeLayer(null, layerId);
+                    }
+                            ')
       
-      if (maskstate()) {
-        m <- m %>% 
-            addControl(tags$div(HTML('<span style="font-weight: bold; color: #184e77;">Mask active</span>')),
-                       position = "topright")
-      }
+      # if (maskstate()) {
+      #   m <- m %>% 
+      #       addControl(tags$div(HTML('<span style="font-weight: bold; color: #184e77;">Mask active</span>')),
+      #                  position = "topright")
+      # }
     
     if (sp_info$scenario != "current" & side_select) {
       
@@ -1019,6 +1024,36 @@ speciesmap <- reactive({
   
   
 })
+
+# Turn mask on or off
+observe({
+  proxy <- leafletProxy("mainMap")
+    spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
+    mask_layer <- paste0("data/maps/taxonid=", spkey, "/model=wwf/predictions/taxonid=", spkey, "_model=wwf_mask_cog_alt.tif")
+
+  if (!maskstate()) {
+    mdebug("Mask deactivated")
+    proxy %>% removeImage(layerId = "mapMask") %>%
+        removeControl(layerId = "maskControl")
+  }
+  if (maskstate()) {
+    mdebug("Mask activated")
+    proxy %>% addGeotiff(file = mask_layer,
+             opacity = 1,
+             #resolution = 50,
+             layerId = "mapMask",
+             bands = 1,
+             colorOptions = colorOptions(
+               palette = c("#aad3df", "#0a626500"),
+               domain = c(0,1),
+               na.color = NA
+             ), autozoom = F) %>%
+      addControl(tags$div(HTML('<span style="font-weight: bold; color: #184e77;">Mask active</span>')),
+                       position = "topright", layerId = "maskControl")
+    }
+
+}) %>%
+  bindEvent(maskstate(), ignoreInit = T)
 
 # Set the new rendered map
 observe({
