@@ -202,7 +202,7 @@ a#tabset-1-4-tab {
 .body-text {
   margin-top: 0.3em;
   color: #545454;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .methods-div {
@@ -338,6 +338,32 @@ a.A4Portrait, a.A4Landscape, a.CurrentSize {
   border-radius: 8px;
   color: white;
   font-size: 12px;
+}
+
+.sideDiv {
+  position: absolute;
+  bottom: 45px;
+  left: 1%;
+  z-index: 1000;
+  padding: 2px;
+  border-radius: 3px;
+  color: #184e77;
+  background-color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.sideDivRight {
+  position: absolute;
+  bottom: 45px;
+  right: 1%;
+  z-index: 1000;
+  padding: 2px;
+  border-radius: 3px;
+  color: #184e77;
+  background-color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: bold;
 }
 
 

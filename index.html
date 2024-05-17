@@ -274,7 +274,7 @@ a#tabset-1-4-tab {
 .body-text {
   margin-top: 0.3em;
   color: #545454;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .methods-div {
@@ -410,6 +410,32 @@ a.A4Portrait, a.A4Landscape, a.CurrentSize {
   border-radius: 8px;
   color: white;
   font-size: 12px;
+}
+
+.sideDiv {
+  position: absolute;
+  bottom: 45px;
+  left: 1%;
+  z-index: 1000;
+  padding: 2px;
+  border-radius: 3px;
+  color: #184e77;
+  background-color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.sideDivRight {
+  position: absolute;
+  bottom: 45px;
+  right: 1%;
+  z-index: 1000;
+  padding: 2px;
+  border-radius: 3px;
+  color: #184e77;
+  background-color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: bold;
 }
 
 
@@ -566,6 +592,16 @@ a {
 </div>
 </div>
 </div>
+</div>
+</div>
+<div id="sideDiv" class="sideDiv">
+<div class="shiny-panel-conditional" data-display-if="input.sideSelect == true" data-ns-prefix="">
+<div id="sidetext_box" class="sidetext_class">Current</div>
+</div>
+</div>
+<div id="sideDivRight" class="sideDivRight">
+<div class="shiny-panel-conditional" data-display-if="input.sideSelect == true" data-ns-prefix="">
+<div id="sidetext_box_r" class="sidetext_class_r">Future</div>
 </div>
 </div>
 </div>
@@ -1094,7 +1130,7 @@ library(stars)
 source("functions.R")
 
 # Settings ----
-debug = T # Set here to TRUE to see debugging messages
+debug = F # Set here to TRUE to see debugging messages
 
 # Create debug function
 mdebug <- function(text, toprint = debug) {
@@ -1110,7 +1146,7 @@ m <- leaflet() %>%
   addProviderTiles(providers$CartoDB.Positron, group = "CartoDB") %>%
   addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark") %>%
   addLayersControl(
-    overlayGroups = c("Points"),
+    overlayGroups = c("Points", "Native ecoregions"),
     baseGroups = c("Open Street Maps", "CartoDB", "CartoDB Dark"),
     options = layersControlOptions(collapsed = T),
     position = "bottomright"
@@ -1148,7 +1184,7 @@ output$tableATitle <- renderText({ "Select a map to start" })
 
 
 # Create species selectize ----
-sp_options <- c("", "Actinia equina", "Actinia fragacea", "Melanostomias tentaculatus", "Arbacia lixula", "Phocoena phocoena")
+sp_options <- c("", "Phocoena phocoena")
 updateSelectizeInput(session, "speciesSelect", choices = sp_options, server = TRUE)
 
 
@@ -1321,6 +1357,20 @@ observe({
   maskstate(!maskstate())
 }) %>% bindEvent(input$jsMask)
 
+maskshape <- reactive({
+    spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
+    mask_layer <- terra::rast(paste0("data/maps/taxonid=", spkey, "/model=wwf/predictions/taxonid=", spkey, "_model=wwf_mask_cog.tif"))
+    mask_layer <- mask_layer$native_ecoregions
+    mask_layer <- as.polygons(mask_layer, values = T)
+    mask_layer <- simplifyGeom(mask_layer)
+    tfile <- tempfile(fileext = ".fgb")
+    sf::st_write(sf::st_as_sf(mask_layer), tfile, append = F, quiet = T)
+    tfile
+})
+
+files_inuse <- reactiveValues(file_a = NULL,
+                              file_b = NULL)
+
 # Change the MAP reactive
 speciesmap <- reactive({
   
@@ -1358,7 +1408,7 @@ speciesmap <- reactive({
      mdebug("Mask active")
 
      # Load mask
-     mask_layer <- terra::rast(paste0("data/maps/taxonid=137117/model=wwf/predictions/taxonid=137117_model=wwf_mask_cog.tif"))
+     mask_layer <- terra::rast(paste0("data/maps/taxonid=", sp_info$spkey, "/model=wwf/predictions/taxonid=", sp_info$spkey, "_model=wwf_mask_cog.tif"))
 
      # Create temp files
      temp_f_a <- tempfile(fileext = ".tif")
@@ -1374,9 +1424,10 @@ speciesmap <- reactive({
 
   } else {
      mdebug("Mask deactivated")
-     print(file_a);print(file_b)
   }
   
+  files_inuse$file_a <- file_a
+  files_inuse$file_b <- file_b
 
   if (sp_info$species == "") {
     m %>%
@@ -1392,6 +1443,10 @@ speciesmap <- reactive({
                        fillOpacity = 0.1,
                        color = "black") %>% 
       hideGroup("Points") %>%
+      leafem::addFgb(file = maskshape(),
+              fillColor = "#57D8FF", fill = T, fillOpacity = 0.1, weigth = 0.2,
+              color = "#57D8FF", group = "Native ecoregions") %>%
+      hideGroup("Native ecoregions") %>%
       addEasyButton(easyButton(
          icon = "fa-eye", title = "Activate/deactivate native mask",
          onClick = JS('
@@ -1515,13 +1570,18 @@ observe({
       paste0(basepath, "taxonid=", spkey, "_model=wwf_method=", input$modelSelect, "_what=cvmetrics.parquet")
     )
     metrics_mean <- metrics %>%
-      summarise(across(1:ncol(metrics), mean))
+      summarise(across(1:ncol(metrics), function(x) {round(mean(x), 2)}))
     metrics_mean <- metrics_mean %>%
       tidyr::pivot_longer(cols = 1:ncol(metrics_mean), names_to = "Metric", values_to = "Mean of 5 folds") %>%
       mutate(Metric = toupper(Metric))
-    metrics_mean <- metrics_mean %>%
-      filter(Metric %in% c("AUC", "CBI", "PR", "TSS_P10"))
-    metrics_mean$`Mean of 5 folds` <- round(metrics_mean$`Mean of 5 folds`, 2)
+    metrics_sd <- metrics %>%
+      summarise(across(1:ncol(metrics), function(x) {round(sd(x), 2)}))
+    metrics_sd <- metrics_sd %>%
+      tidyr::pivot_longer(cols = 1:ncol(metrics_sd), names_to = "Metric", values_to = "SD") %>%
+      mutate(Metric = toupper(Metric))
+    metrics_mean <- left_join(metrics_mean, metrics_sd, by = "Metric")
+    # metrics_mean <- metrics_mean %>%
+    #   filter(Metric %in% c("AUC", "CBI", "PR", "TSS_P10"))
     continfo$tableA <- metrics_mean
     
     # Graph
@@ -1539,15 +1599,31 @@ observe({
     continfo$plotA <- gen_plotly_resp(response_curves)
     
     # Text
-    continfo$text[[1]] <- paste("Model explanation -", ifelse(
-      input$modelSelect == "lassonaive", "Lasso", "Random Forest"
-    ))
+    continfo$text[[1]] <- paste("Model explanation -",
+                                switch(strtrim(input$modelSelect, 3),
+                                       brt = "BRT",
+                                       las = "LASSO",
+                                       ela = "elasticnet",
+                                       max = "MAXENT",
+                                       rf_ = "Random Forest",
+                                       glm = "GLM",
+                                       gam = "GAM",
+                                       xgb = "XGBoost",
+                                       lgb = "LightGBM",
+                                       ens = "Ensemble"))
     
-    continfo$text[[2]] <- ifelse(input$modelSelect == "lassonaive",
-                                 "Given the complexity of the task, which involves generating distribution models for a large number 
-                                 of species in a semi-automated manner...",
-                                 "Given the complexity of the task, which involves generating distribution models for a large number 
-                                 of species in a semi-automated manner... Random Forest...")
+    context_file <- jsonlite::read_json("context_info.json")
+    continfo$text[[2]] <- switch(strtrim(input$modelSelect, 3),
+       brt = unlist(context_file$models[["brt"]]),
+       las = unlist(context_file$models[["lasso"]]),
+       ela = unlist(context_file$models[["elasticnet"]]),
+       max = unlist(context_file$models[["maxent"]]),
+       rf_ = unlist(context_file$models[["rf"]]),
+       glm = unlist(context_file$models[["glm"]]),
+       gam = unlist(context_file$models[["gam"]]),
+       xgb = unlist(context_file$models[["xgboost"]]),
+       lgb = unlist(context_file$models[["lightgbm"]]),
+       ens = unlist(context_file$models[["ensemble"]]))
     
   }
   
@@ -1555,7 +1631,8 @@ observe({
   bindEvent(c(input$speciesSelect, input$modelSelect), ignoreInit = TRUE)
 
 output$tableA <- DT::renderDT({
-  continfo$tableA
+  #continfo$tableA
+   DT::datatable(continfo$tableA, options = list(paging =TRUE, pageLength = 5))
 }) %>%
   bindEvent(continfo$tableA)
 
@@ -1565,7 +1642,7 @@ output$plotA <- renderPlotly({
   bindEvent(continfo$plotA)
 
 output$tableB <- DT::renderDT({
-  continfo$tableA
+  DT::datatable(continfo$tableA, options = list(paging =TRUE, pageLength = 5))
 }) %>%
   bindEvent(continfo$tableA)
 
@@ -1606,13 +1683,7 @@ observe({
         spkey = speciesinfo$key[speciesinfo$species == input$speciesSelect]
     )
 
-    if (sp_info$scenario == "current") {
-        file_a <- paste0("data/maps/species/cogmv1pr_", sp_info$model, "_key", sp_info$spkey, "_basevars_", sp_info$scenario, ".tif")
-    } else {
-        file_a <- paste0("data/maps/species/cogmv1pr_", sp_info$model, "_key", sp_info$spkey, "_basevars_", sp_info$scenario, "_", sp_info$decade, ".tif")
-    }
-
-    vals <- terra::extract(terra::rast(file_a), vect_obj)
+    vals <- terra::extract(terra::rast(files_inuse$file_a), vect_obj)
     vals <- vals[,2]
     vals <- vals[!is.na(vals)]
     

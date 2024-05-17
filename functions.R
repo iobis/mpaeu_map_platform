@@ -5,7 +5,7 @@ gen_plotly_resp <- function(respcurves) {
   obj <- plot_ly()
   
   for (i in vars) {
-    print(i)
+    #print(i)
     if (i == vars[1]) {
       obj <- obj %>%
         add_trace(y = respcurves$response[respcurves$variable == i],
