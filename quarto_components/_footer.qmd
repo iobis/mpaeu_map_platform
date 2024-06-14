@@ -1,0 +1,49 @@
+<!-- HERE STARTS THE METHODS SECTION -->
+::: {.methods-div}
+
+## How models were created?
+
+Models were created using a point-process framework. Details on the modelling framework adopted by MPA Europe, including the full documentation are available [in this link.](https://iobis.github.io/mpaeu_docs/)
+
+## How should I use this information?
+
+Species Distribution Models (SDMs) provide valuable insights for both research and conservation efforts. These maps depict the relative and potential suitability of habitats for a particular species, aiding researchers and conservationists in understanding where a species could potentially occur. It is important to note that SDMs show suitability rather than presence, meaning the species may not actually occur throughout the entire extent indicated on the map. Additionally, there is inherent uncertainty associated with all SDM maps, stemming from various factors such as data quality, model assumptions, and environmental variability. Therefore, while SDMs offer valuable information, their results should be interpreted critically, considering the limitations and uncertainties associated with the models. 
+
+:::
+
+<!-- HERE STARTS THE FOOTER -->
+<div id="footer-div" class="footer-div">
+
+## MPA Europe project
+
+Using a holistic range of measures that include the range of biodiversity from species to ecosystems, including habitats, areas will be prioritised using systematic conservation planning software. This enables alternative weighting of variables and multiple scenarios and thus support wider marine spatial planning.
+
+::: {.grid}
+
+::: {.g-col-md-3 .g-col-12 #footer-links}
+### Explore more
+
+[<span class="material-symbols-outlined" style="font-size: 12px; vertical-align: middle !important;">chevron_right</span>MPA Europe](https://mpa-europe.eu/)  
+[<span class="material-symbols-outlined" style="font-size: 12px; vertical-align: middle !important;">chevron_right</span>OBIS](https://obis.org)
+
+Product created by the [Ocean Biodiversity Information System](https://obis.org)
+
+![](www/obis_logo.png){width=80%}
+:::
+
+::: {.g-col-md-9 .g-col-12 #footer-credits}
+### Support
+
+Grant Agreement 101059988 – MPA Europe | 
+MPA Europe project has been approved under HORIZON-CL6-2021-BIODIV-01-12 — Improved science based maritime spatial planning and identification of marine protected areas.
+
+Co-funded by the European Union. Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or UK Research and Innovation. Neither the European Union nor the granting authority can be held responsible for them.
+
+![](www/euuk_logo.png){width=50%}
+:::
+
+:::
+
+<div style="font-size: 8px; color: white; text-align: center;">All data shown in this website is under a CC-0 licence.</div>
+
+</div>

@@ -1,0 +1,82 @@
+::: {.tabdiv}
+
+```{r}
+# Load/set options ----
+# Load habitat options
+hab_options <- c("Select a habitat" = "", "Test" = "test")
+
+# Add selectors ----
+# Group selector
+selectInput(
+   inputId = "groupSelectHabitat",
+   label = "Select group", 
+   choices = c("All")
+)
+
+# Filter selector
+selectInput(
+   inputId = "habitatSelect",
+   label = "Select habitat", 
+   choices = hab_options
+)
+
+
+# Add contextual information ----
+tags$div(
+  id = "habitat_title",
+  class = "rtitle_class",
+  textOutput("selectedHabitat")
+)
+
+tags$div(
+  id = "context_info_hab",
+  class = "context_info",
+  textOutput("contextHabitat")
+)
+```
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-6}
+```{r}
+tags$div(
+  id = "scenario_box_habitat",
+  class = "scenario_class",
+      selectInput(
+        inputId = "scenarioSelectHabitat",
+        label = "Scenario",
+        choices = scenario_options
+      ))
+```
+
+:::
+
+::: {.g-col-6}
+```{r}
+tags$div(
+  id = "scenario_box_thermal",
+  class = "scenario_class",
+      selectInput(
+        inputId = "periodSelectHabitat",
+        label = "Period",
+        choices = period_options
+      ))
+```
+
+:::
+
+:::
+</div>
+
+<div class="context-icons">
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+
+</div>
+
+:::

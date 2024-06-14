@@ -1,0 +1,87 @@
+::: {.tabdiv}
+
+```{r}
+# Load/set options ----
+# Load metrics options
+metrics_options <- c("Richness", "E50")
+
+# Add selectors ----
+# Filter selector
+selectInput(
+   inputId = "diversitySelect",
+   label = "Select metric", 
+   choices = metrics_options
+)
+
+# Add contextual information ----
+tags$div(
+  id = "diversity_title",
+  class = "rtitle_class",
+  textOutput("selectedMetric")
+)
+
+tags$div(
+  id = "context_info_div",
+  class = "context_info",
+  textOutput("contextMetric")
+)
+```
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-5}
+```{r}
+tags$div(
+  id = "scenario_box_diversity",
+  class = "scenario_class",
+selectInput(
+        inputId = "modelSelectDiversity",
+        label = "Model",
+        choices = model_options
+      ))
+```
+:::
+
+::: {.g-col-4}
+```{r}
+tags$div(
+  id = "scenario_box_diversity",
+  class = "scenario_class",
+      selectInput(
+        inputId = "scenarioSelectDiversity",
+        label = "Scenario",
+        choices = scenario_options
+      ))
+```
+
+:::
+
+::: {.g-col-3}
+```{r}
+tags$div(
+  id = "scenario_box_diversity",
+  class = "scenario_class",
+      selectInput(
+        inputId = "periodSelectDiversity",
+        label = "Period",
+        choices = period_options
+      ))
+```
+
+:::
+
+:::
+</div>
+
+<div class="context-icons">
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+
+</div>
+
+:::

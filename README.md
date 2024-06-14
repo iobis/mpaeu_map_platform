@@ -6,17 +6,19 @@ The platform uses [Quarto](https://quarto.org/) and [Shiny](https://shiny.posit.
 
 Below, a screenshot showing the most recent status:
 
-![](readme_files/status_23nov23.png)
+![](readme_files/status_14jun24.png)
 
 ## Repository structure
 
 The main files are:
 
-- *index.qmd*: Quarto file used to generate the webpage and the frontend part of the app (generate `index.html`)
-- *sever.R*: Hold the functions on the server-side [for now - Feb 2023 - server code is being copied to `index.qmd` due to a limitation in Quarto/Shiny]
-- *addons.js*: Javascript additional functions.
-- *styles.css*: CSS stylesheet for personalization of the interface.
+- *index.qmd*: Quarto file used to generate the webpage and the frontend part of the app (generate `index.html`).
+- *_quarto.yml*: Quarto configuration file.
+- *www/addons.js*: Javascript additional functions.
+- *www/styles.css*: CSS stylesheet for personalization of the interface.
 
 Main folders:
 
-- *www*: Images used in the website.
+- *quarto_components*: Page sections.
+- *components*: Shiny server-side components.
+- *scripts*: R functions/scripts needed within components.

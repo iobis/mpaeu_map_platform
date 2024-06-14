@@ -1,0 +1,84 @@
+::: {.tabdiv}
+
+```{r}
+# Load/set options ----
+
+# Add selectors ----
+# Group selector
+selectInput(
+   inputId = "groupSelectThermal",
+   label = "Select group", 
+   choices = group_options
+)
+
+# Species selector
+tags$div(
+  id = 'italic_div_thermal',
+  class = 'itdiv_class',
+  selectizeInput(
+    inputId = "speciesSelectThermal",
+    label = "Search species",
+    choices = c("Select one" = ""),
+    multiple = FALSE
+  )
+)
+
+# Add contextual information ----
+tags$div(
+  id = "thermal_species_title",
+  class = "rtitle_class",
+  textOutput("selectedSpeciesThermal")
+)
+
+tags$div(
+  id = "context_info_thermal",
+  class = "context_info",
+  htmlOutput("contextSpeciesThermal")
+)
+```
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-6}
+```{r}
+tags$div(
+  id = "scenario_box_thermal",
+  class = "scenario_class",
+      selectInput(
+        inputId = "scenarioSelectThermal",
+        label = "Scenario",
+        choices = scenario_options
+      ))
+```
+
+:::
+
+::: {.g-col-6}
+```{r}
+tags$div(
+  id = "scenario_box_thermal",
+  class = "scenario_class",
+      selectInput(
+        inputId = "periodSelectThermal",
+        label = "Period",
+        choices = period_options
+      ))
+```
+
+:::
+
+:::
+</div>
+
+<div class="context-icons">
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+
+</div>
+
+:::

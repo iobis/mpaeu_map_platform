@@ -18,7 +18,7 @@ mainfont: Noto Sans
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 library(ggplot2)
 library(dplyr)
-source("{WD_PATH}/auxiliary_modelfit.R")
+source("{WD_PATH}/scripts/auxiliary_modelfit.R")
 outfolder <- "{WD_PATH}/data/maps"#"../data/maps/"
 model_acro <- "{ACRO_CODE}"
 

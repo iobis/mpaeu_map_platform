@@ -58,7 +58,7 @@ gen_quarto_report <- function(file, folder, basepath, species_aphia, model) {
   
   tg_species <- species_aphia
   
-  base_f <- readLines("map_output_model.qmd", warn = F)
+  base_f <- readLines("scripts/map_output_model.qmd", warn = F)
   
   outfolder <- folder
   

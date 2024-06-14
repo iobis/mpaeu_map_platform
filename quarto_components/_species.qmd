@@ -1,0 +1,112 @@
+::: {.tabdiv}
+
+```{r}
+# Load/set options ----
+# Load group options
+group_options <- c("All", "Others")
+
+# Set model option
+model_options <- c(#"BRT" = "brt", 
+                  "MAXENT" = "maxnet", "Random Forest" = "rf_classification_ds", 
+                  "XGBoost" = "xgboost", "GLM" = "glm",
+                  #  "Elasticnet" = "elasticnet", 
+                  "Ensemble" = "ensemble")
+scenario_options <- c("Current", "SSP1" = "ssp126", "SSP2" = "ssp245",
+                      "SSP3" = "ssp370", "SSP4" = "ssp460", "SSP5" = "ssp585")
+period_options <- c(2050, 2100)
+
+# Add selectors ----
+# Group selector
+selectInput(
+   inputId = "groupSelect",
+   label = "Select group", 
+   choices = group_options
+)
+
+# Species selector
+tags$div(
+  id = 'italic_div',
+  class = 'itdiv_class',
+  selectizeInput(
+    inputId = "speciesSelect",
+    label = "Search species",
+    choices = c("Select one" = ""),
+    multiple = FALSE
+  )
+)
+
+# Add contextual information ----
+tags$div(
+  id = "species_title",
+  class = "rtitle_class",
+  textOutput("selectedSpecies")
+)
+
+tags$div(
+  id = "context_info",
+  class = "context_info",
+  htmlOutput("contextSpecies")
+)
+```
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-5}
+```{r}
+tags$div(
+  id = "scenario_box",
+  class = "scenario_class",
+  selectInput(
+        inputId = "modelSelect",
+        label = "Model",
+        choices = model_options
+      ))
+```
+:::
+
+::: {.g-col-4}
+```{r}
+conditionalPanel("input.speciesSelect != ''",
+                 tags$div(
+                    id = "scenario_box",
+                    class = "scenario_class",
+                     selectInput(
+                       inputId = "scenarioSelect",
+                       label = "Scenario",
+                       choices = scenario_options
+                     )))
+```
+
+:::
+
+::: {.g-col-3}
+```{r}
+conditionalPanel("input.scenarioSelect != 'Current'",
+                 tags$div(
+                     id = "scenario_box",
+                     class = "scenario_class",
+                     selectInput(
+                       inputId = "periodSelect",
+                       label = "Period",
+                       choices = period_options
+      )))
+```
+
+:::
+
+:::
+</div>
+
+<div class="context-icons">
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
+
+<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+
+</div>
+
+
+:::
