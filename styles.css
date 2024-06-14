@@ -92,6 +92,18 @@ a#tabset-1-4-tab {
   margin: 0;
 }
 
+.scenario_class .selectize-input {
+  font-size: 11px;
+  margin: 0;
+}
+
+.scenario_class .selectize-dropdown,
+.scenario_class .selectize-input,
+.scenario_class .selectize-input input {
+  font-size: 11px;
+  margin: 0;
+}
+
 .bottom-container {
   position: absolute;
   bottom: 0;
@@ -383,3 +395,50 @@ a {
   color: #168aad;
 }
 
+
+/* Buttons */
+.extra-button {
+   display: inline-block;
+   padding: 5px;
+   border: 2px solid #184e77; /* Blue outline */
+   background-color: transparent; /* No background */
+   color: #184e77; /* Text color same as outline */
+   font-weight: bold; /* Bold text */
+   text-align: center; /* Center the text */
+   vertical-align: middle; /* Center the text vertically */
+   transition: all 0.3s ease; /* Fading animation on hover */
+   cursor: pointer; /* Pointer cursor on hover */
+   font-size: 14px;
+}
+
+.extra-button:hover {
+    background-color: transparent; /* Background color on hover */
+    border: 2px solid #168aad; /* Blue outline */
+    color: #168aad; /* Text color on hover */
+}
+
+.download-button {
+   display: inline-block;
+   padding: 5px;
+   border: 2px solid #0F7861; /* Blue outline */
+   background-color: transparent; /* No background */
+   color: #0F7861; /* Text color same as outline */
+   font-weight: bold; /* Bold text */
+   text-align: center; /* Center the text */
+   vertical-align: middle; /* Center the text vertically */
+   transition: all 0.3s ease; /* Fading animation on hover */
+   cursor: pointer; /* Pointer cursor on hover */
+   font-size: 14px;
+}
+
+.download-button:hover {
+    background-color: transparent; /* Background color on hover */
+    border: 2px solid #14BD99; /* Blue outline */
+    color: #14BD99; /* Text color on hover */
+}
+
+.extra-buttons-cont {
+    display: flex;
+    justify-content: center; /* Center the buttons horizontally */
+    gap: 50px; /* Space between buttons */
+}

@@ -79,6 +79,19 @@ document.addEventListener('DOMContentLoaded', function() {
       }
   };
   
+  // Flushed mask
+  //Shiny.addCustomMessageHandler('enableMask', enableMaskFun);
+  
+  //function enableMaskFun(message) {
+  //  Shiny.onInputChange("enableMaskJS", message)
+  //}
+  /*$(document).on('shiny:value', function(event) {
+    if(event.name == 'mainMap'){
+      var message = {id: event.name, nonce: Math.random()};
+      Shiny.onInputChange("enableMaskJS", message);
+    }
+  });*/
+  
   //TEMPORARY!!!
   Shiny.addCustomMessageHandler('backToTab', backTotabtemp);
   function backTotabtemp(message) {
@@ -93,8 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
     tab1.setAttribute('aria-selected', 'true');
 
     // Remove active state from the second tab
-    tab2.classList.remove('active');
-    tab2.setAttribute('aria-selected', 'false');
+    //tab2.classList.remove('active');
+    //tab2.setAttribute('aria-selected', 'false');
     tab3.classList.remove('active');
     tab3.setAttribute('aria-selected', 'false');
     tab4.classList.remove('active');

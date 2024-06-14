@@ -1,0 +1,219 @@
+---
+title: "MPA Europe - Species Distribution Models"
+format:
+  html:
+    toc: true
+    number-sections: false
+    highlight-style: github
+    self-contained: true
+header-includes: |
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+mainfont: Noto Sans
+---
+
+# Model for species _{SPECIES_NAME}_
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(ggplot2)
+library(dplyr)
+source("{WD_PATH}/auxiliary_modelfit.R")
+outfolder <- "{WD_PATH}/data/maps"#"../data/maps/"
+model_acro <- "{ACRO_CODE}"
+
+sp <- {SPECIES_CODE}
+
+wrld <- rnaturalearth::ne_countries(returnclass = "sf")
+sf::st_crs(wrld) <- sf::st_crs("EPSG:4326")
+
+masks <- retrieve(sp, "mask_cog.tif$", acro = model_acro, results_folder = outfolder)
+
+ecoreg <- sf::st_read("{WD_PATH}/data/MarineRealms_BO.shp")
+
+logf <- jsonlite::read_json(retrieve(sp, "log.json", acro = model_acro, results_folder = outfolder, load = F))
+
+ecoreg_sel <- ecoreg[ecoreg$Realm %in% unlist(logf$model_details$ecoregions_included),]
+
+sca <- function(limits, guide_title, ...) {
+  scale_fill_gradientn(
+    colours = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
+    limits = limits,
+    guide = guide_colorbar(title = guide_title,
+                           show.limits = TRUE,
+                           barheight = unit(0.12, "in"),
+                           barwidth = unit(3.5, "in"),
+                           ticks = F,
+                           ticks.colour = "grey20",
+                           frame.colour = "grey20",
+                           title.position = "top"),
+    ...#,
+    #labels = c("Low", "", "", "", "High")#,
+    #na.value = "#2b0700"
+  )
+}
+
+# Temporary solution while log is not fixed
+# which_model <- names(logf$model_posteval)
+# which_model <- which_model[!which_model %in% c("niche", "hyperniche")]
+# 
+# which_model_f <- lapply(which_model, function(x) if (length(logf$model_posteval[[x]]) < 1) FALSE else TRUE )
+# 
+# which_model <- which_model[unlist(which_model_f)]
+# 
+# which_model <- gsub("maxent", "maxnet", which_model)
+# 
+# # Definitive
+# # which_model <- lapply(logf$model_result, function(x) if (length(x) > 0) x[[1]] else "failed")
+# # which_model <- which_model[which(which_model == "succeeded")]
+# # which_model <- names(which_model)
+# # which_model <- gsub("maxent", "maxnet", which_model)
+# 
+# tg_models <- c("ensemble", "maxnet", "rf", "xgboost", "glm")
+# which_model <- tg_models[tg_models %in% which_model][1]
+# 
+# which_model <- gsub("rf", "rf_classification_ds", which_model)
+which_model <- "{MODEL_CODE}"
+
+var_names <- unlist(logf$model_details$variables)
+var_names_full <- dplyr::case_when(
+  grepl("tas", var_names) ~ "Air temperature",
+  grepl("siconc", var_names) ~ "Sea Ice",
+  grepl("thetao", var_names) ~ "SST",
+  grepl("bathy", var_names) ~ "Bathymetry",
+  grepl("dist", var_names) ~ "Distance to coast",
+  grepl("sws", var_names) ~ "Sea water speed",
+  grepl("wave", var_names) ~ "Wave Fetch",
+  grepl("so", var_names) ~ "Salinity",
+  grepl("o2", var_names) ~ "Oxygen",
+  grepl("par", var_names) ~ "PAR",
+  grepl("thetao", var_names) ~ "SST",
+  grepl("rugo", var_names) ~ "Rugosity",
+  .default = var_names
+)
+
+var_names <- paste(var_names_full, paste0("(", var_names, ")"), collapse = ", ")
+
+timings <- lapply(logf$timings, function(x) data.frame(what = x$what[[1]], time = x$time_mins[[1]]))
+timings <- do.call("rbind", timings)
+timings <- timings %>%
+  mutate(diff = time - lag(time))
+timings$diff[1] <- timings$time[1]
+
+```
+
+
+## Species data
+
+```{r echo=FALSE}
+pts <- retrieve(sp, "fitocc", acro = model_acro, results_folder = outfolder)
+
+ext_dat <- terra::ext(terra::vect(pts, geom = c("decimalLongitude", "decimalLatitude"), crs = "EPSG:4326"))
+
+ggplot() +
+  geom_sf(data = wrld, color = "grey70", fill = "grey80") +
+  #geom_sf(data = ecoreg, color = "grey60", fill = NA) +
+  geom_point(data = pts, aes(x = decimalLongitude, y = decimalLatitude), alpha = .4, size = 0.5,
+             color = "darkblue") +
+  ylab(NULL) + xlab(NULL) +
+  coord_sf(crs = "EPSG:4326", xlim = c(ext_dat[1:2]), ylim = c(ext_dat[3:4])) +
+  theme(panel.background = element_blank(),
+        panel.grid.major = element_line(color = "grey90"))
+```
+
+## Model details
+
+**Species:** `r logf$scientificName[[1]]`   
+**AphiaID:** `r logf$taxonID[[1]]`   
+**WoRMS link:** `r paste0('<a href="', "https://www.marinespecies.org/aphia.php?p=taxdetails&id=", logf$taxonID[[1]], '">', "https://www.marinespecies.org/aphia.php?p=taxdetails&id=", logf$taxonID[[1]], '</a>')`   
+**Run acronym:** `r logf$model_acro[[1]]`   
+**Date:** `r logf$model_date[[1]]`   
+**Number of records:** `r logf$model_fit_points[[1]]`    
+**Number of quadrature points:** `r logf$model_details$background_size[[1]]`   
+**Model selected (this page):** `r stringr::str_to_title(which_model)`  
+**Models executed (succeeded):** `r paste(names(unlist(logf$model_result)[which(unlist(logf$model_result) == "succeeded")]), collapse = ", ")`   
+**Variables:** `r var_names`   
+**Time (in minutes):** Model fit - `r round(sum(timings$diff[timings$what %in% c("Model selection", "Model fit")]),1)` | Predictions - `r round(sum(timings$diff[timings$what %in% c("Model prediction")]),1)` | Others - `r round(sum(timings$diff[!timings$what %in% c("Model selection", "Model fit", "Model prediction")]),1)`   
+
+## Model evaluation
+
+### Metrics
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cv <- retrieve(sp, paste0("method=",which_model,"_what=cvmetrics"), acro = model_acro, results_folder = outfolder)
+if (which_model == "ensemble") {
+  cols <- colnames(cv)[!colnames(cv) %in% c("what", "origin")]
+  cv <- cv %>%
+    group_by(what, origin) %>%
+    summarise(across(all_of(cols), ~ round(mean(.x, na.rm = TRUE), 2))) %>%
+    ungroup() %>%
+    filter(what == "mean") %>%
+    dplyr::select(-what)
+  if (any(grepl("eval", cv$origin))) cv$origin[grepl("eval", cv$origin)] <- "Evaluation dataset"
+  cv$origin[grepl("fit", cv$origin)] <- "Cross-validation"
+} else {
+  cv <- cv %>% summarise(across(1:ncol(.), ~ round(mean(.x, na.rm = TRUE), 2)))
+}
+knitr::kable(cv)
+```
+
+
+### Variable importance
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+imp <- retrieve(sp, paste0("method=",which_model,"_what=varimp"), acro = model_acro, results_folder = outfolder)
+knitr::kable(imp)
+```
+
+### Response curves
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rc <- retrieve(sp, paste0("method=",which_model,"_what=respcurv"), acro = model_acro, results_folder = outfolder)
+obissdm:::plot.sdm_respcur(rc)
+```
+
+
+## Predictions
+
+{PREDICTIONS}
+
+## Model post-evaluation
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Temporary, to be removed after name fixing
+if (grepl("rf", which_model)) which_model <- "rf"
+if (grepl("maxnet", which_model)) which_model <- "maxent"
+
+D <- try(round(logf$model_posteval$niche[which(lapply(logf$model_posteval$niche, function(x) x[[1]]) == which_model)][[1]]$D,1), silent = T)
+I_m <- try(round(logf$model_posteval$niche[which(lapply(logf$model_posteval$niche, function(x) x[[1]]) == which_model)][[1]]$I,1), silent = T)
+jacc <- try(round(logf$model_posteval$hyperniche[which(lapply(logf$model_posteval$hyperniche, function(x) x$model) == which_model)][[1]]$hyperniche_jaccard,1), silent = T)
+sore <- try(round(logf$model_posteval$hyperniche[which(lapply(logf$model_posteval$hyperniche, function(x) x$model) == which_model)][[1]]$hyperniche_sorensen,1), silent = T)
+
+if (inherits(D, "try-error")) {
+  D <- "Not available"
+}
+if (inherits(I_m, "try-error")) {
+  I_m <- "Not available"
+}
+if (inherits(jacc, "try-error")) {
+  jacc <- "Not available"
+}
+if (inherits(sore, "try-error")) {
+  sore <- "Not available"
+}
+
+```
+
+
+**Thermal range (Q0.05 / Q0.95):** `r round(logf$model_posteval[[which_model]]$thermal_range[[2]],1)` / `r round(logf$model_posteval[[which_model]]$thermal_range[[4]], 1)`   
+**Inside thermal envelope?** `r ifelse(grepl("inside", logf$model_posteval[[which_model]]$thermal_envelope), "Yes", "No")` (`r logf$model_posteval[[which_model]]$thermal_envelope[[1]]$percentage`%)   
+**Niche metrics (overlay between points and predicted sample of points):**  
+
+* **D:** `r D`   
+* **I:** `r I_m`   
+* **Jaccard (hypervolume):** `r jacc`   
+* **Sorensen (hypervolume):** `r sore`   
+
+---
+Produced by the [OBIS](https://obis.org/) team.  
+`obissdm` version `r logf$obissdm_version[[1]]`
