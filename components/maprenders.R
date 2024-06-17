@@ -1,18 +1,14 @@
-# Main renders
-# Set reactive for the map ----
-current_map <- reactiveVal()
-
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+########################## Map render and placeholder ##########################
 
 # Start by ploting/printing placeholders ----
 output$mainMap <- renderLeaflet({
   mdebug("Rendering Leaflet map")
-  current_map()})
+  m})
 
 output$tableATitle <- renderText({ "Select a map to start" })
-
-# Set the new rendered map
-observe({
-  mdebug("Setting new map")
-  current_map(speciesmap())
-}) %>%
-  bindEvent(speciesmap())

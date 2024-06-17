@@ -1,12 +1,21 @@
-# Extra info (maps)
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+###################### Extra information popup - maps ##########################
 
+# Observe draw on map
 observe({
   session$sendCustomMessage("showContext", "nothing")
 }) %>%
   bindEvent(input$mainMap_draw_new_feature)
 
+# Create list to hold information
 continfo_leaf <- reactiveValues()
 
+# Get information
 observe({
   
   coords <- lapply(input$mainMap_draw_new_feature$geometry$coordinates[[1]], function(x){
@@ -63,6 +72,7 @@ observe({
 }) %>%
   bindEvent(input$mainMap_draw_new_feature)
 
+# Output contextual info
 output$contextMap <- renderPlot({
   continfo_leaf$density
 }, height = 200, width = 200) %>%

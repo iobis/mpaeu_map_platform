@@ -1,4 +1,10 @@
-# Downloads
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+########################## Manage download requests ############################
 
 # Species report ----
 output$downloadSpeciesReport <- downloadHandler(

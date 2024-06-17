@@ -1,3 +1,11 @@
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+#################### Information loaded on server start ########################
+
 # Load needed packages ----
 library(leaflet)
 library(leafem)
@@ -37,7 +45,22 @@ m <- leaflet() %>%
     title = 'Print map',
     position = 'bottomleft',
     exportOnly = TRUE)) %>%
-  setView(lng = 0.35, lat = 65, zoom = 3)
+  setView(lng = 0.35, lat = 65, zoom = 3) %>%
+  addMapPane("left", zIndex = 0) %>%
+  addMapPane("right", zIndex = 0) %>%
+  addMapPane("maskPane", zIndex = 500)
+
+m$dependencies <- c(m$dependencies, leafpm::pmDependencies())
+
+m <- m %>%
+  htmlwidgets::onRender('
+                            LeafletWidget.methods.removeImage = function(layerId) {
+                              this.layerManager.removeLayer(null, layerId);
+                            }
+                            ')
 
 # Add title/text species
 speciesinfo <- read.csv("data/all_splist_20231017.csv")
+
+# Load study area
+starea <- sf::read_sf("data/studyarea.fgb")

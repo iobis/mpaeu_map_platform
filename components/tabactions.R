@@ -1,4 +1,10 @@
-# Tab control
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+############################ Tab control/actions ###############################
 
 # Set first tab
 active_tab <- reactiveValues()
@@ -9,19 +15,16 @@ observeEvent(input$jsValue, {
   mdebug("New tab active")
   # If there is a new value:
   if (active_tab$current != input$jsValue$id) {
-    # output$mainMap <- renderLeaflet({eval(parse(text = paste0("map_", 
-    #                                                          input$jsValue$id)))})
     
     # Update current status
     active_tab$current <- input$jsValue$id
     
     # Temporary workaround while other features will be added!
-    if (!active_tab$current %in% c("species", "thermal", "habitat")) {
+    if (!active_tab$current %in% c("species", "thermal")) {
       shinyalert::shinyalert("Feature not available", "For now only species distribution maps are available.", type = "info")
       active_tab$current <- "species"
       session$sendCustomMessage("backToTab", "nothing")
     }
-    #
   }
 })
 
@@ -33,8 +36,8 @@ bindEvent(observe({input_state$status <- 2}), input$speciesSelectThermal,
           once = TRUE, ignoreInit = TRUE)
 bindEvent(observe({input_state$status <- 3}), input$habitatSelect,
           once = TRUE, ignoreInit = TRUE)
-# bindEvent(observe({input_state$status <- 4}), input$speciesSelectThermal,
-#           once = TRUE, ignoreInit = TRUE)
+bindEvent(observe({input_state$status <- 4}), input$speciesSelectThermal,
+          once = TRUE, ignoreInit = TRUE)
 
 # Create a reactive for titles
 title_state <- reactiveValues()

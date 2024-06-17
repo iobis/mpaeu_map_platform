@@ -1,3 +1,11 @@
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+########################## Update selectize options ############################
+
 # Create species selectize ----
 available_species <- list.files("data/maps/")
 available_species_int <- list.files(paste0("data/maps/", available_species))
@@ -11,6 +19,7 @@ sp_options <- c("", available_species)
 updateSelectizeInput(session, "speciesSelect", choices = sp_options, server = TRUE)
 updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options, server = TRUE)
 
+# Change model options based on available models
 observe({
   mdebug("Changing options")
   spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]

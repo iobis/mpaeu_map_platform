@@ -1,17 +1,39 @@
-# Contextual info
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+##################### Add/update contextual information ########################
+
+# Create a reactive list for contextual info
 continfo <- reactiveValues()
 
+# Observe input changes
 observe({
   
+  if (active_tab$current == "species" & input$speciesSelect == "") {
+    continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
+  }
+  if (active_tab$current == "thermal" & input$speciesSelectThermal == "") {
+    continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
+  }
+  if (active_tab$current == "habitat" & input$habitatSelect == "") {
+    continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
+  }
+  if (active_tab$current == "diversity" & input$diversitySelect == "") {
+    continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
+  }
+  
+  # If active is species
   if (active_tab$current == "species") {
     req(!is.null(model_inuse$model))
-    spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
     
-    basepath <- paste0("data/maps/taxonid=", spkey, "/model=inteval/metrics/")
+    basepath <- paste0("data/maps/taxonid=", sp_info$spkey, "/model=inteval/metrics/")
     
     # Table 1
     metrics <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", spkey, "_model=inteval_method=", model_inuse$model,#input$modelSelect, 
+      paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval_method=", model_inuse$model,#input$modelSelect, 
              "_what=cvmetrics.parquet")
     )
     if (model_inuse$model == "ensemble") {
@@ -34,23 +56,16 @@ observe({
     
     # Table 2
     varimp <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", spkey, "_model=inteval_method=", model_inuse$model,#input$modelSelect,
+      paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval_method=", model_inuse$model,#input$modelSelect,
              "_what=varimportance.parquet")
     )
     continfo$tableB <- varimp
     
     # Graph
     response_curves <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", spkey, "_model=inteval_method=", model_inuse$model,#input$modelSelect,
+      paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval_method=", model_inuse$model,#input$modelSelect,
              "_what=respcurves.parquet")
     )
-    # response_curves <- response_curves %>%
-    #   group_by(variable) %>%
-    #   mutate(base = scale(base))
-    # pa <- ggplot(response_curves) +
-    #   geom_line(aes(x = base, y = response, color = variable)) +
-    #   theme_light() +
-    #   xlab("Value (scaled)") + ylab("Response")
     
     continfo$plotA <- gen_plotly_resp(response_curves)
     
@@ -83,23 +98,42 @@ observe({
     
   }
   
+  # If active tab is thermal
   if (active_tab$current == "thermal") {
     
-    spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelectThermal]
-    
+    req(sp_info$spkey_t)
     thermal_envelope <- jsonlite::read_json(
-      paste0("../mpaeu_sdm/results/taxonid=", spkey, "/model=inteval/metrics/taxonid=", spkey, "_model=inteval_what=thermmetrics.json"))
+      paste0("../mpaeu_sdm/results/taxonid=", sp_info$spkey_t, "/model=inteval/metrics/taxonid=",
+             sp_info$spkey_t, "_model=inteval_what=thermmetrics.json"))
     
+    # Table 1
     thermal_envelope$limits[[1]]$decade <- NA
     limits <- data.frame(do.call("rbind", thermal_envelope$limits))
     colnames(limits) <- c("Q5%", "Q50%", "Q95%", "Mean", "SD", "Scenario", "Decade")
     limits <- limits[,c(6,7,1:5)]
+    limits$Scenario <- dplyr::case_when(
+      limits$Scenario == "current" ~ "Current",
+      limits$Scenario == "ssp126" ~ "SSP1 (2.6)",
+      limits$Scenario == "ssp245" ~ "SSP2 (4.5)",
+      limits$Scenario == "ssp370" ~ "SSP3 (7.0)",
+      limits$Scenario == "ssp460" ~ "SSP4 (6.0)",
+      limits$Scenario == "ssp585" ~ "SSP5 (8.5)"
+    )
+    limits$Decade <- dplyr::case_when(
+      is.na(limits$Decade) ~ NA,
+      limits$Decade == "dec50" ~ 2050,
+      limits$Decade == "dec100" ~ 2100
+    )
     
+    # Table 2
     thermal_envelope$areas[[1]]$decade <- NA
     areas <- data.frame(do.call("rbind", thermal_envelope$areas))
     colnames(areas) <- c("Area (km²)", "Scenario", "Decade")
     areas <- areas[,c(2,3,1)]
+    areas$Scenario <- limits$Scenario
+    areas$Decade <- limits$Decade
     
+    # Graph
     sst <- rast(paste0("data/thetao_baseline_",thermal_envelope$sst_depth[[1]],"_mean_cog.tif"))
     sst_data <- terra::extract(sst, speciespts()[,1:2], ID = F)
     colnames(sst_data) <- "sst"
@@ -131,10 +165,13 @@ observe({
     continfo$tableA <- limits
     continfo$tableB <- areas
     continfo$plotA <- plotly::ggplotly(p)
+    
+    # Text
     continfo$text[[1]] <- "How this data is extracted?"
-    continfo$text[[2]] <- "Short explanation."
+    continfo$text[[2]] <- "Thermal ranges are extracted based on the occurrence data."
   }
   
 }) %>%
-  bindEvent(c(input$speciesSelect, input$modelSelect,
-              input$speciesSelectThermal), ignoreInit = TRUE)
+  bindEvent(input$speciesSelect, input$modelSelect,
+            input$speciesSelectThermal,
+            active_tab$current, ignoreInit = TRUE)

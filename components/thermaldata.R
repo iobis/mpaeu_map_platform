@@ -1,14 +1,19 @@
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+####################### Update map with thermal data ###########################
+
+
 # For thermal data, we have a shapefile. So, what we do is to just update the proxy map
 thermal_data <- reactive({
   mdebug("Changing thermal reactive")
   if (input$speciesSelectThermal != "" & active_tab$current == "thermal") {
-    scenario <- tolower(input$scenarioSelectThermal)
-    decade <- ifelse(is.null(input$periodSelectThermal), NULL,
-                     ifelse(input$periodSelectThermal == 2050, "dec50", "dec100"))
-    spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelectThermal]
-    
     thermal_envelope <- sfarrow::st_read_parquet(
-      paste0("../mpaeu_sdm/results/taxonid=", spkey, "/model=inteval/predictions/taxonid=", spkey, "_model=inteval_what=thermenvelope.parquet")
+      paste0("../mpaeu_sdm/results/taxonid=", sp_info$spkey_t, "/model=inteval/predictions/taxonid=",
+             sp_info$spkey_t, "_model=inteval_what=thermenvelope.parquet")
     )
     
     thermal_envelope_current <- thermal_envelope[1,]
@@ -17,7 +22,8 @@ thermal_data <- reactive({
       nams_thermal_envelope <- c("current", paste0(
         rep(c("ssp126", "ssp245", "ssp370", "ssp460", "ssp585"), each = 2), "_", rep(c("dec50", "dec100"), 5)
       ))
-      nams_thermal_envelope <- which(grepl(paste0(scenario, "_", decade), nams_thermal_envelope))
+      nams_thermal_envelope <- which(grepl(paste0(sp_info$scenario_t, "_", sp_info$decade_t), 
+                                           nams_thermal_envelope))
       thermal_envelope_future <- thermal_envelope[nams_thermal_envelope,]
     } else {
       thermal_envelope_future <- NULL
@@ -27,27 +33,32 @@ thermal_data <- reactive({
          future = thermal_envelope_future)
   } else {NULL}
   
-})
+}) %>%
+  bindEvent(sp_info$spkey_t, sp_info$scenario_t, sp_info$decade_t, active_tab$current, ignoreInit = T)
 
 observe({
   
   mdebug("Processing thermal update")
   proxy <- leafletProxy("mainMap")
   
-  proxy <- proxy %>% 
-    clearMarkers() %>%
-    clearShapes() %>%
-    leafem::addFeatures(thermal_data()$current, layerId = "Current", group = "Current") 
+  suppressWarnings({
+    proxy <- proxy %>% 
+      clearMarkers() %>%
+      clearShapes() %>%
+      leafem::addFeatures(thermal_data()$current, layerId = "Current", group = "Current")
+  }) 
   
   if (!is.null(thermal_data()$future)) {
-    proxy <- proxy %>% 
-      leafem::addFeatures(thermal_data()$future, color = "#ffcc00", layerId = "Future", group = "Future") %>%
-      addLayersControl(
-        overlayGroups = c("Points", "Current", "Future"),
-        baseGroups = c("Open Street Maps", "CartoDB", "CartoDB Dark"),
-        options = layersControlOptions(collapsed = T),
-        position = "bottomright"
-      )
+    suppressWarnings({
+      proxy <- proxy %>% 
+        leafem::addFeatures(thermal_data()$future, color = "#ffcc00", layerId = "Future", group = "Future") %>%
+        addLayersControl(
+          overlayGroups = c("Points", "Current", "Future"),
+          baseGroups = c("Open Street Maps", "CartoDB", "CartoDB Dark"),
+          options = layersControlOptions(collapsed = T),
+          position = "bottomright"
+        )
+    })
   }
   
   proxy %>%

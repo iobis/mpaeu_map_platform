@@ -1,4 +1,12 @@
-# Extra info (page)
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+######################### Extra information section ############################
+
+# Extra info (page) - SPECIES ----
 output$extraPlotA <- renderPlot({
   if (input$extraButton != 0 && input$extraButton %% 2 != 0) {
     bias <- readRDS("data/maps/taxonid=100803/model=inteval/metrics/taxonid=100803_model=inteval_what=biasmetrics.rds")

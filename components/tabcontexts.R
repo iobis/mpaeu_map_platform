@@ -1,8 +1,18 @@
-# Tab contexts
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+######################### Tab contextual information ###########################
+
+# Species ----
+# Species title
 output$selectedSpecies <- renderText({
   input$speciesSelect
 })
 
+# Context info
 output$contextSpecies <- renderText({
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelect,]
   if (input$speciesSelect != "") {
@@ -26,6 +36,14 @@ output$contextSpecies <- renderText({
   )
 })
 
+# Thermal ----
+# Species title
+output$selectedSpeciesThermal <- renderText({
+  input$speciesSelectThermal
+}) %>%
+  bindEvent(input$speciesSelectThermal, ignoreInit = T)
+
+# Context info
 output$contextSpeciesThermal <- renderText({
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelectThermal,]
   if (input$speciesSelectThermal != "") {

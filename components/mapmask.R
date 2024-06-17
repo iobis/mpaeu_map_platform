@@ -1,10 +1,31 @@
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+########################### Control mask over map ##############################
+
+# Create a reactive with mask state ----
 maskstate <- reactiveVal(TRUE)
+
+# Observe changes on tab ----
+observe({
+  mdebug("Changing mask state based on tab")
+  if (active_tab$current == "species") {
+    maskstate(TRUE)
+  } else {
+    maskstate(FALSE)
+  }
+}) %>% bindEvent(active_tab$current)
+
+# Observe changes via mask command (eye symbol) ----
 observe({
   mdebug("Mask JS")
   maskstate(!maskstate())
 }) %>% bindEvent(input$jsMask)
 
-# Turn mask on or off
+# Turn mask on or off based on mask state ----
 observe({
   req(input$speciesSelect)
   mdebug("Processing mask")
@@ -19,10 +40,8 @@ observe({
   } else {
     mdebug("Mask activated")
     proxy %>% 
-      addMapPane("maskPane", zIndex = 500) %>%
       addGeotiff(file = mask_layer,
                  opacity = 1,
-                 #resolution = 50,
                  layerId = "mapMask",
                  bands = 1,
                  options = pathOptions(pane = "maskPane"),
