@@ -103,7 +103,7 @@ observe({
     
     req(sp_info$spkey_t)
     thermal_envelope <- jsonlite::read_json(
-      paste0("../mpaeu_sdm/results/taxonid=", sp_info$spkey_t, "/model=inteval/metrics/taxonid=",
+      paste0("data/maps/taxonid=", sp_info$spkey_t, "/model=inteval/metrics/taxonid=",
              sp_info$spkey_t, "_model=inteval_what=thermmetrics.json"))
     
     # Table 1
