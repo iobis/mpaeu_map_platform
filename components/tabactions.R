@@ -19,9 +19,9 @@ observeEvent(input$jsValue, {
     # Update current status
     active_tab$current <- input$jsValue$id
     
-    # Temporary workaround while other features will be added!
+    #Temporary workaround while other features will be added!
     if (!active_tab$current %in% c("species", "thermal")) {
-      shinyalert::shinyalert("Feature not available", "For now only species distribution maps are available.", type = "info")
+      shinyalert::shinyalert("Feature not available", "For now only species distribution/thermal range maps are available.", type = "info")
       active_tab$current <- "species"
       session$sendCustomMessage("backToTab", "nothing")
     }
@@ -89,7 +89,7 @@ observe({
         title_state$current <- "habitat"
         title_state$to_print <- list(
           tableA = "Model metrics",
-          graph = "Histogram",
+          graph = "Thresholded map",
           tableB = "Habitat metrics",
           modelTitle = "Model explanation"
         )
@@ -104,9 +104,9 @@ observe({
         title_state$current <- "species"
         title_state$to_print <- list(
           tableA = "Model metrics",
-          graph = "Response curves",
+          graph = "Protected areas",
           tableB = "Variables importance",
-          modelTitle = "Model explanation"
+          modelTitle = "Metrics explanation"
         )
       } else {
         title_state$to_print <- base_list

@@ -58,3 +58,27 @@ output$contextSpeciesThermal <- renderText({
     <b>Number of records:</b> {nrec} <br>"
   )
 })
+
+# Habitat ----
+# Species title
+output$selectedHabitat <- renderText({
+  input$habitatSelect
+}) %>%
+  bindEvent(input$habitatSelect, ignoreInit = T)
+
+# Context info
+output$contextHabitat <- renderText({
+  "Habitat map"
+})
+
+# Diversity ----
+# Species title
+output$selectedMetric <- renderText({
+  input$diversitySelect
+}) %>%
+  bindEvent(input$diversitySelect, ignoreInit = T)
+
+# Context info
+output$contextMetric <- renderText({
+  "Diversity map"
+})

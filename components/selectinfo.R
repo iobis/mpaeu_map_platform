@@ -19,7 +19,10 @@ sp_info <- reactiveValues(species = "", # Species
                           # Habitat
                           habitat = "",
                           # Diversity
-                          metric = "")
+                          metric = "",
+                          scenario_d = "",
+                          decade_d = "",
+                          model_d = "")
 
 model_inuse <- reactiveValues(model = NULL)
 
@@ -80,9 +83,9 @@ observe({
   if (active_tab$current == "diversity") {
     # Update diversity metric and model information from input selections
     sp_info$metric <- input$diversitySelect
-    sp_info$model <- input$modelSelectDiversity
-    sp_info$scenario <- tolower(input$scenarioSelectDiversity)
-    sp_info$decade <- ifelse(is.null(input$periodSelectDiversity), NULL,
+    sp_info$model_d <- input$modelSelectDiversity
+    sp_info$scenario_d <- tolower(input$scenarioSelectDiversity)
+    sp_info$decade_d <- ifelse(is.null(input$periodSelectDiversity), NULL,
                              ifelse(input$periodSelectDiversity == 2050, "dec50", "dec100"))
   }
 })

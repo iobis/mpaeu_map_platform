@@ -151,4 +151,12 @@ observe({
                      editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE))
     }
   }
+  
+  # If the active tab is "diversity"
+  if (active_tab$current == "diversity") {
+    if (sp_info$metric == "") {
+      proxy %>%
+        leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
+    } # With data state handled by diversitydata.R
+  }
 })

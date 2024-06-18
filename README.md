@@ -22,3 +22,22 @@ Main folders:
 - *quarto_components*: Page sections.
 - *components*: Shiny server-side components.
 - *scripts*: R functions/scripts needed within components.
+
+Components explanation:
+
+- *serverstart.R*: Information loaded on server start  
+- *tabactions.R*: Tab control/actions  
+- *tabcontexts.R*: Tab contextual information  
+- *updateoptions.R*: Update selectize options  
+- *selectinfo.R*: Main information from input  
+- *contextualinfo.R*: Add/update contextual information  
+- *dataloaders.R*: Load accessory data  
+- *renders.R*: Contextual information renders  
+- *maprenders.R*: Map render and placeholder  
+- *mapreactive.R*: Main reactive for map change  
+- *mapmask.R*: Control mask over map  
+- *thermaldata.R*: Update map with thermal data  
+- *diversitydata.R*: Update map with diversity data  
+- *extrainfo.R*: Extra information section  
+- *extrainfomaps.R*: Extra information popup - maps  
+- *downloads.R*: Manage download requests  

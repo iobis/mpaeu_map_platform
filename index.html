@@ -973,9 +973,10 @@ a {
 <div class="form-group shiny-input-container">
 <label class="control-label" id="diversitySelect-label" for="diversitySelect">Select metric</label>
 <div>
-<select id="diversitySelect" class="shiny-input-select"><option value="Richness" selected="">Richness</option>
+<select id="diversitySelect" class="shiny-input-select"><option value="" selected="">Select a metric</option>
+<option value="Richness">Richness</option>
 <option value="E50">E50</option></select>
-<script type="application/json" data-for="diversitySelect" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
+<script type="application/json" data-for="diversitySelect">{"plugins":["selectize-plugin-a11y"]}</script>
 </div>
 </div>
 </div>
@@ -999,11 +1000,8 @@ a {
 <div class="form-group shiny-input-container">
 <label class="control-label" id="modelSelectDiversity-label" for="modelSelectDiversity">Model</label>
 <div>
-<select id="modelSelectDiversity" class="shiny-input-select"><option value="maxnet" selected="">MAXENT</option>
-<option value="rf_classification_ds">Random Forest</option>
-<option value="xgboost">XGBoost</option>
-<option value="glm">GLM</option>
-<option value="ensemble">Ensemble</option></select>
+<select id="modelSelectDiversity" class="shiny-input-select"><option value="Raw" selected="">Raw</option>
+<option value="Modeled">Modeled</option></select>
 <script type="application/json" data-for="modelSelectDiversity" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
 </div>
 </div>
@@ -1241,6 +1239,9 @@ source("components/mapmask.R", local = TRUE)
 
 ### Thermal data updater ----
 source("components/thermaldata.R", local = TRUE)
+
+### Diversity data updater ----
+source("components/diversitydata.R", local = TRUE)
   
 ### Contextual info ----
 source("components/contextualinfo.R", local = TRUE)

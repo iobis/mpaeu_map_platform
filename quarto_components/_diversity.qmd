@@ -3,7 +3,7 @@
 ```{r}
 # Load/set options ----
 # Load metrics options
-metrics_options <- c("Richness", "E50")
+metrics_options <- c("Select a metric" = "", "Richness", "E50")
 
 # Add selectors ----
 # Filter selector
@@ -38,7 +38,7 @@ tags$div(
 selectInput(
         inputId = "modelSelectDiversity",
         label = "Model",
-        choices = model_options
+        choices = c("Raw", "Modeled")
       ))
 ```
 :::
