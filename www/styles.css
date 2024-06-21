@@ -442,16 +442,3 @@ a {
     justify-content: center; /* Center the buttons horizontally */
     gap: 50px; /* Space between buttons */
 }
-
-.busy-open-div {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-    background-color: #1e6091;
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-}
