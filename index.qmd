@@ -47,6 +47,10 @@ shiny_busy <- function() {
 #| out-width: 100%
 # Create a div to show messages if busy
 shiny_busy()
+conditionalPanel("$('html').hasClass('shiny-busy') && !input.speciesSelect", 
+  htmltools::tags$div(
+      "Loading the app...",
+      class = "busy-open-div"))
 
 # Create a sample graph div with a close button
 graph_div <- htmltools::tags$div(
@@ -149,7 +153,6 @@ combined
 
 ```{r}
 #| context: server-start
-#| include: false
 
 # Settings ----
 debug = T # Set here to TRUE to see debugging messages

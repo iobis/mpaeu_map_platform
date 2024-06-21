@@ -513,6 +513,19 @@ a {
     display: flex;
     justify-content: center; /* Center the buttons horizontally */
     gap: 50px; /* Space between buttons */
+}
+
+.busy-open-div {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background-color: #1e6091;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
 }</style>
 </div>
 <div class="cell-output-display">
@@ -634,6 +647,11 @@ a {
 <div class="cell">
 <div class="cell-output-display">
 <div class="busyDiv" data-display-if="$('html').attr('class')=='shiny-busy'">Loading/processing data...<i class="fa fa-spinner fa-pulse fa-fw" style="color:#1a759f"></i></div>
+</div>
+<div class="cell-output-display">
+<div class="shiny-panel-conditional" data-display-if="$('html').hasClass('shiny-busy') &amp;&amp; !input.speciesSelect" data-ns-prefix="">
+<div class="busy-open-div">Loading the app...</div>
+</div>
 </div>
 <div class="cell-output-display">
 <div style="position: relative;">
