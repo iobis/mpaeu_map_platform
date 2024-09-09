@@ -1,10 +1,10 @@
-# Info renders
-
-# Thermal
-output$selectedSpeciesThermal <- renderText({
-  input$speciesSelectThermal
-}) %>%
-  bindEvent(input$speciesSelectThermal, ignoreInit = T)
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+###################### Contextual information renders ##########################
 
 # Print titles ----
 output$tableATitle <- renderText({title_state$to_print$tableA})
@@ -14,7 +14,6 @@ output$textTitle <- renderText({title_state$to_print$modelTitle})
 
 # Context info ----
 output$tableA <- DT::renderDT({
-  #continfo$tableA
   DT::datatable(continfo$tableA, options = list(paging =TRUE, pageLength = 5))
 }) %>%
   bindEvent(continfo$tableA)

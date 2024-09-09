@@ -1,12 +1,21 @@
-# Extra info (maps)
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+###################### Extra information popup - maps ##########################
 
+# Observe draw on map
 observe({
   session$sendCustomMessage("showContext", "nothing")
 }) %>%
   bindEvent(input$mainMap_draw_new_feature)
 
+# Create list to hold information
 continfo_leaf <- reactiveValues()
 
+# Get information
 observe({
   
   coords <- lapply(input$mainMap_draw_new_feature$geometry$coordinates[[1]], function(x){
@@ -22,14 +31,14 @@ observe({
   if (active_tab$current == "species") {
     mdebug(paste("Active tab for data extraction:", active_tab$current))
     
-    sp_info <- list(
-      species = input$speciesSelect,
-      model = input$modelSelect,
-      scenario = tolower(input$scenarioSelect),
-      decade = ifelse(is.null(input$periodSelect), NULL,
-                      ifelse(input$periodSelect == 2050, "dec50", "dec100")),
-      spkey = speciesinfo$key[speciesinfo$species == input$speciesSelect]
-    )
+    # sp_info <- list(
+    #   species = input$speciesSelect,
+    #   model = input$modelSelect,
+    #   scenario = tolower(input$scenarioSelect),
+    #   decade = ifelse(is.null(input$periodSelect), NULL,
+    #                   ifelse(input$periodSelect == 2050, "dec50", "dec100")),
+    #   spkey = speciesinfo$key[speciesinfo$species == input$speciesSelect]
+    # )
     
     vals <- terra::extract(terra::rast(files_inuse$file_a), vect_obj)
     vals <- vals[,2]
@@ -63,6 +72,7 @@ observe({
 }) %>%
   bindEvent(input$mainMap_draw_new_feature)
 
+# Output contextual info
 output$contextMap <- renderPlot({
   continfo_leaf$density
 }, height = 200, width = 200) %>%

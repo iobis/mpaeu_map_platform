@@ -1,4 +1,10 @@
-# Tab control
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+############################ Tab control/actions ###############################
 
 # Set first tab
 active_tab <- reactiveValues()
@@ -9,19 +15,16 @@ observeEvent(input$jsValue, {
   mdebug("New tab active")
   # If there is a new value:
   if (active_tab$current != input$jsValue$id) {
-    # output$mainMap <- renderLeaflet({eval(parse(text = paste0("map_", 
-    #                                                          input$jsValue$id)))})
     
     # Update current status
     active_tab$current <- input$jsValue$id
     
-    # Temporary workaround while other features will be added!
-    if (!active_tab$current %in% c("species", "thermal", "habitat")) {
-      shinyalert::shinyalert("Feature not available", "For now only species distribution maps are available.", type = "info")
+    #Temporary workaround while other features will be added!
+    if (!active_tab$current %in% c("species", "thermal", "habitat", "diversity")) {
+      shinyalert::shinyalert("Feature not available", "For now only species distribution/thermal range maps are available.", type = "info")
       active_tab$current <- "species"
       session$sendCustomMessage("backToTab", "nothing")
     }
-    #
   }
 })
 
@@ -33,8 +36,8 @@ bindEvent(observe({input_state$status <- 2}), input$speciesSelectThermal,
           once = TRUE, ignoreInit = TRUE)
 bindEvent(observe({input_state$status <- 3}), input$habitatSelect,
           once = TRUE, ignoreInit = TRUE)
-# bindEvent(observe({input_state$status <- 4}), input$speciesSelectThermal,
-#           once = TRUE, ignoreInit = TRUE)
+bindEvent(observe({input_state$status <- 4}), input$diversitySelect,
+          once = TRUE, ignoreInit = TRUE)
 
 # Create a reactive for titles
 title_state <- reactiveValues()
@@ -86,7 +89,7 @@ observe({
         title_state$current <- "habitat"
         title_state$to_print <- list(
           tableA = "Model metrics",
-          graph = "Histogram",
+          graph = "Thresholded map",
           tableB = "Habitat metrics",
           modelTitle = "Model explanation"
         )
@@ -97,13 +100,13 @@ observe({
     
     # Diversity condition
     if (active_tab$current == "diversity") {
-      if (input$speciesSelect != "") {
-        title_state$current <- "species"
+      if (input$diversitySelect != "") {
+        title_state$current <- "diversity"
         title_state$to_print <- list(
-          tableA = "Model metrics",
-          graph = "Response curves",
-          tableB = "Variables importance",
-          modelTitle = "Model explanation"
+          tableA = "Model details",
+          graph = "Protected areas",
+          tableB = "By group",
+          modelTitle = "Metric explanation"
         )
       } else {
         title_state$to_print <- base_list

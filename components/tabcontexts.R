@@ -1,12 +1,22 @@
-# Tab contexts
+########################### MPA Europe - Map platform ##########################
+########################## SDMs created by WP3 - OBIS ##########################
+# June of 2024
+# Authors: Silas Principe, Pieter Provoost
+# Contact: s.principe@unesco.org
+#
+######################### Tab contextual information ###########################
+
+# Species ----
+# Species title
 output$selectedSpecies <- renderText({
   input$speciesSelect
 })
 
+# Context info
 output$contextSpecies <- renderText({
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelect,]
   if (input$speciesSelect != "") {
-    spmodinfo <- jsonlite::read_json(glue::glue("data/maps/taxonid={selinf$key}/model=inteval/taxonid={selinf$key}_model=inteval_what=log.json"))
+    spmodinfo <- jsonlite::read_json(glue::glue("data/maps/taxonid={selinf$key}/model={selinf$acro}/taxonid={selinf$key}_model={selinf$acro}_what=log.json"))
   } else {
     spmodinfo <- NULL
   }
@@ -26,10 +36,18 @@ output$contextSpecies <- renderText({
   )
 })
 
+# Thermal ----
+# Species title
+output$selectedSpeciesThermal <- renderText({
+  input$speciesSelectThermal
+}) %>%
+  bindEvent(input$speciesSelectThermal, ignoreInit = T)
+
+# Context info
 output$contextSpeciesThermal <- renderText({
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelectThermal,]
   if (input$speciesSelectThermal != "") {
-    spmodinfo <- jsonlite::read_json(glue::glue("data/maps/taxonid={selinf$key}/model=inteval/taxonid={selinf$key}_model=inteval_what=log.json"))
+    spmodinfo <- jsonlite::read_json(glue::glue("data/maps/taxonid={selinf$key}/model={selinf$acro}/taxonid={selinf$key}_model={selinf$acro}_what=log.json"))
   } else {
     spmodinfo <- NULL
   }
@@ -39,4 +57,43 @@ output$contextSpeciesThermal <- renderText({
       <b>AphiaID:</b> <a style = 'text-decoration: none; color: #07A5F0;' target='_blank' href = 'https://www.marinespecies.org/aphia.php?p=taxdetails&id={selinf$key}'>{selinf$key}</a><br><br>
     <b>Number of records:</b> {nrec} <br>"
   )
+})
+
+# Habitat ----
+# Species title
+output$selectedHabitat <- renderText({
+  stringr::str_to_title(input$habitatSelect)
+}) %>%
+  bindEvent(input$habitatSelect, ignoreInit = T)
+
+# Context info
+output$contextHabitat <- renderText({
+  if (input$habitatSelect != "") {
+    context_file <- jsonlite::read_json("www/context_info.json")
+    HTML(
+      switch(input$habitatSelect,
+        seagrass = unlist(context_file$habitats[["seagrass"]]),
+        kelp = unlist(context_file$habitats[["kelp"]]),
+        colonialcorals = unlist(context_file$habitats[["colonialcorals"]]),
+        maerl = unlist(context_file$habitats[["maerl"]]),
+        bivalvebeds = unlist(context_file$habitats[["bivalvebeds"]])
+      )
+    )
+  }
+})
+
+# Diversity ----
+# Species title
+output$selectedMetric <- renderText({
+  stringr::str_to_title(input$diversitySelect)
+}) %>%
+  bindEvent(input$diversitySelect, ignoreInit = T)
+
+# Context info
+output$contextMetric <- renderText({
+  if (input$diversitySelect != "") {
+    switch(input$diversitySelect,
+        richness = "Number of species considering modelled (binary) SDMs or raw data."
+      )
+  }
 })

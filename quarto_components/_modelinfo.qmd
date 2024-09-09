@@ -1,4 +1,46 @@
+<!-- add toolbar here -->
+```{r}
+label_select_mask <- bslib::tooltip(span("Mask type:", bsicons::bs_icon("info-circle")),
+       "Predictions are made for the whole globe, even in areas where the species does not occur today. Masks highlight only areas close to the area of occurrence of the species. You can turn the mask on/off by clicking on the 'eye' icon on the map.",
+        placement = "bottom")
+
+label_select_bin <- bslib::tooltip(span("Filter:", bsicons::bs_icon("info-circle")),
+       "You can use a threshold to remove areas of the prediction. This is similar to converting a prediction to binary, except that in this case only the unsuitable part is removed, and the rest is kept on continuous mode. Available are P10 (10th percentile), MSS (maximum sensitivity plus specificity) and MTP (minimum training presence).",
+        placement = "bottom")
+
+label_switch_bootstrap <- bslib::tooltip(span("Show uncertainty", bsicons::bs_icon("info-circle")),
+       "Show uncertainty, as bootstrap CV, if available.",
+        placement = "bottom")
+
+label_switch_realms <- bslib::tooltip(span("Show realms", bsicons::bs_icon("info-circle")),
+       "Show Costello et al. 2017 realms.",
+        placement = "bottom")
+
+label_switch_eez <- bslib::tooltip(span("Show EEZs", bsicons::bs_icon("info-circle")),
+       "Show EEZs - Flanders Marine Institute (2020). The intersect of the Exclusive Economic Zones and IHO sea areas, version 4. Available online at https://www.marineregions.org/",
+        placement = "bottom")
+
+
+masks_options <- c("native_ecoregions", "fit_region", "convex_hull", "minbounding_circle", "buffer100m")
+names(masks_options) <- c("Native Realms", "Fit area", "Convex Hull", "Min. bounding circle", "Buffer 100m")
+
+conditionalPanel(
+  condition = "input.speciesSelect !== '' && (input.jsValue?.id ?? 'species') === 'species'",
+  tags$div(
+      shiny::selectInput("ecspMask", label_select_mask, masks_options, width = "360px"),
+      shiny::selectInput("ecspBin", label_select_bin, c(
+        "None" = "none", "P10" = "p10", "MSS" = "maxsss", "MTP" = "mtp"
+      ), width = "220px"),
+      bslib::input_switch("ecspBoot", label_switch_bootstrap, FALSE),
+      bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
+      bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),
+      #shiny::selectInput("ecspMask2", span("This is a test label", id = "test span"), "Choice1"), 
+      class = "ecsp-controls", width = "100%")
+)
+```
+
 <div class="body-section">
+
 ::: {.grid}
 
 <!-- Table 1 --->
@@ -63,7 +105,7 @@ conditionalPanel(
 ::: {.g-col-md-4 .g-col-12}
 ```{r}
 conditionalPanel(
-          condition = "input.extraButton != 0 && input.extraButton % 2 != 0",
+          condition = "input.extraButton != 0 && input.extraButton % 2 != 0 && (input.jsValue?.id ?? 'species') === 'species'",
           plotOutput("extraPlotA", height = "600px"),
           tags$div('The K-function is a tool that can be used to assess the dependence between locations at different distances. The L-function transform the K-function to a straight line and makes interpretation easier. Both tools can be used to assess the clustering of the points. To know more', tags$a(href = "https://www.paulamoraga.com/book-spatial/the-k-function.html#the-k-function", "read this article."))
         )
@@ -74,11 +116,24 @@ conditionalPanel(
 ::: {.g-col-md-8 .g-col-12}
 ```{r}
 conditionalPanel(
-          condition = "input.extraButton != 0 && input.extraButton % 2 != 0",
+          condition = "input.extraButton != 0 && input.extraButton % 2 != 0 && (input.jsValue?.id ?? 'species') === 'species'",
           plotOutput("extraPlotB", height = "600px"),
           tags$div('The SHAPE is a new method of estimating model extrapolation. The higher the value of the SHAPE statistic, the higher is the extrapolation at that particular area. To know more', tags$a(href="https://doi.org/10.1111/ecog.06992", "read this article."), 'MESS also enable to see the areas where the model is extrapolating when making predictions. Areas with values different than 0 depict extrapolation. The value shows how many variables are causing the extrapolation in that cell. To learn more about MESS', tags$a( href="https://doi.org/10.1111/j.2041-210X.2010.00036.x", "read this article."))
         )
 ```
 :::
 :::
+
+```{r}
+conditionalPanel(
+          condition = "input.extraButton != 0 && input.extraButton % 2 != 0 && (input.jsValue?.id ?? 'species') === 'species'",
+          tags$div(
+            tags$br(),
+            bslib::tooltip(tags$span("Model details", class = "body-title"),
+             "This section shows details about the model fitting, such as parameters used to train the models and number of occurrence points used. To understand what each value refers to, see the 'What are the properties' value in the explorer."),
+            tags$br(),
+            shiny::uiOutput("speciesJsonLog", width = "100%")
+          )
+        )
+```
 </div>

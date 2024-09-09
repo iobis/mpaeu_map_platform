@@ -79,18 +79,15 @@ document.addEventListener('DOMContentLoaded', function() {
       }
   };
   
-  // Flushed mask
-  //Shiny.addCustomMessageHandler('enableMask', enableMaskFun);
-  
-  //function enableMaskFun(message) {
-  //  Shiny.onInputChange("enableMaskJS", message)
-  //}
-  /*$(document).on('shiny:value', function(event) {
-    if(event.name == 'mainMap'){
-      var message = {id: event.name, nonce: Math.random()};
-      Shiny.onInputChange("enableMaskJS", message);
+  // Remove mask control when updating object
+  Shiny.addCustomMessageHandler('removeEye', removeEyeFun);
+  function removeEyeFun(message) {
+    var divToRemove = document.querySelector('.leaflet-bar.easy-button-container.leaflet-control');
+    if (divToRemove) {
+       // Remove the div from the DOM
+       divToRemove.remove();
     }
-  });*/
+  }
   
   //TEMPORARY!!!
   Shiny.addCustomMessageHandler('backToTab', backTotabtemp);

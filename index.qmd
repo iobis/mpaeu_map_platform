@@ -149,7 +149,6 @@ combined
 
 ```{r}
 #| context: server-start
-#| include: false
 
 # Settings ----
 debug = T # Set here to TRUE to see debugging messages
@@ -174,6 +173,9 @@ source("components/tabcontexts.R", local = TRUE)
 ### Options -----
 source("components/updateoptions.R", local = TRUE)
 
+### User input info ----
+source("components/selectinfo.R", local = TRUE)
+
 ### Load accessory data -----
 source("components/dataloaders.R", local = TRUE)
 
@@ -185,6 +187,9 @@ source("components/mapmask.R", local = TRUE)
 
 ### Thermal data updater ----
 source("components/thermaldata.R", local = TRUE)
+
+### Diversity data updater ----
+source("components/diversitydata.R", local = TRUE)
   
 ### Contextual info ----
 source("components/contextualinfo.R", local = TRUE)
