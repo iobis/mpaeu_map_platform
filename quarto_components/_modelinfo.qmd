@@ -105,7 +105,7 @@ conditionalPanel(
 ::: {.g-col-md-4 .g-col-12}
 ```{r}
 conditionalPanel(
-          condition = "input.extraButton != 0 && input.extraButton % 2 != 0",
+          condition = "input.extraButton != 0 && input.extraButton % 2 != 0 && (input.jsValue?.id ?? 'species') === 'species'",
           plotOutput("extraPlotA", height = "600px"),
           tags$div('The K-function is a tool that can be used to assess the dependence between locations at different distances. The L-function transform the K-function to a straight line and makes interpretation easier. Both tools can be used to assess the clustering of the points. To know more', tags$a(href = "https://www.paulamoraga.com/book-spatial/the-k-function.html#the-k-function", "read this article."))
         )
@@ -116,7 +116,7 @@ conditionalPanel(
 ::: {.g-col-md-8 .g-col-12}
 ```{r}
 conditionalPanel(
-          condition = "input.extraButton != 0 && input.extraButton % 2 != 0",
+          condition = "input.extraButton != 0 && input.extraButton % 2 != 0 && (input.jsValue?.id ?? 'species') === 'species'",
           plotOutput("extraPlotB", height = "600px"),
           tags$div('The SHAPE is a new method of estimating model extrapolation. The higher the value of the SHAPE statistic, the higher is the extrapolation at that particular area. To know more', tags$a(href="https://doi.org/10.1111/ecog.06992", "read this article."), 'MESS also enable to see the areas where the model is extrapolating when making predictions. Areas with values different than 0 depict extrapolation. The value shows how many variables are causing the extrapolation in that cell. To learn more about MESS', tags$a( href="https://doi.org/10.1111/j.2041-210X.2010.00036.x", "read this article."))
         )
@@ -126,7 +126,7 @@ conditionalPanel(
 
 ```{r}
 conditionalPanel(
-          condition = "input.extraButton != 0 && input.extraButton % 2 != 0",
+          condition = "input.extraButton != 0 && input.extraButton % 2 != 0 && (input.jsValue?.id ?? 'species') === 'species'",
           tags$div(
             tags$br(),
             bslib::tooltip(tags$span("Model details", class = "body-title"),

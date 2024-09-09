@@ -1319,7 +1319,7 @@ Download species report
 <div class="g-col-md-4 g-col-12">
 <div class="cell">
 <div class="cell-output-display">
-<div class="shiny-panel-conditional" data-display-if="input.extraButton != 0 &amp;&amp; input.extraButton % 2 != 0" data-ns-prefix="">
+<div class="shiny-panel-conditional" data-display-if="input.extraButton != 0 &amp;&amp; input.extraButton % 2 != 0 &amp;&amp; (input.jsValue?.id ?? 'species') === 'species'" data-ns-prefix="">
 <div class="shiny-plot-output html-fill-item" id="extraPlotA" style="width:100%;height:600px;"></div>
 <div>
 The K-function is a tool that can be used to assess the dependence between locations at different distances. The L-function transform the K-function to a straight line and makes interpretation easier. Both tools can be used to assess the clustering of the points. To know more
@@ -1333,7 +1333,7 @@ The K-function is a tool that can be used to assess the dependence between locat
 <div class="g-col-md-8 g-col-12">
 <div class="cell">
 <div class="cell-output-display">
-<div class="shiny-panel-conditional" data-display-if="input.extraButton != 0 &amp;&amp; input.extraButton % 2 != 0" data-ns-prefix="">
+<div class="shiny-panel-conditional" data-display-if="input.extraButton != 0 &amp;&amp; input.extraButton % 2 != 0 &amp;&amp; (input.jsValue?.id ?? 'species') === 'species'" data-ns-prefix="">
 <div class="shiny-plot-output html-fill-item" id="extraPlotB" style="width:100%;height:600px;"></div>
 <div>
 The SHAPE is a new method of estimating model extrapolation. The higher the value of the SHAPE statistic, the higher is the extrapolation at that particular area. To know more
@@ -1348,7 +1348,7 @@ MESS also enable to see the areas where the model is extrapolating when making p
 </div>
 <div class="cell">
 <div class="cell-output-display no-overflow-x">
-<div class="shiny-panel-conditional" data-display-if="input.extraButton != 0 &amp;&amp; input.extraButton % 2 != 0" data-ns-prefix="">
+<div class="shiny-panel-conditional" data-display-if="input.extraButton != 0 &amp;&amp; input.extraButton % 2 != 0 &amp;&amp; (input.jsValue?.id ?? 'species') === 'species'" data-ns-prefix="">
 <div>
 <br>
 <bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
