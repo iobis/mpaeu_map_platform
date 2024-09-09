@@ -65,3 +65,18 @@ observe({
   updateSelectInput(session, "speciesSelect", choices = sp_options_upd, selected = sp_options_upd[2])
   
 }) %>% bindEvent(input$groupSelect, ignoreInit = T, ignoreNULL = TRUE)
+
+observe({
+  mdebug("Changing thermal species options")
+  
+  sp_options_upd <- switch(input$groupSelectThermal,
+    all = sp_options,
+    others = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "others"])],
+    seabirds = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "seabirds"])],
+    mammals = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "mammals"])],
+    photosynthesizers = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "photosynthesizers"])]
+  )
+  
+  updateSelectInput(session, "speciesSelectThermal", choices = sp_options_upd, selected = sp_options_upd[2])
+  
+}) %>% bindEvent(input$groupSelectThermal, ignoreInit = T, ignoreNULL = TRUE)

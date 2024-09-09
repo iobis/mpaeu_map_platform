@@ -204,7 +204,7 @@ observe({
     
     # Text
     continfo$text[[1]] <- "How this data is extracted?"
-    continfo$text[[2]] <- "Thermal ranges are extracted based on the occurrence data."
+    continfo$text[[2]] <- "Thermal ranges are extracted based on the occurrence data and SST data from Bio-ORACLE v3.0 (https://www.bio-oracle.org/). For each occurrence record we extract the temperature and then calculates a kernel density. This follow the method developed on the 'speedy' package (https://github.com/iobis/speedy)."
   }
   
 }) %>%
