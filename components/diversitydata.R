@@ -15,12 +15,13 @@ diversity_f_data <- reactive({
   mdebug("Loading diversity data")
   if (input$diversitySelect != "" & active_tab$current == "diversity") {
     
-    raw_diversity <- sfarrow::st_read_parquet(
-      paste0("../mpaeu_sdm/results/taxonid=", sp_info$spkey_t, "/model=inteval/predictions/taxonid=",
-             sp_info$spkey_t, "_model=inteval_what=thermenvelope.parquet")
-    )
+    # raw_diversity <- sfarrow::st_read_parquet(
+    #   paste0("../mpaeu_sdm/results/taxonid=", sp_info$spkey_t, "/model=inteval/predictions/taxonid=",
+    #          sp_info$spkey_t, "_model=inteval_what=thermenvelope.parquet")
+    # )
     
-    modeled_diversity <- list.files("data/diversity", pattern = "\\.tif")
+    # modeled_diversity <- list.files("data/diversity", pattern = "\\.tif")
+    modeled_diversity <- raw_diversity <- "data/maps/taxonid=1245747/model=mpaeu/predictions/taxonid=1245747_model=mpaeu_method=ensemble_scen=current_cog.tif"
     
     list(raw = raw_diversity,
          modeled = modeled_diversity)

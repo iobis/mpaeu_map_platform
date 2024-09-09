@@ -62,23 +62,38 @@ output$contextSpeciesThermal <- renderText({
 # Habitat ----
 # Species title
 output$selectedHabitat <- renderText({
-  input$habitatSelect
+  stringr::str_to_title(input$habitatSelect)
 }) %>%
   bindEvent(input$habitatSelect, ignoreInit = T)
 
 # Context info
 output$contextHabitat <- renderText({
-  "Habitat map"
+  if (input$habitatSelect != "") {
+    context_file <- jsonlite::read_json("www/context_info.json")
+    HTML(
+      switch(input$habitatSelect,
+        seagrass = unlist(context_file$habitats[["seagrass"]]),
+        kelp = unlist(context_file$habitats[["kelp"]]),
+        colonialcorals = unlist(context_file$habitats[["colonialcorals"]]),
+        maerl = unlist(context_file$habitats[["maerl"]]),
+        bivalvebeds = unlist(context_file$habitats[["bivalvebeds"]])
+      )
+    )
+  }
 })
 
 # Diversity ----
 # Species title
 output$selectedMetric <- renderText({
-  input$diversitySelect
+  stringr::str_to_title(input$diversitySelect)
 }) %>%
   bindEvent(input$diversitySelect, ignoreInit = T)
 
 # Context info
 output$contextMetric <- renderText({
-  "Diversity map"
+  if (input$diversitySelect != "") {
+    switch(input$diversitySelect,
+        richness = "Number of species considering modelled (binary) SDMs or raw data."
+      )
+  }
 })

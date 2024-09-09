@@ -125,6 +125,14 @@ a#tabset-1-4-tab {
     border-radius: 0.2em;
 }
 
+.form-group.shiny-input-container {
+  margin-bottom: 5px;
+}
+
+.form-label, .shiny-input-container .control-label {
+  margin-bottom: .01rem;
+}
+
 
 /* Others */
 .tabdiv {

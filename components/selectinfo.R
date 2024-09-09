@@ -20,6 +20,7 @@ sp_info <- reactiveValues(species = "", # Species
                           acro_t = "",
                           # Habitat
                           habitat = "",
+                          acro_h = "mpaeu",
                           # Diversity
                           metric = "",
                           scenario_d = "",

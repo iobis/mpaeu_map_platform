@@ -182,9 +182,9 @@ observe({
         leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
     } else {
       # Select the habitat file based on the scenario and decade
-      sel_habitat <- paste0("data/habitats/habitat=", tolower(sp_info$habitat), "_model=mpaeu_scen=",
+      sel_habitat <- paste0("data/habitats/habitat=", tolower(sp_info$habitat), "_model=", sp_info$acro_h, "_scen=",
                             ifelse(sp_info$scenario == "current", "current", paste0(sp_info$scenario, "_", sp_info$decade)), "_cog.tif")
-      
+      print(sel_habitat)
       # Disable the mask state
       maskstate(FALSE)
       

@@ -206,8 +206,52 @@ observe({
     continfo$text[[1]] <- "How this data is extracted?"
     continfo$text[[2]] <- "Thermal ranges are extracted based on the occurrence data and SST data from Bio-ORACLE v3.0 (https://www.bio-oracle.org/). For each occurrence record we extract the temperature and then calculates a kernel density. This follow the method developed on the 'speedy' package (https://github.com/iobis/speedy)."
   }
+
+  # If active tab is habitat
+  if (active_tab$current == "habitat") {
+    
+    req(sp_info$habitat)
+    
+    # Table 1
+    
+    
+    # Table 2
+    
+    
+    # Graph
+    
+    # continfo$tableA <- limits
+    # continfo$tableB <- areas
+    # continfo$plotA <- plotly::ggplotly(p)
+    
+    # Text
+    continfo$text[[1]] <- "What is a biogenic habitat?"
+    continfo$text[[2]] <- "More details soon."
+  }
+
+   # If active tab is diversity
+  if (active_tab$current == "diversity") {
+    
+    req(sp_info$metric)
+    
+    # Table 1
+    
+    
+    # Table 2
+    
+    
+    # Graph
+    
+    # continfo$tableA <- limits
+    # continfo$tableB <- areas
+    # continfo$plotA <- plotly::ggplotly(p)
+    
+    # Text
+    continfo$text[[1]] <- paste("What is", sp_info$metric)
+    continfo$text[[2]] <- "More details soon."
+  }
   
 }) %>%
   bindEvent(input$speciesSelect, input$modelSelect,
-            input$speciesSelectThermal,
+            input$speciesSelectThermal, sp_info$metric, sp_info$habitat,
             active_tab$current, ignoreInit = TRUE)

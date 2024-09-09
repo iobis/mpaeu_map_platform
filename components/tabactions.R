@@ -20,7 +20,7 @@ observeEvent(input$jsValue, {
     active_tab$current <- input$jsValue$id
     
     #Temporary workaround while other features will be added!
-    if (!active_tab$current %in% c("species", "thermal")) {
+    if (!active_tab$current %in% c("species", "thermal", "habitat", "diversity")) {
       shinyalert::shinyalert("Feature not available", "For now only species distribution/thermal range maps are available.", type = "info")
       active_tab$current <- "species"
       session$sendCustomMessage("backToTab", "nothing")
@@ -36,7 +36,7 @@ bindEvent(observe({input_state$status <- 2}), input$speciesSelectThermal,
           once = TRUE, ignoreInit = TRUE)
 bindEvent(observe({input_state$status <- 3}), input$habitatSelect,
           once = TRUE, ignoreInit = TRUE)
-bindEvent(observe({input_state$status <- 4}), input$speciesSelectThermal,
+bindEvent(observe({input_state$status <- 4}), input$diversitySelect,
           once = TRUE, ignoreInit = TRUE)
 
 # Create a reactive for titles
@@ -100,13 +100,13 @@ observe({
     
     # Diversity condition
     if (active_tab$current == "diversity") {
-      if (input$speciesSelect != "") {
-        title_state$current <- "species"
+      if (input$diversitySelect != "") {
+        title_state$current <- "diversity"
         title_state$to_print <- list(
-          tableA = "Model metrics",
+          tableA = "Model details",
           graph = "Protected areas",
-          tableB = "Variables importance",
-          modelTitle = "Metrics explanation"
+          tableB = "By group",
+          modelTitle = "Metric explanation"
         )
       } else {
         title_state$to_print <- base_list

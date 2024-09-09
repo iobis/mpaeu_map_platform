@@ -3,16 +3,11 @@
 ```{r}
 # Load/set options ----
 # Load habitat options
-hab_options <- c("Select a habitat" = "", "Test" = "test")
+hab_options <- c("Select a habitat" = "",
+ "Seagrass" = "seagrass", "Kelp" = "kelp", "Colonial corals" = "colonialcorals",
+ "Maerl" = "maerl", "Bivalve beds" = "bivalvebeds")
 
 # Add selectors ----
-# Group selector
-selectInput(
-   inputId = "groupSelectHabitat",
-   label = "Select group", 
-   choices = c("All")
-)
-
 # Filter selector
 selectInput(
    inputId = "habitatSelect",
@@ -20,18 +15,29 @@ selectInput(
    choices = hab_options
 )
 
+selectInput(
+   inputId = "habitatBin",
+   label = "Binary mode", 
+   choices = c("P10" = "p10", "MSS" = "maxsss", "MTP" = "mtp")
+)
+
+label_switch_eunis <- bslib::tooltip(span("Show EUNIS biogenic substrate", bsicons::bs_icon("info-circle")),
+       "Show EUNIS biogenic substrate according to EMODNET Seabed Habitats product (https://emodnet.ec.europa.eu/en/seabed-habitats).",
+        placement = "bottom")
+span(bslib::input_switch("habitatEUNIS", label_switch_eunis, FALSE), style = "display: flex; margin-top: 25px; margin-bottom: 5px; margin-left: 5px;")
 
 # Add contextual information ----
 tags$div(
   id = "habitat_title",
   class = "rtitle_class",
-  textOutput("selectedHabitat")
+  textOutput("selectedHabitat"),
+  style = "font-style: normal !important;"
 )
 
 tags$div(
   id = "context_info_hab",
   class = "context_info",
-  textOutput("contextHabitat")
+  uiOutput("contextHabitat")
 )
 ```
 

@@ -3,7 +3,7 @@
 ```{r}
 # Load/set options ----
 # Load metrics options
-metrics_options <- c("Select a metric" = "", "Richness", "E50")
+metrics_options <- c("Select a metric" = "", "Richness" = "richness")
 
 # Add selectors ----
 # Filter selector
@@ -17,7 +17,8 @@ selectInput(
 tags$div(
   id = "diversity_title",
   class = "rtitle_class",
-  textOutput("selectedMetric")
+  textOutput("selectedMetric"),
+  style = "font-style: normal !important;"
 )
 
 tags$div(
