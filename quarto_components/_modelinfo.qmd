@@ -4,6 +4,10 @@ label_select_mask <- bslib::tooltip(span("Mask type:", bsicons::bs_icon("info-ci
        "Predictions are made for the whole globe, even in areas where the species does not occur today. Masks highlight only areas close to the area of occurrence of the species. You can turn the mask on/off by clicking on the 'eye' icon on the map.",
         placement = "bottom")
 
+label_select_bin <- bslib::tooltip(span("Filter:", bsicons::bs_icon("info-circle")),
+       "You can use a threshold to remove areas of the prediction. This is similar to converting a prediction to binary, except that in this case only the unsuitable part is removed, and the rest is kept on continuous mode. Available are P10 (10th percentile), MSS (maximum sensitivity plus specificity) and MTP (minimum training presence).",
+        placement = "bottom")
+
 label_switch_bootstrap <- bslib::tooltip(span("Show uncertainty", bsicons::bs_icon("info-circle")),
        "Show uncertainty, as bootstrap CV, if available.",
         placement = "bottom")
@@ -23,7 +27,10 @@ names(masks_options) <- c("Native Realms", "Fit area", "Convex Hull", "Min. boun
 conditionalPanel(
   condition = "input.speciesSelect !== '' && (input.jsValue?.id ?? 'species') === 'species'",
   tags$div(
-      shiny::selectInput("ecspMask", label_select_mask, masks_options, width = "300px"),
+      shiny::selectInput("ecspMask", label_select_mask, masks_options, width = "360px"),
+      shiny::selectInput("ecspBin", label_select_bin, c(
+        "None" = "none", "P10" = "p10", "MSS" = "maxsss", "MTP" = "mtp"
+      ), width = "220px"),
       bslib::input_switch("ecspBoot", label_switch_bootstrap, FALSE),
       bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
       bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),

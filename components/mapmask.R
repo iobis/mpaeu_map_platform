@@ -32,6 +32,9 @@ observe({
   proxy <- leafletProxy("mainMap")
   spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
   mask_layer <- paste0("data/maps/taxonid=", spkey, "/model=", sp_info$acro, "/predictions/taxonid=", spkey, "_model=", sp_info$acro, "_mask_cog.tif")
+  avmasks <- c("native_ecoregions", "fit_ecoregions", "fit_region", "convex_hull", "minbounding_circle", "buffer100m")
+  sel_mask <- input$ecspMask
+  which_band <- match(sel_mask, avmasks)
   
   if (!maskstate()) {
     mdebug("Mask deactivated")
@@ -43,7 +46,7 @@ observe({
       addGeotiff(file = mask_layer,
                  opacity = 1,
                  layerId = "mapMask",
-                 bands = 1,
+                 bands = which_band,
                  options = pathOptions(pane = "maskPane"),
                  colorOptions = colorOptions(
                    palette = c("#aad3df", "#0a626500"),
@@ -55,4 +58,33 @@ observe({
   }
   
 }) %>%
-  bindEvent(maskstate(), input$speciesSelect, input$scenarioSelect, input$modelSelect, input$periodSelect, input$sideSelect)
+  bindEvent(maskstate(), input$ecspMask, input$speciesSelect, input$scenarioSelect, input$modelSelect, input$periodSelect, input$sideSelect)
+
+
+observe({
+  mdebug("Processing realms")
+  proxy <- leafletProxy("mainMap")
+  
+  if (input$ecspRealms) {
+    proxy %>% leaflet::addPolygons(data = realms, color = "#454545", opacity = 0.3,
+      popup = ~as.character(Realm), fillColor = ~colorQuantile("YlOrRd", Realm)(Realm),
+      fillOpacity = 0.05, weight = 2, layerId = paste0("realmsShape", 1:nrow(realms)), options = pathOptions(pane = "extraPane"))
+  } else {
+    proxy %>% leaflet::removeShape(layerId = paste0("realmsShape", 1:nrow(realms)))
+  }
+  
+})
+
+observe({
+  mdebug("Processing EEZ")
+  proxy <- leafletProxy("mainMap")
+  
+  if (input$ecspEEZ) {
+    proxy %>% leaflet::addPolygons(data = eez, color = "#454545", opacity = 0.3,
+      popup = ~EEZ, fillColor = "#0d7edb",
+      fillOpacity = 0.05, weight = 2, layerId = paste0("eezShape", 1:nrow(eez)), options = pathOptions(pane = "extraPane"))
+  } else {
+    proxy %>% leaflet::removeShape(layerId = paste0("eezShape", 1:nrow(eez)))
+  }
+  
+})

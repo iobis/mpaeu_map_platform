@@ -21,6 +21,7 @@ observe({
     clearMarkers() %>%
     clearShapes() %>%
     clearImages() %>%
+    removeControl("legend") %>%
     removeImage(layerId = "mapLayer1") %>%
     removeImage(layerId = "mapLayer2") %>%
     leafpm::removePmToolbar() %>%
@@ -38,17 +39,62 @@ observe({
     mdebug(paste("In use species", sp_info$species, sp_info$model, sp_info$scenario, collapse = ","))
     mdebug(paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif"))
     
+     # Get threshold
+    if (length(sp_info$spkey) > 0 && sp_info$spkey != "") {
+      thresholds <- arrow::read_parquet(paste0(
+        "data/maps/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/metrics/taxonid=", 
+        sp_info$spkey, "_model=", sp_info$acro, "_what=thresholds.parquet"
+     ))
+      thresholds <- thresholds[grepl(substr(sp_info$model, 1, 2), thresholds$model),]
+      min_range <- switch(input$ecspBin,
+        none = 0,
+        p10 = round(as.numeric(thresholds$p10) * 100),
+        maxsss = round(as.numeric(thresholds$max_spec_sens) * 100),
+        mtp = round(as.numeric(thresholds$mtp) * 100)
+      )
+    }
+    
+    check_boot <- function() {
+      nounc_mod <- shiny::modalDialog("Uncertainty not available for this species/model",
+             title = NULL, footer = modalButton("Dismiss"), size = "s", easyClose = TRUE, fade = TRUE)
+      if (input$ecspBoot) {
+            bslib::update_switch("ecspBoot", value = FALSE)
+            shiny::showModal(nounc_mod)
+      }
+      return(invisible(NULL))
+    }
+
     # Determine which files to use based on the scenario and side selection
     side_select <- input$sideSelect
     if (sp_info$scenario == "current") {
-      file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_cog.tif")
+      uncert_file <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_what=boot_cog.tif")
+      if (input$ecspBoot && file.exists(uncert_file)) {
+        file_a <- uncert_file
+      } else {
+        file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_cog.tif")
+        check_boot()
+      }
       file_b <- NULL
     } else {
       if (side_select) {
-        file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_cog.tif")
-        file_b <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
+        uncert_file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_what=boot_cog.tif")
+        uncert_file_b <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_what=boot_cog.tif")
+        if (input$ecspBoot && file.exists(uncert_file_a) && file.exists(uncert_file_b)) {
+          file_a <- uncert_file_a
+          file_b <- uncert_file_b
+        } else {
+          file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_cog.tif")
+          file_b <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
+          check_boot()
+        }
       } else {
-        file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
+        uncert_file <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_what=boot_cog.tif")
+        if (input$ecspBoot && file.exists(uncert_file)) {
+          file_a <- uncert_file
+        } else {
+          file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
+           check_boot()
+        }
         file_b <- NULL
       }
     }
@@ -91,12 +137,12 @@ observe({
           addTiles(group = "Open Street", layerId = "leftbaseid", options = pathOptions(pane = "left")) %>%
           addGeotiff(file = file_a, layerId = "mapLayer1", opacity = 1,
                      colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                                                 domain = c(0, 100), na.color = NA),
+                                                 domain = c(min_range, 100), na.color = NA),
                      options = pathOptions(pane = "left"), autozoom = F) %>%
           addTiles(group = "Open Street B", layerId = "rightbaseid", options = pathOptions(pane = "right")) %>%
           addGeotiff(file = file_b, opacity = 1, layerId = "mapLayer2",
                      colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                                                 domain = c(0, 100), na.color = NA),
+                                                 domain = c(min_range, 100), na.color = NA),
                      options = pathOptions(pane = "right"), autozoom = F) %>%
           addSidebyside(layerId = "sidecontrols", rightId = "rightbaseid", leftId = "leftbaseid")
       } else {
@@ -104,7 +150,12 @@ observe({
         proxy %>%
           addGeotiff(file = file_a, opacity = 1, layerId = "mapLayer1",
                      colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                                                 domain = c(0, 100), na.color = NA), autozoom = F) %>%
+                                                 domain = c(min_range, 100), na.color = NA), autozoom = F) %>%
+          leaflegend::addLegendNumeric(pal = colorNumeric(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
+                                                 domain = c(0, 100), na.color = NA),
+                  values = c(0, 100), title = 'ROR', layerId = "legend",
+                   orientation = 'horizontal', fillOpacity = .7, width = 75,
+                   height = 15, position = 'topright', labels = c("Low", "High")) %>%
           addPmToolbar(toolbarOptions = pmToolbarOptions(drawMarker = FALSE,
                                                          drawPolyline = FALSE,
                                                          drawCircle = FALSE,

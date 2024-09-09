@@ -496,6 +496,20 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
   margin-left: -5px;
 } 
 
+.ecsp-controls .selectize-control.single .selectize-input:not(.no-arrow):after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  margin-top: -3px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px 5px 0 5px;
+  border-color: #333 transparent transparent transparent;
+}
+
 @media (max-width: 830px) {
   .ecsp-controls {
     display: block !important;
@@ -509,4 +523,8 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
   .ecsp-controls .form-switch .form-check-input {
     margin-left: -10px;
   } 
+
+  .ecsp-controls .form-group.shiny-input-container {
+    width: 300px !important;
+  }
 }

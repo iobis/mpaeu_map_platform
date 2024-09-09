@@ -49,3 +49,19 @@ observe({
   names(available_models) <- names_options
   updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
 }) %>% bindEvent(input$speciesSelect, ignoreInit = T)
+
+# Change species according to group
+observe({
+  mdebug("Changing species options")
+  
+  sp_options_upd <- switch(input$groupSelect,
+    all = sp_options,
+    others = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "others"])],
+    seabirds = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "seabirds"])],
+    mammals = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "mammals"])],
+    photosynthesizers = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "photosynthesizers"])]
+  )
+  
+  updateSelectInput(session, "speciesSelect", choices = sp_options_upd, selected = sp_options_upd[2])
+  
+}) %>% bindEvent(input$groupSelect, ignoreInit = T, ignoreNULL = TRUE)

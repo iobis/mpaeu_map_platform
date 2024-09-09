@@ -48,7 +48,8 @@ m <- leaflet() %>%
   setView(lng = 0.35, lat = 65, zoom = 3) %>%
   addMapPane("left", zIndex = 0) %>%
   addMapPane("right", zIndex = 0) %>%
-  addMapPane("maskPane", zIndex = 500)
+  addMapPane("maskPane", zIndex = 500) %>%
+  addMapPane("extraPane", zIndex = 600)
 
 m$dependencies <- c(m$dependencies, leafpm::pmDependencies())
 
@@ -63,6 +64,10 @@ m <- m %>%
 speciesinfo <- read.csv("data/all_splist_20240724.csv")
 speciesinfo$key <- speciesinfo$taxonID
 speciesinfo$species <- speciesinfo$scientificName
+
+speciesinfo <- obissdm::get_listbygroup(speciesinfo, conf_file = "data/sdm_conf.yml")
+available_groups <- c("all", unique(speciesinfo$sdm_group))
+names(available_groups) <- stringr::str_to_title(available_groups)
 
 # Verify most recent acronym
 build_json <- jsonlite::read_json("data/platform_build.json")

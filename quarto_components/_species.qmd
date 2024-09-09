@@ -2,8 +2,6 @@
 
 ```{r}
 # Load/set options ----
-# Load group options
-group_options <- c("All", "Others")
 
 # Set model option
 model_options <- c(#"BRT" = "brt", 
@@ -17,6 +15,10 @@ period_options <- c(2050, 2100)
 
 # Add selectors ----
 # Group selector
+avg <- yaml::read_yaml("data/sdm_conf.yml", readLines.warn = F)
+avg <- names(avg$groups)
+group_options <- c("all", avg)
+names(group_options) <- stringr::str_to_title(group_options)
 selectInput(
    inputId = "groupSelect",
    label = "Select group", 
