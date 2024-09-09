@@ -7,8 +7,8 @@ group_options <- c("All", "Others")
 
 # Set model option
 model_options <- c(#"BRT" = "brt", 
-                  "MAXENT" = "maxnet", "Random Forest" = "rf_classification_ds", 
-                  "XGBoost" = "xgboost", "GLM" = "glm",
+                  "MAXENT" = "maxent", "Random Forest" = "rf_classification_ds", 
+                  "XGBoost" = "xgboost", #"GLM" = "glm",
                   #  "Elasticnet" = "elasticnet", 
                   "Ensemble" = "ensemble")
 scenario_options <- c("Current", "SSP1" = "ssp126", "SSP2" = "ssp245",

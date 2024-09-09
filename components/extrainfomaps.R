@@ -31,14 +31,14 @@ observe({
   if (active_tab$current == "species") {
     mdebug(paste("Active tab for data extraction:", active_tab$current))
     
-    sp_info <- list(
-      species = input$speciesSelect,
-      model = input$modelSelect,
-      scenario = tolower(input$scenarioSelect),
-      decade = ifelse(is.null(input$periodSelect), NULL,
-                      ifelse(input$periodSelect == 2050, "dec50", "dec100")),
-      spkey = speciesinfo$key[speciesinfo$species == input$speciesSelect]
-    )
+    # sp_info <- list(
+    #   species = input$speciesSelect,
+    #   model = input$modelSelect,
+    #   scenario = tolower(input$scenarioSelect),
+    #   decade = ifelse(is.null(input$periodSelect), NULL,
+    #                   ifelse(input$periodSelect == 2050, "dec50", "dec100")),
+    #   spkey = speciesinfo$key[speciesinfo$species == input$speciesSelect]
+    # )
     
     vals <- terra::extract(terra::rast(files_inuse$file_a), vect_obj)
     vals <- vals[,2]

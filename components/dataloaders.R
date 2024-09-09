@@ -15,7 +15,8 @@ speciespts <- reactive({
     sel_species <- input$speciesSelectThermal
   }
   spkey <- speciesinfo$key[speciesinfo$species == sel_species]
-  pts <- arrow::read_parquet(paste0("data/maps/taxonid=", spkey, "/model=inteval/taxonid=", spkey, "_model=inteval_what=fitocc.parquet"))[,1:2]
+  sel_acro <- speciesinfo$acro[speciesinfo$species == sel_species]
+  pts <- arrow::read_parquet(paste0("data/maps/taxonid=", spkey, "/model=", sel_acro, "/taxonid=", spkey, "_model=", sel_acro, "_what=fitocc.parquet"))[,1:2]
   colnames(pts) <- c("longitude", "latitude")
   pts
 })

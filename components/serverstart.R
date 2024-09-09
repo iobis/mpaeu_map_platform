@@ -60,7 +60,28 @@ m <- m %>%
                             ')
 
 # Add title/text species
-speciesinfo <- read.csv("data/all_splist_20231017.csv")
+speciesinfo <- read.csv("data/all_splist_20240724.csv")
+speciesinfo$key <- speciesinfo$taxonID
+speciesinfo$species <- speciesinfo$scientificName
+
+# Verify most recent acronym
+build_json <- jsonlite::read_json("data/platform_build.json")
+if (length(unlist(build_json$acronyms_available)) > 1) {
+  av_keys <- gsub("taxonid=", "", list.files("data/maps"))
+  recent_acro <- lapply(av_keys, function(x){
+    re <- suppressMessages(obissdm::recent_file(paste0("data/maps/taxonid=", x, "/"), "*"))
+    ifelse(is.null(re), "NA", basename(re))
+  })
+  recent_acro <- unlist(recent_acro)
+  acros_df <- data.frame(key = as.numeric(av_keys), acro = gsub("model=", "", recent_acro))
+  speciesinfo <- dplyr::left_join(speciesinfo, acros_df)
+} else {
+  speciesinfo$acro <- unlist(build_json$acronyms_available)[1]
+}
 
 # Load study area
 starea <- sf::read_sf("data/studyarea.fgb")
+
+# Load additional data
+eez <- sfarrow::st_read_parquet("data/EEZ_IHO_simp_edited.parquet")
+realms <- sf::st_read("data/MarineRealms_BO.shp")

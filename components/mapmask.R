@@ -31,7 +31,7 @@ observe({
   mdebug("Processing mask")
   proxy <- leafletProxy("mainMap")
   spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
-  mask_layer <- paste0("data/maps/taxonid=", spkey, "/model=inteval/predictions/taxonid=", spkey, "_model=inteval_mask_cog.tif")
+  mask_layer <- paste0("data/maps/taxonid=", spkey, "/model=", sp_info$acro, "/predictions/taxonid=", spkey, "_model=", sp_info$acro, "_mask_cog.tif")
   
   if (!maskstate()) {
     mdebug("Mask deactivated")

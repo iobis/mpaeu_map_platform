@@ -29,11 +29,11 @@ observe({
   if (active_tab$current == "species") {
     req(!is.null(model_inuse$model))
     
-    basepath <- paste0("data/maps/taxonid=", sp_info$spkey, "/model=inteval/metrics/")
+    basepath <- paste0("data/maps/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/metrics/")
     
     # Table 1
     metrics <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval_method=", model_inuse$model,#input$modelSelect, 
+      paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_method=", model_inuse$model,#input$modelSelect, 
              "_what=cvmetrics.parquet")
     )
     if (model_inuse$model == "ensemble") {
@@ -50,20 +50,56 @@ observe({
       tidyr::pivot_longer(cols = 1:ncol(metrics_sd), names_to = "Metric", values_to = "SD") %>%
       mutate(Metric = toupper(Metric))
     metrics_mean <- left_join(metrics_mean, metrics_sd, by = "Metric")
+
+    metrics_mean <- metrics_mean %>% tidyr::separate_wider_delim(cols = Metric, delim = "_",
+       names = c("Metric", "Threshold"),
+       too_few = "align_start") %>%
+      mutate(Threshold = case_when(
+        Threshold == "MAXSSS" ~ "Max. Sens. + Spec.",
+        Threshold == "MTP" ~ "Min. train. pres.",
+        Threshold == "P10" ~ "10th perc. train. pres."
+      ))
     # metrics_mean <- metrics_mean %>%
     #   filter(Metric %in% c("AUC", "CBI", "PR", "TSS_P10"))
     continfo$tableA <- metrics_mean
     
     # Table 2
     varimp <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval_method=", model_inuse$model,#input$modelSelect,
+      paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_method=", model_inuse$model,#input$modelSelect,
              "_what=varimportance.parquet")
     )
+    varimp <- varimp %>%
+      tidyr::separate_wider_delim(cols = variable, delim = "_",
+       names = c("variable", "variant"),
+       too_few = "align_start") %>%
+      mutate(variable = case_when(
+        variable == "tas" ~ "Air temperature",
+        variable == "siconc" ~ "Sea ice concentration",
+        variable == "thetao" ~ "Sea temperature",
+        variable == "bathymetry" ~ "Bathymetry",
+        variable == "distcoast" ~ "Distance to coast",
+        variable == "sws" ~ "Sea water speed",
+        variable == "wavefetch" ~ "Wavefetch",
+        variable == "so" ~ "Salinity",
+        variable == "no3" ~ "Nitrate",
+        variable == "par" ~ "Photosynthetically Available Radiation",
+        variable == "rugosity" ~ "Rugosity",
+        variable == "o2" ~ "Oxygen concentration"
+      )) %>%
+      mutate(variant = case_when(
+        is.na(variant) ~ "",
+        variant == "mean" ~ "Mean",
+        variant == "max" ~ "Maximum",
+        variant == "min" ~ "Minimum",
+        variant == "range" ~ "Range"
+      )) %>%
+      select(Variable = variable, Variant = variant, Mean = mean, SD = sd)
+
     continfo$tableB <- varimp
     
     # Graph
     response_curves <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval_method=", model_inuse$model,#input$modelSelect,
+      paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_method=", model_inuse$model,#input$modelSelect,
              "_what=respcurves.parquet")
     )
     
@@ -103,8 +139,8 @@ observe({
     
     req(sp_info$spkey_t)
     thermal_envelope <- jsonlite::read_json(
-      paste0("data/maps/taxonid=", sp_info$spkey_t, "/model=inteval/metrics/taxonid=",
-             sp_info$spkey_t, "_model=inteval_what=thermmetrics.json"))
+      paste0("data/maps/taxonid=", sp_info$spkey_t, "/model=", sp_info$acro_t, "/metrics/taxonid=",
+             sp_info$spkey_t, "_model=", sp_info$acro_t, "_what=thermmetrics.json"))
     
     # Table 1
     thermal_envelope$limits[[1]]$decade <- NA

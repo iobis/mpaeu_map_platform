@@ -1,4 +1,39 @@
+<!-- add toolbar here -->
+```{r}
+label_select_mask <- bslib::tooltip(span("Mask type:", bsicons::bs_icon("info-circle")),
+       "Predictions are made for the whole globe, even in areas where the species does not occur today. Masks highlight only areas close to the area of occurrence of the species. You can turn the mask on/off by clicking on the 'eye' icon on the map.",
+        placement = "bottom")
+
+label_switch_bootstrap <- bslib::tooltip(span("Show uncertainty", bsicons::bs_icon("info-circle")),
+       "Show uncertainty, as bootstrap CV, if available.",
+        placement = "bottom")
+
+label_switch_realms <- bslib::tooltip(span("Show realms", bsicons::bs_icon("info-circle")),
+       "Show Costello et al. 2017 realms.",
+        placement = "bottom")
+
+label_switch_eez <- bslib::tooltip(span("Show EEZs", bsicons::bs_icon("info-circle")),
+       "Show EEZs - Flanders Marine Institute (2020). The intersect of the Exclusive Economic Zones and IHO sea areas, version 4. Available online at https://www.marineregions.org/",
+        placement = "bottom")
+
+
+masks_options <- c("native_ecoregions", "fit_region", "convex_hull", "minbounding_circle", "buffer100m")
+names(masks_options) <- c("Native Realms", "Fit area", "Convex Hull", "Min. bounding circle", "Buffer 100m")
+
+conditionalPanel(
+  condition = "input.speciesSelect !== '' && (input.jsValue?.id ?? 'species') === 'species'",
+  tags$div(
+      shiny::selectInput("ecspMask", label_select_mask, masks_options, width = "300px"),
+      bslib::input_switch("ecspBoot", label_switch_bootstrap, FALSE),
+      bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
+      bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),
+      #shiny::selectInput("ecspMask2", span("This is a test label", id = "test span"), "Choice1"), 
+      class = "ecsp-controls", width = "100%")
+)
+```
+
 <div class="body-section">
+
 ::: {.grid}
 
 <!-- Table 1 --->
@@ -81,4 +116,17 @@ conditionalPanel(
 ```
 :::
 :::
+
+```{r}
+conditionalPanel(
+          condition = "input.extraButton != 0 && input.extraButton % 2 != 0",
+          tags$div(
+            tags$br(),
+            bslib::tooltip(tags$span("Model details", class = "body-title"),
+             "This section shows details about the model fitting, such as parameters used to train the models and number of occurrence points used. To understand what each value refers to, see the 'What are the properties' value in the explorer."),
+            tags$br(),
+            shiny::uiOutput("speciesJsonLog", width = "100%")
+          )
+        )
+```
 </div>

@@ -12,10 +12,12 @@ sp_info <- reactiveValues(species = "", # Species
                           scenario = "",
                           decade = "",
                           spkey = "",
+                          acro = "",
                           # Thermal
                           spkey_t = "",
                           scenario_t = "",
                           decade_t = "",
+                          acro_t = "",
                           # Habitat
                           habitat = "",
                           # Diversity
@@ -39,22 +41,23 @@ observe({
                              ifelse(input$periodSelect == 2050, "dec50", "dec100"))
     key <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
     sp_info$spkey <- key
+    sp_info$acro <- speciesinfo$acro[speciesinfo$species == input$speciesSelect]
     
     # Check available models for the selected species
     if (input$speciesSelect != "") {
       logf <- jsonlite::read_json(paste0("data/maps/taxonid=", key,
-                                         "/model=inteval/taxonid=", key, "_model=inteval_what=log.json"))
+                                         "/model=mpaeu/taxonid=", key, "_model=mpaeu_what=log.json"))
       mod_names <- names(logf$model_posteval)[unlist(lapply(logf$model_posteval,
                                                             function(x) if (length(x) > 0) TRUE else FALSE))]
       available_models <- mod_names[!grepl("niche", mod_names)]
-      available_models <- gsub("maxent", "maxnet", available_models)
+      #available_models <- gsub("maxent", "maxnet", available_models)
       available_models <- gsub("rf", "rf_classification_ds", available_models)
       
       # Set the model in use based on availability and priority
       if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
         model_inuse$model <- input$modelSelect
       } else {
-        priority <- c("ensemble", "maxnet", "rf_classification_ds", "xgboost", "glm")
+        priority <- c("ensemble", "maxent", "rf_classification_ds", "xgboost", "glm")
         model_inuse$model <- sp_info$model <- priority[priority %in% available_models][1]
       }
     }
@@ -68,6 +71,7 @@ observe({
     sp_info$decade_t <- ifelse(is.null(input$periodSelectThermal), NULL,
                              ifelse(input$periodSelectThermal == 2050, "dec50", "dec100"))
     sp_info$spkey_t <- speciesinfo$key[speciesinfo$species == input$speciesSelectThermal]
+    sp_info$acro_t <- speciesinfo$acro[speciesinfo$species == input$speciesSelectThermal]
   }
   
   # When the active tab is "habitat"

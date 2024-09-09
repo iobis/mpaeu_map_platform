@@ -12,8 +12,8 @@ thermal_data <- reactive({
   mdebug("Changing thermal reactive")
   if (input$speciesSelectThermal != "" & active_tab$current == "thermal") {
     thermal_envelope <- sfarrow::st_read_parquet(
-      paste0("data/maps/taxonid=", sp_info$spkey_t, "/model=inteval/predictions/taxonid=",
-             sp_info$spkey_t, "_model=inteval_what=thermenvelope.parquet")
+      paste0("data/maps/taxonid=", sp_info$spkey_t, "/model=", sp_info$acro_t, "/predictions/taxonid=",
+             sp_info$spkey_t, "_model=", sp_info$acro_t, "_what=thermenvelope.parquet")
     )
     
     thermal_envelope_current <- thermal_envelope[1,]

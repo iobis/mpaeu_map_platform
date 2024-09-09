@@ -30,25 +30,25 @@ observe({
   session$sendCustomMessage("removeEye", "nothing")
   
   # Construct the base path for the map data files
-  basepath <- paste0("data/maps/taxonid=", sp_info$spkey, "/model=inteval/predictions/")
+  basepath <- paste0("data/maps/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/predictions/")
   
   # If the active tab is "species"
   if (active_tab$current == "species") {
     mdebug("Executing species map")
     mdebug(paste("In use species", sp_info$species, sp_info$model, sp_info$scenario, collapse = ","))
-    mdebug(paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif"))
+    mdebug(paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif"))
     
     # Determine which files to use based on the scenario and side selection
     side_select <- input$sideSelect
     if (sp_info$scenario == "current") {
-      file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval", "_method=", sp_info$model, "_scen=current_cog.tif")
+      file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_cog.tif")
       file_b <- NULL
     } else {
       if (side_select) {
-        file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval", "_method=", sp_info$model, "_scen=current_cog.tif")
-        file_b <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
+        file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_cog.tif")
+        file_b <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
       } else {
-        file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=inteval", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
+        file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
         file_b <- NULL
       }
     }
@@ -131,7 +131,7 @@ observe({
         leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
     } else {
       # Select the habitat file based on the scenario and decade
-      sel_habitat <- paste0("data/habitats/habitat=", tolower(sp_info$habitat), "_model=inteval_scen=",
+      sel_habitat <- paste0("data/habitats/habitat=", tolower(sp_info$habitat), "_model=mpaeu_scen=",
                             ifelse(sp_info$scenario == "current", "current", paste0(sp_info$scenario, "_", sp_info$decade)), "_cog.tif")
       
       # Disable the mask state

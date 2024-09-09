@@ -387,7 +387,7 @@ a.A4Portrait, a.A4Landscape, a.CurrentSize {
   z-index: 3000;
   background-color: white;
   color: #545454;
-  font-size: 12px;
+  font-size: 20px;
 }
 
 a {
@@ -441,4 +441,72 @@ a {
     display: flex;
     justify-content: center; /* Center the buttons horizontally */
     gap: 50px; /* Space between buttons */
+}
+
+/* Json visualizer */
+
+.jse-menu.svelte-497ud4 {
+  background: #184e77 !important;
+  border-bottom: 0px !important;
+}
+
+button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
+  color: #184e77 !important;
+}
+
+/* Extra control species tab */
+.ecsp-controls {
+  display: flex;
+  min-height: 45px;
+  font-size: 14px;
+  /*justify-content: space-between;*/
+  /* max-width: 400px; */
+  margin: 0 auto;
+  background: #f6f6f6;
+  /* padding: 10px 0; */
+}
+
+.ecsp-controls .form-group.shiny-input-container {
+  display: flex;
+  justify-content: start;
+  margin-right: 2px;
+  margin-left: 25px;
+  /* max-width: 400px; */
+  /* margin: -1px auto; */
+  /* padding-right: 10px; */
+}
+
+.ecsp-controls .shiny-input-container .control-label {
+  margin-bottom: 0px;
+  align-content: space-evenly;
+  margin-right: 10px;
+}
+
+.ecsp-controls .shiny-input-select.selectize-control.single.plugin-selectize-plugin-a11y {
+  padding-top: 4px;
+  min-width: 110%;
+}
+
+.ecsp-controls .form-switch {
+  padding-left: 15px;
+  padding-top: 10px;
+}
+
+.ecsp-controls .form-switch .form-check-input {
+  margin-left: -5px;
+} 
+
+@media (max-width: 830px) {
+  .ecsp-controls {
+    display: block !important;
+  }
+
+  .ecsp-controls .shiny-input-select.selectize-control.single.plugin-selectize-plugin-a11y {
+    padding-top: 4px;
+    min-width: 100%;
+  }
+
+  .ecsp-controls .form-switch .form-check-input {
+    margin-left: -10px;
+  } 
 }

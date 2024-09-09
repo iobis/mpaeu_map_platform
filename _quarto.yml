@@ -1,5 +1,6 @@
 project:
   title: "quarto_test"
-
+  post-render: 
+    - post-render.R
 
 
