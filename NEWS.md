@@ -2,7 +2,7 @@
 
 ## General
 
-- Number of species available: 1000
+- Number of species available: 500
 - Next species update: 2024-09-15
 
 ## 2024-09-01
