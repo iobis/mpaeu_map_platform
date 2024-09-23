@@ -7,16 +7,8 @@
 ########################## Update selectize options ############################
 
 # Create species selectize ----
-available_species <- list.files("data/maps/")
-available_species_int <- list.files(paste0("data/maps/", available_species))
-available_species <- available_species[which(grepl("mpaeu", available_species_int))]
-available_species_int <- list.files(paste0("data/maps/", available_species, "/model=mpaeu"), pattern = "log.json")
-available_ids <- unlist(regmatches(available_species_int, gregexpr("taxonid=\\d+_", available_species_int)))
-available_ids <- gsub("_", "", gsub("taxonid=", "", available_ids))
-available_species <- speciesinfo$scientificName[speciesinfo$taxonID %in% as.numeric(available_ids)]
-sp_options <- c("", available_species)
-
 updateSelectizeInput(session, "speciesSelect", choices = sp_options, server = TRUE)
+# Create thermal selectize ----
 updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options, server = TRUE)
 
 # Change model options based on available models
@@ -50,33 +42,87 @@ observe({
   updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
 }) %>% bindEvent(input$speciesSelect, ignoreInit = T)
 
-# Change species according to group
+
+##### Filter modals #####
+source("scripts/filter_functions.R", local = TRUE)
+
+# Species modal -----
+observeEvent(input$filterSpecies, {
+  updateSelectizeInput(session, "groupSelect", choices = sdm_groups, server = TRUE)
+  updateSelectizeInput(session, "commonSelect", choices = common_names, server = TRUE)
+  updateSelectizeInput(session, "seaSelect", choices = region_names, server = TRUE)
+  updateSelectizeInput(session, "phylumSelect", choices = phylums, server = TRUE)
+  updateSelectizeInput(session, "classSelect", choices = classes, server = TRUE)
+  updateSelectizeInput(session, "orderSelect", choices = orders, server = TRUE)
+  updateSelectizeInput(session, "familySelect", choices = families, server = TRUE)
+  showModal(filterSpeciesModal())
+})
+
+observeEvent(input$speciesActionOK, {
+  removeModal()
+})
+
+filtered_data <- reactiveValues(species = list(species = NULL, n = 0),
+                                thermal = list(species = NULL, n = 0))
+
+# Observe filtering
 observe({
-  mdebug("Changing species options")
-  
-  sp_options_upd <- switch(input$groupSelect,
-    all = sp_options,
-    others = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "others"])],
-    seabirds = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "seabirds"])],
-    mammals = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "mammals"])],
-    photosynthesizers = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "photosynthesizers"])]
-  )
-  
-  updateSelectInput(session, "speciesSelect", choices = sp_options_upd, selected = sp_options_upd[2])
-  
-}) %>% bindEvent(input$groupSelect, ignoreInit = T, ignoreNULL = TRUE)
+  filt_list <- filter_opts(speciesinfo, input$groupSelect, input$commonSelect, input$seaSelect, input$includeProjects,
+    input$phylumSelect, input$classSelect, input$orderSelect, input$familySelect)
+
+  filtered_data$species$species <- filt_list$species
+  filtered_data$species$n <- nrow(filt_list)
+
+  if (length(filt_list$species) > 0) {
+    shiny::updateActionButton(inputId = "speciesActionOK", label = "OK", disabled = FALSE)
+  } else {
+    shiny::updateActionButton(inputId = "speciesActionOK", label = "OK", disabled = TRUE)
+  }
+
+})
+
+output$filterN <- renderText({filtered_data$species$n})
 
 observe({
-  mdebug("Changing thermal species options")
-  
-  sp_options_upd <- switch(input$groupSelectThermal,
-    all = sp_options,
-    others = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "others"])],
-    seabirds = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "seabirds"])],
-    mammals = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "mammals"])],
-    photosynthesizers = sp_options[sp_options %in% c("", speciesinfo$species[speciesinfo$sdm_group == "photosynthesizers"])]
-  )
-  
-  updateSelectInput(session, "speciesSelectThermal", choices = sp_options_upd, selected = sp_options_upd[2])
-  
-}) %>% bindEvent(input$groupSelectThermal, ignoreInit = T, ignoreNULL = TRUE)
+  updateSelectizeInput(session, "speciesSelect", choices = filtered_data$species$species, server = TRUE)
+}) %>% bindEvent(input$speciesActionOK)
+
+
+# Thermal modal -----
+observeEvent(input$filterThermalSpecies, {
+  updateSelectizeInput(session, "groupThermalSelect", choices = sdm_groups, server = TRUE)
+  updateSelectizeInput(session, "commonThermalSelect", choices = common_names, server = TRUE)
+  updateSelectizeInput(session, "seaThermalSelect", choices = region_names, server = TRUE)
+  updateSelectizeInput(session, "phylumThermalSelect", choices = phylums, server = TRUE)
+  updateSelectizeInput(session, "classThermalSelect", choices = classes, server = TRUE)
+  updateSelectizeInput(session, "orderThermalSelect", choices = orders, server = TRUE)
+  updateSelectizeInput(session, "familyThermalSelect", choices = families, server = TRUE)
+  showModal(filterThermalModal())
+})
+
+observeEvent(input$speciesThermalActionOK, {
+  removeModal()
+})
+
+# Observe filtering
+observe({
+  filt_list <- filter_opts(speciesinfo, input$groupThermalSelect, input$commonThermalSelect,
+    input$seaThermalSelect, input$includeThermalProjects,
+    input$phylumThermalSelect, input$classThermalSelect, input$orderThermalSelect, input$familyThermalSelect)
+
+  filtered_data$thermal$species <- filt_list$species
+  filtered_data$thermal$n <- nrow(filt_list)
+
+  if (length(filt_list$species) > 0) {
+    shiny::updateActionButton(inputId = "speciesThermalActionOK", label = "OK", disabled = FALSE)
+  } else {
+    shiny::updateActionButton(inputId = "speciesThermalActionOK", label = "OK", disabled = TRUE)
+  }
+
+})
+
+output$filterThermalN <- renderText({filtered_data$thermal$n})
+
+observe({
+  updateSelectizeInput(session, "speciesSelectThermal", choices = filtered_data$thermal$species, server = TRUE)
+}) %>% bindEvent(input$speciesThermalActionOK)
