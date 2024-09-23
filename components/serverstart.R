@@ -61,13 +61,41 @@ m <- m %>%
                             ')
 
 # Add title/text species
-speciesinfo <- read.csv("data/all_splist_20240724.csv")
+# speciesinfo <- read.csv("data/all_splist_20240724.csv")
+# speciesinfo$key <- speciesinfo$taxonID
+# speciesinfo$species <- speciesinfo$scientificName
+
+# speciesinfo <- obissdm::get_listbygroup(speciesinfo, conf_file = "data/sdm_conf.yml")
+# available_groups <- c("all", unique(speciesinfo$sdm_group))
+# names(available_groups) <- stringr::str_to_title(available_groups)
+
+# New data loading and options setting
+speciesinfo <- readRDS("data/app_splist.rds")
 speciesinfo$key <- speciesinfo$taxonID
 speciesinfo$species <- speciesinfo$scientificName
 
-speciesinfo <- obissdm::get_listbygroup(speciesinfo, conf_file = "data/sdm_conf.yml")
 available_groups <- c("all", unique(speciesinfo$sdm_group))
 names(available_groups) <- stringr::str_to_title(available_groups)
+
+common_names <- stringr::str_split(speciesinfo$common_names, pattern = "; ")
+common_names <- unique(unlist(common_names, use.names = F))
+#common_names <- stringr::str_to_sentence(common_names)
+common_names <- c("All" = "all", common_names)
+
+region_names <- stringr::str_split(speciesinfo$region_name, pattern = "; ")
+region_names <- unique(unlist(region_names, use.names = F))
+region_names <- c("All" = "all", region_names)
+
+sdm_groups <- c("All" = "all", unique(speciesinfo$sdm_group))
+phylums <- c("All" = "all", unique(speciesinfo$phylum))
+classes <- c("All" = "all", unique(speciesinfo$class))
+orders <- c("All" = "all", unique(speciesinfo$order))
+families <- c("All" = "all", unique(speciesinfo$family))
+
+available_species <- list.files("data/maps/")
+available_ids <- gsub("taxonid=", "", available_species)
+speciesinfo <- speciesinfo[speciesinfo$taxonID %in% as.numeric(available_ids), ]
+sp_options <- c("", speciesinfo$scientificName)
 
 # Verify most recent acronym
 build_json <- jsonlite::read_json("data/platform_build.json")

@@ -4,12 +4,9 @@
 # Load/set options ----
 
 # Add selectors ----
-# Group selector
-selectInput(
-   inputId = "groupSelectThermal",
-   label = "Select group", 
-   choices = group_options
-)
+spThermSelectLab <- htmltools::div(htmltools::span(
+  "Search species", actionButton("filterThermalSpecies", htmltools::HTML('<span><i class="bi bi-funnel"></i> Filter</span>'), style = "border: 0; font-size: 12px; margin-left: 10px; background: none;")
+))
 
 # Species selector
 tags$div(
@@ -17,7 +14,7 @@ tags$div(
   class = 'itdiv_class',
   selectizeInput(
     inputId = "speciesSelectThermal",
-    label = "Search species",
+    label = spThermSelectLab,
     choices = c("Select one" = ""),
     multiple = FALSE
   )

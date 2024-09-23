@@ -44,6 +44,6 @@ Co-funded by the European Union. Views and opinions expressed are however those 
 
 :::
 
-<div style="font-size: 8px; color: white; text-align: center;">All data shown in this website is under a CC-0 licence.</div>
+<div style="font-size: 8px; color: white; text-align: center;">All data shown in this website is under a CC-0 licence. See project status <a href="https://github.com/iobis/mpaeu_map_platform/blob/main/NEWS.md" target="_blank" style = "color: #B2EDFA !important;">here</a></div>
 
 </div>

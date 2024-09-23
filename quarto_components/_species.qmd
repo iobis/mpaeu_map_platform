@@ -14,16 +14,9 @@ scenario_options <- c("Current", "SSP1" = "ssp126", "SSP2" = "ssp245",
 period_options <- c(2050, 2100)
 
 # Add selectors ----
-# Group selector
-avg <- yaml::read_yaml("data/sdm_conf.yml", readLines.warn = F)
-avg <- names(avg$groups)
-group_options <- c("all", avg)
-names(group_options) <- stringr::str_to_title(group_options)
-selectInput(
-   inputId = "groupSelect",
-   label = "Select group", 
-   choices = group_options
-)
+spSelectLab <- htmltools::div(htmltools::span(
+  "Search species", actionButton("filterSpecies", htmltools::HTML('<span><i class="bi bi-funnel"></i> Filter</span>'), style = "border: 0; font-size: 12px; margin-left: 10px; background: none;")
+))
 
 # Species selector
 tags$div(
@@ -31,11 +24,13 @@ tags$div(
   class = 'itdiv_class',
   selectizeInput(
     inputId = "speciesSelect",
-    label = "Search species",
+    label = spSelectLab,#"Search species",
     choices = c("Select one" = ""),
     multiple = FALSE
   )
 )
+
+
 
 # Add contextual information ----
 tags$div(
