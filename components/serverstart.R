@@ -74,6 +74,25 @@ speciesinfo <- readRDS("data/app_splist.rds")
 speciesinfo$key <- speciesinfo$taxonID
 speciesinfo$species <- speciesinfo$scientificName
 
+avmodels <- lapply(speciesinfo$taxonID, function(id) {
+  jfile <- paste0("data/maps/taxonid=", id, "/model=mpaeu/taxonid=", id,
+                  "_model=mpaeu_what=log.json")
+
+  if (file.exists(jfile)) {
+    logf <- jsonlite::read_json(jfile)
+
+    mod_names <- names(logf$model_posteval)[unlist(lapply(logf$model_posteval, function(x) if (length(x) > 0) TRUE else FALSE))]
+    available_models <- mod_names[!grepl("niche", mod_names)]
+    # available_models <- gsub("maxent", "maxnet", available_models)
+    available_models <- gsub("rf", "rf_classification_ds", available_models)
+    available_models <- paste0(available_models, collapse = ";")
+  } else {
+    available_models <- NA
+  }
+  return(available_models)
+})
+speciesinfo$models <- unlist(avmodels)
+
 available_groups <- c("all", unique(speciesinfo$sdm_group))
 names(available_groups) <- stringr::str_to_title(available_groups)
 

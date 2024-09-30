@@ -13,19 +13,16 @@ updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options, serv
 
 # Change model options based on available models
 observe({
+  req(input$speciesSelect != "")
   mdebug("Changing options")
-  spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
-  logf <- jsonlite::read_json(paste0("data/maps/taxonid=",spkey,"/model=mpaeu/taxonid=",spkey,"_model=mpaeu_what=log.json"))
-  
-  mod_names <- names(logf$model_posteval)[unlist(lapply(logf$model_posteval, function(x) if (length(x) > 0) TRUE else FALSE))]
-  available_models <- mod_names[!grepl("niche", mod_names)]
-  #available_models <- gsub("maxent", "maxnet", available_models)
-  available_models <- gsub("rf", "rf_classification_ds", available_models)
+
+  available_models <- speciesinfo$models[speciesinfo$species == input$speciesSelect]
+  available_models <- unlist(strsplit(available_models, ";"))
   
   if (any(grepl(substr(input$modelSelect,1,3), available_models))) {
     model_inuse <- input$modelSelect
   } else {
-    priority <- c("ensemble", "maxnet", "rf_classification_ds", "xgboost", "glm")
+    priority <- c("ensemble", "maxent", "rf_classification_ds", "xgboost", "glm")
     model_inuse <- priority[priority %in% available_models][1]
   }
   
@@ -83,8 +80,21 @@ observe({
 
 output$filterN <- renderText({filtered_data$species$n})
 
+# Clear the selection before updating choices
+# https://github.com/rstudio/shiny/issues/3966
+observeEvent(input$speciesActionOK, {
+  updateSelectizeInput(
+    inputId = "speciesSelect",
+    selected = NULL,
+    server = TRUE
+  )
+})
+
 observe({
-  updateSelectizeInput(session, "speciesSelect", choices = filtered_data$species$species, server = TRUE)
+  updateSelectizeInput(session, "speciesSelect",
+    choices = filtered_data$species$species,
+    selected = NULL,#filtered_data$species$species[1],
+    server = TRUE)
 }) %>% bindEvent(input$speciesActionOK)
 
 
@@ -123,6 +133,19 @@ observe({
 
 output$filterThermalN <- renderText({filtered_data$thermal$n})
 
+# Clear the selection before updating choices
+# https://github.com/rstudio/shiny/issues/3966
+observeEvent(input$speciesThermalActionOK, {
+  updateSelectizeInput(
+    inputId = "speciesSelectThermal",
+    selected = NULL,
+    server = TRUE
+  )
+})
+
 observe({
-  updateSelectizeInput(session, "speciesSelectThermal", choices = filtered_data$thermal$species, server = TRUE)
+  updateSelectizeInput(session, "speciesSelectThermal",
+    choices = filtered_data$thermal$species,
+    selected = NULL,#filtered_data$species$species[1],
+    server = TRUE)
 }) %>% bindEvent(input$speciesThermalActionOK)

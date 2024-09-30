@@ -27,7 +27,7 @@ observe({
   
   # If active is species
   if (active_tab$current == "species") {
-    req(!is.null(model_inuse$model))
+    req(!is.null(model_inuse$model) && sp_info$spkey != "")
     
     basepath <- paste0("data/maps/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/metrics/")
     
