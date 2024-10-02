@@ -22,6 +22,7 @@ diversity_f_data <- reactive({
     
     # modeled_diversity <- list.files("data/diversity", pattern = "\\.tif")
     modeled_diversity <- raw_diversity <- "data/maps/taxonid=1245747/model=mpaeu/predictions/taxonid=1245747_model=mpaeu_method=ensemble_scen=current_cog.tif"
+    files_inuse_habdiv$file_diversity <- modeled_diversity
     
     list(raw = raw_diversity,
          modeled = modeled_diversity)

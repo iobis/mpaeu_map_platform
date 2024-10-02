@@ -1,23 +1,27 @@
 <!-- add toolbar here -->
 ```{r}
-label_select_mask <- bslib::tooltip(span("Mask type:", bsicons::bs_icon("info-circle")),
+label_select_mask <- bslib::tooltip(span("Mask type:", bsicons::bs_icon("info-circle", size = "0.7em")),
        "Predictions are made for the whole globe, even in areas where the species does not occur today. Masks highlight only areas close to the area of occurrence of the species. You can turn the mask on/off by clicking on the 'eye' icon on the map.",
         placement = "bottom")
 
-label_select_bin <- bslib::tooltip(span("Filter:", bsicons::bs_icon("info-circle")),
+label_select_bin <- bslib::tooltip(span("Filter:", bsicons::bs_icon("info-circle", size = "0.7em")),
        "You can use a threshold to remove areas of the prediction. This is similar to converting a prediction to binary, except that in this case only the unsuitable part is removed, and the rest is kept on continuous mode. Available are P10 (10th percentile), MSS (maximum sensitivity plus specificity) and MTP (minimum training presence).",
         placement = "bottom")
 
-label_switch_bootstrap <- bslib::tooltip(span("Show uncertainty", bsicons::bs_icon("info-circle")),
+label_switch_bootstrap <- bslib::tooltip(span("Show uncertainty", bsicons::bs_icon("info-circle", size = "0.7em")),
        "Show uncertainty, as bootstrap CV, if available.",
         placement = "bottom")
 
-label_switch_realms <- bslib::tooltip(span("Show realms", bsicons::bs_icon("info-circle")),
+label_switch_realms <- bslib::tooltip(span("Show realms", bsicons::bs_icon("info-circle", size = "0.7em")),
        "Show Costello et al. 2017 realms.",
         placement = "bottom")
 
-label_switch_eez <- bslib::tooltip(span("Show EEZs", bsicons::bs_icon("info-circle")),
+label_switch_eez <- bslib::tooltip(span("Show EEZs", bsicons::bs_icon("info-circle", size = "0.7em")),
        "Show EEZs - Flanders Marine Institute (2020). The intersect of the Exclusive Economic Zones and IHO sea areas, version 4. Available online at https://www.marineregions.org/",
+        placement = "bottom")
+
+label_switch_mpa <- bslib::tooltip(span("Show MPAs", bsicons::bs_icon("info-circle", size = "0.7em")),
+       "Show MPAs - Not available at this moment",
         placement = "bottom")
 
 
@@ -34,9 +38,37 @@ conditionalPanel(
       bslib::input_switch("ecspBoot", label_switch_bootstrap, FALSE),
       bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
       bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),
-      #shiny::selectInput("ecspMask2", span("This is a test label", id = "test span"), "Choice1"), 
+      bslib::input_switch("ecspMPA", label_switch_mpa, FALSE),
       class = "ecsp-controls", width = "100%")
 )
+
+conditionalPanel(
+  condition = "input.speciesSelectThermal !== '' && (input.jsValue?.id ?? 'thermal') === 'thermal'",
+  tags$div(
+      bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
+      bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),
+      bslib::input_switch("ecspMPA", label_switch_mpa, FALSE),
+      class = "ecsp-controls", width = "100%")
+)
+
+conditionalPanel(
+  condition = "input.habitatSelect !== '' && (input.jsValue?.id ?? 'habitat') === 'habitat'",
+  tags$div(
+      bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
+      bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),
+      bslib::input_switch("ecspMPA", label_switch_mpa, FALSE),
+      class = "ecsp-controls", width = "100%")
+)
+
+conditionalPanel(
+  condition = "input.diversitySelect !== '' && (input.jsValue?.id ?? 'diversity') === 'diversity'",
+  tags$div(
+      bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
+      bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),
+      bslib::input_switch("ecspMPA", label_switch_mpa, FALSE),
+      class = "ecsp-controls", width = "100%")
+)
+
 ```
 
 <div class="body-section">

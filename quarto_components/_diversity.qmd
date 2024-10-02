@@ -13,6 +13,13 @@ selectInput(
    choices = metrics_options
 )
 
+selectInput(
+   inputId = "diversityGroup",
+   label = "Select level", 
+   choices = c("All" = "all", "Fishes" = "fishes"),
+   selected = "all"
+)
+
 # Add contextual information ----
 tags$div(
   id = "diversity_title",
@@ -77,11 +84,19 @@ tags$div(
 
 <div class="context-icons">
 
-<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+```{r}
+button <- htmltools::tags$span(
+  bsicons::bs_icon("download"),
+  "DOWNLOAD THE DATA",
+  style = "color: #545454 !important;"
+)
+htmltools::div(
+  downloadLink("downloadDataDiversity", label = button),
+  class = "context-icons-box"
+)
+```
 
-<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
-
-<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+<div class="context-icons-box" onclick="location.href='https://github.com/iobis/mpaeu_sdm/blob/main/codes/post_div_richness.R';">{{< fa brands github >}} ACCESS THE CODE</div>
 
 </div>
 

@@ -220,9 +220,9 @@ observe({
     
     # Graph
     
-    # continfo$tableA <- limits
+    continfo$tableA <- NULL
     # continfo$tableB <- areas
-    # continfo$plotA <- plotly::ggplotly(p)
+    continfo$plotA <- NULL
     
     # Text
     continfo$text[[1]] <- "What is a biogenic habitat?"
@@ -235,16 +235,31 @@ observe({
     req(sp_info$metric)
     
     # Table 1
-    
+    table_a <- data.frame(Type = c("EEZ", "Protected area"),
+                                  Name = c("My EEZ", "My MPA"),
+                                  `Richness` = c(10, 20))
     
     # Table 2
-    
+    if (input$diversityGroup == "all") {
+      table_b <- data.frame(Group = c("Fishes", "Others"),
+                            `Richness` = c(10, 20))
+    } else {
+      table_b <- data.frame(Species = c("species A", "species B"))
+    }
     
     # Graph
+    base <- rnaturalearth::ne_countries(returnclass = "sf")
+    p <- ggplot() +
+      geom_sf(data = base, color = "grey70", fill = "grey70") +
+      geom_point(data = data.frame(x = rnorm(10), y = rnorm(10)), aes(x = x, y = y)) +
+      xlab(NULL) + ylab(NULL) +
+      coord_sf() +
+      theme_light()
+
     
-    # continfo$tableA <- limits
-    # continfo$tableB <- areas
-    # continfo$plotA <- plotly::ggplotly(p)
+    continfo$tableA <- table_a
+    continfo$tableB <- table_b
+    continfo$plotA <- plotly::ggplotly(p)
     
     # Text
     continfo$text[[1]] <- paste("What is", sp_info$metric)
@@ -254,4 +269,5 @@ observe({
 }) %>%
   bindEvent(input$speciesSelect, input$modelSelect,
             input$speciesSelectThermal, sp_info$metric, sp_info$habitat,
+            input$diversityGroup,
             active_tab$current, ignoreInit = TRUE)

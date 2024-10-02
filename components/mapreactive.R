@@ -8,6 +8,7 @@
 
 # Create a reactive to hold the files in use
 files_inuse <- reactiveValues(file_a = NULL, file_b = NULL)
+files_inuse_habdiv <- reactiveValues(file_habitat = NULL, file_diversity = NULL)
 
 # Observe changes and update the map accordingly
 observe({
@@ -184,7 +185,8 @@ observe({
       # Select the habitat file based on the scenario and decade
       sel_habitat <- paste0("data/habitats/habitat=", tolower(sp_info$habitat), "_model=", sp_info$acro_h, "_scen=",
                             ifelse(sp_info$scenario == "current", "current", paste0(sp_info$scenario, "_", sp_info$decade)), "_cog.tif")
-      print(sel_habitat)
+      mdebug(sel_habitat)
+      files_inuse_habdiv$file_habitat <- sel_habitat
       # Disable the mask state
       maskstate(FALSE)
       
