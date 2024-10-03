@@ -122,7 +122,7 @@ conditionalPanel(
       tags$div(
         id = 'extraButtons', class = 'extra-buttons-cont',
         actionButton("extraButton", "Show additional information", icon = icon("layer-group"), class = "extra-button"),
-        downloadButton("downloadSpeciesReport", "Download species report", icon = icon("download"), class = "download-button")
+        actionButton("speciesReportAction", "Download species report", icon = icon("download"), class = "download-button")
       ),
       tags$br()
   )

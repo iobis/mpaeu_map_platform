@@ -54,15 +54,13 @@ gen_plotly_resp <- function(respcurves) {
 
 
 # Generate quarto report
-gen_quarto_report <- function(file, folder, basepath, species_aphia, model) {
+gen_quarto_report <- function(file, folder, basepath, species_aphia, model, sp_name, acronym) {
   
   tg_species <- species_aphia
   
   base_f <- readLines("scripts/map_output_model.qmd", warn = F)
   
   outfolder <- folder
-  
-  acronym <- "inteval"
   
   pred_base <- '
 
@@ -101,9 +99,7 @@ ggplot() +
                           period = c(NA, rep(c("dec50", "dec100"), 5)))
   
   sp_code <- as.numeric(tg_species)
-  
-  sp_name <- worrms::wm_id2name(sp_code)
-  
+
   # Construct predictions
   pred_code <- c()
   for (z in 1:nrow(pred_list)) {
@@ -141,14 +137,9 @@ ggplot() +
   
   writeLines(new_code_cont, new_file)
   
-  quarto::quarto_render(new_file)
+  try(quarto::quarto_render(new_file, output_format = "html"))
   
-  pagedown::chrome_print(gsub("\\.qmd", "\\.html", new_file),
-                         output = file)
-  
-  #fs::file_delete(c(new_file, gsub("\\.qmd", "\\.html", new_file)))
-  fs::dir_delete(outfolder)
-  return(invisible(NULL))
+  return(gsub("qmd", "html", new_file))
   
 }
 
