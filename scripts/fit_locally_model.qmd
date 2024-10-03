@@ -1,0 +1,406 @@
+---
+title: "Fit model locally"
+format: html
+---
+
+<img src=https://obis.org/images/logo.png width="300">  <img src=https://obis.org/images/ioc_logo.png width="80">
+
+<div style="width: 100%; background-color: #0277d4;">&nbsp;</div>
+
+# Model the distribution of species _SPECIES_NAME_
+
+This notebook provides the code to run the model for _SPECIES_NAME_ (AphiaID APHIA_ID) using the method ALGO_NAME.
+
+Before starting you will need to:
+
+1. Download the full data for the species and put the downloaded (and unzipped) 'taxonid=APHIA_ID' folder to a folder called "data" in the working directory of this notebook.
+2. Install the requirements (see below)
+
+### Requirements
+
+You need to install some packages before being able to run this notebook. Run the next cell to install the necessary packages.
+
+### NOTES
+- this code does not cover ESMs (Ensemble of Small Models).
+- this code is a simplified version of our modelling framework. To understand the full range of decisions, see [this code](https://github.com/iobis/mpaeu_sdm/blob/main/codes/model_fit.R) and the [associated function](https://github.com/iobis/mpaeu_sdm/blob/main/functions/model_species.R)
+
+``` {r}
+install.packages(c("ragg", "ecospat", "terra", "jsonlite", "glue", "arrow", "cli", "fs", "ALGO_PACKAGE"))
+devtools::install_github("iobis/mpaeu_msdm")
+devtools::install_github("bio-oracle/biooracler")
+devtools::install_github("sjevelazco/flexsdm")
+```
+
+``` {r}
+library(terra)
+library(obissdm)
+library(ALGO_PACKAGE)
+
+set.seed(2023)
+species_id <- APHIA_ID
+```
+
+Once we have the necessary packages installed, we need to download the environmental data. We will use the function `obissdm::get_env_data()` to download the data from Bio-ORACLE. We first load the log file to get the information of used layers and the habitat depth.
+
+``` {r}
+model_log <- jsonlite::read_json(glue::glue("data/taxonid={species_id}/model=mpaeu/taxonid={species_id}_model=mpaeu_what=log.json"))
+layer_names <- unlist(model_log$model_details$variables)
+print(layer_names)
+
+hab_depth <- model_log$hab_depth[[1]]
+print(hab_depth)
+
+sat_vars <- layer_names[grepl("_", layer_names)]
+terrain_vars <- layer_names[!grepl("_", layer_names)]
+
+sat_vars <- sat_vars[sat_vars != "bathymetry_mean"]
+terrain_vars <- c(terrain_vars, "bathymetry_mean")
+terrain_vars <- ifelse(terrain_vars == "rugosity", "terrain_ruggedness_index", terrain_vars)
+if ("distcoast" %in% terrain_vars || "wavefetch" %in% terrain_vars) {
+    aws_layers <- terrain_vars[terrain_vars %in% c("distcoast", "wavefetch")]
+    terrain_vars <- terrain_vars[!terrain_vars %in% c("distcoast", "wavefetch")]
+} else {
+    aws_layers <- NULL
+}
+```
+
+``` {r}
+# List datasets to download ----
+datasets <- c(
+  "thetao_baseline_2000_2019_depthsurf",
+  "so_baseline_2000_2019_depthsurf",
+  "PAR_mean_baseline_2000_2020_depthsurf",
+  "phyc_baseline_2000_2020_depthsurf",
+  "ph_baseline_2000_2018_depthsurf",
+  "sws_baseline_2000_2019_depthsurf",
+  "siconc_baseline_2000_2020_depthsurf",
+  "o2_baseline_2000_2018_depthsurf",
+  "KDPAR_mean_baseline_2000_2020_depthsurf",
+  "no3_baseline_2000_2018_depthsurf",
+  "chl_baseline_2000_2018_depthsurf",
+  "tas_baseline_2000_2020_depthsurf",
+  "si_baseline_2000_2018_depthsurf",
+  "mlotst_baseline_2000_2019_depthsurf"
+)
+
+datasets <- datasets[grepl(paste0(gsub("_.*", "", sat_vars), collapse = "|"),
+ datasets, ignore.case = T)]
+
+datasets <- gsub("depthsurf", hab_depth, datasets)
+
+print(datasets)
+```
+
+``` {r}
+### Change here if you want to download just a subset of the scenarios
+# List scenarios to download ----
+future_scenarios <- c("ssp126", "ssp245", "ssp370", "ssp460", "ssp585")
+
+### Change here if you want to download for a different time period
+# Define time steps ----
+time_steps <- list(
+  current = c("2000-01-01T00:00:00Z", "2010-01-01T00:00:00Z"), #2000-2010/2010-2020
+  dec50 = c("2030-01-01", "2040-01-01"), #2030-2040/2040-2050
+  dec100 = c("2080-01-01", "2090-01-01") #2080-2090/2090-2100
+)
+```
+
+``` {r}
+for (i in seq_along(sat_vars)) {
+    variable <- gsub("_.*", "", sat_vars[i])
+    variant <- gsub(".*._", "", sat_vars[i])
+    sel_dataset <- datasets[grepl(variable, datasets)]
+    get_env_data(datasets = sel_dataset, future_scenarios = future_scenarios,
+             time_steps = time_steps, variables = variant,
+             average_time = T)
+}
+```
+
+``` {r}
+# Now the terrain variables
+if (length(terrain_vars) > 0) {
+    get_env_data(terrain_vars = terrain_vars)
+}
+```
+
+``` {r}
+# And then layers not available on Bio-ORACLE
+if (!is.null(aws_layers)) {
+    if ("distcoast" %in% aws_layers) {
+        download.file("https://mpaeu-dist.s3.amazonaws.com/source/data/env/terrain/distcoast.tif",
+        destfile = "data/env/terrain/distcoast.tif", method = "wget")
+    }
+    if ("wavefetch" %in% aws_layers) {
+        download.file("https://mpaeu-dist.s3.amazonaws.com/source/data/env/terrain/wavefetch.tif",
+        destfile = "data/env/terrain/wavefetch.tif", method = "wget")
+    }
+}
+```
+
+There are a few checks that should be done with the environmental layers before proceeding. Also, note that if any download failed you just need to run again the cell - it will not download again what was already downloaded.
+
+``` {r}
+if (any(grepl("chl", sat_vars)) && hab_depth != "depthsurf") {
+    # For Chlorophyll-a we remove the depthmean and depthmax, as for the future is
+    # not available
+    to_remove <- list.files("data/env/current", full.names = T)
+    to_remove <- to_remove[grepl("chl", to_remove)]
+    to_remove <- to_remove[grepl("depthmean|depthmax", to_remove)]
+    fs::file_delete(to_remove)
+}
+
+if (any(grepl("kd", sat_vars))) {
+    # Rename KDPAR for kd
+    to_rename <- list.files("data/env", recursive = T, full.names = T)
+    to_rename <- to_rename[grepl("kdpar", to_rename)]
+    new_names <- gsub("kdpar", "kd", to_rename)
+    file.rename(to_rename, new_names)
+}
+
+if (any(grepl("terrain_ruggedness_index", terrain_vars))) {
+    # Rename terrain_ruggedness
+    to_rename <- list.files("data/env/terrain/", recursive = T, full.names = T)
+    to_rename <- to_rename[grepl("rugg", to_rename)]
+    to_rename <- to_rename[!grepl("aux", to_rename)]
+    new_names <- gsub("terrain_ruggedness_index", "rugosity", to_rename)
+    edit_r <- terra::rast(to_rename)
+    names(edit_r) <- "rugosity"
+    terra::writeRaster(edit_r, new_names, overwrite = T)
+    fs::file_delete(to_rename)
+}
+```
+
+With all data on the folder, we can start the modelling. First, we load and prepare the environmental data according to the project settings:
+
+``` {r}
+# Select environmental layers
+env_files <- c(
+    list.files("data/env/current", full.names = T),
+    list.files("data/env/terrain", full.names = T)
+)
+env_files <- env_files[grepl(
+    paste0(gsub("_", paste0("_baseline_", hab_depth, "_"), layer_names), collapse = "|"), env_files)]
+env_files <- env_files[!grepl(".json", env_files)]
+print(env_files)
+```
+
+``` {r}
+# Load masks
+masks <- rast(glue::glue("data/taxonid={species_id}/model=mpaeu/predictions/taxonid={species_id}_model=mpaeu_mask_cog.tif"))
+NAflag(masks) <- 0
+masks
+```
+
+``` {r}
+# Load environmental layer and apply the mask
+env <- rast(env_files)
+env <- terra::mask(env, masks$fit_region)
+print(env)
+plot(env[[1]])
+```
+
+Then we prepare the data object for the SDM.
+
+``` {r}
+quad_n <- model_log$model_details$background_size[[1]]
+fit_pts <- arrow::read_parquet(glue::glue("data/taxonid={species_id}/model=mpaeu/taxonid={species_id}_model=mpaeu_what=fitocc.parquet"))
+species_name <- model_log$scientificName[[1]]
+
+sp_data <- mp_prepare_data(
+    training = fit_pts,
+    eval_data = NULL,
+    species_id = species_name,
+    env_layers = env,
+    quad_number = quad_n,
+    verbose = TRUE
+)
+
+block_grid <- get_block_grid(sp_data, env,
+    sel_vars = names(env),
+    verbose = TRUE
+)
+
+sp_data <- mp_prepare_blocks(sp_data,
+    method = "manual",
+    block_types = "spatial_grid",
+    n_iterate = 300,
+    retry_if_zero = TRUE,
+    manual_shp = block_grid,
+    verbose = TRUE
+)
+
+if (any(table(sp_data$training$presence, sp_data$blocks$folds[["spatial_grid"]])[2, ] == 0)) {
+    stop("Blocks with less than 1 point. Failed.")
+}
+
+sp_data
+
+```
+
+Now we can start the modelling. We need to prepare the settings for the model tunning. Here is your opportunity to modify the settings that we used.
+
+``` {r}
+model_options <- sdm_options("ALGO_NAME")
+used_options <- model_log$algorithms_parameters$ALGO_NAME
+for (i in 1:length(used_options)) {
+    if (names(used_options)[i] %in% names(model_options)) {
+        model_options[[names(used_options)[i]]] <- unlist(used_options[i], recursive = T, use.names = F)
+    }
+}
+model_options
+```
+
+``` {r}
+model_fit <- sdm_fit(sp_data, sdm_method = "ALGO_NAME", options = model_options)
+model_fit
+```
+
+Now that we have the model fitted, we can predict to the current and future scenarios. Note that this will take some time! You can speed things up by reducing the number of scenarios/decades (see comment below).
+
+``` {r}
+pred_model <- function(model, pred_out, species, outacro) {
+    model_name <- model$name
+    cli::cli_alert_info("Predicting model {id} - {model_name}")
+
+    if (!dir.exists(pred_out)) fs::dir_create(pred_out)
+
+    outmess <- file.path(pred_out, paste0("taxonid=", species, "_model=", outacro, "_what=mess.tif"))
+    outshape <- file.path(pred_out, paste0("taxonid=", species, "_model=", outacro, "_what=shape.tif"))
+
+    scenarios <- data.frame(
+        scenario = c("current", rep(c("ssp126", "ssp245", "ssp370", "ssp460", "ssp585"),
+            each = 2
+        )),
+        year = c(NA, rep(c("dec50", "dec100"), 5))
+    )
+
+    # If you want to reduce the number of scenarios you simply edit the above lines
+    # as is done below:
+    scenarios <- data.frame(scenario = c("current", "ssp126"), year = c(NA,"dec50"))
+    #scenarios <- data.frame(scenario = c("current"), year = c(NA))
+
+    for (k in 1:nrow(scenarios)) {
+        if (is.na(scenarios$year[k])) {
+            period <- NULL
+        } else {
+            period <- scenarios$year[k]
+        }
+
+        cli::cli_alert_info("Predicting scenario {k} of {nrow(scenarios)}.")
+        outpred <- file.path(pred_out, paste0(
+            "taxonid=", species, "_model=", outacro,
+            "_method=", model_name, "_scen=", scenarios$scenario[k],
+            ifelse(is.null(period), "", paste0("_", period)), ".tif"
+        ))
+
+        if (scenarios$scenario[k] != "current") {
+            env_files_ed <- gsub("current/", paste0("future/", scenarios$scenario[k], "/"), env_files)
+            env_files_ed <- gsub("baseline", scenarios$scenario[k], env_files_ed)
+            env_files_ed <- gsub(hab_depth, paste0(hab_depth, "_", period), env_files_ed)
+        } else {
+            env_files_ed <- env_files
+        }
+        env_to_pred <- terra::rast(env_files_ed)
+
+        pred <- predict(model, env_to_pred)
+
+        names(pred) <- paste0(scenarios$scenario[k], ifelse(is.null(period), "", paste0("_", period)))
+
+        pred <- pred * 100
+        pred <- as.int(pred)
+        writeRaster(pred, outpred, overwrite = T, datatype = "INT1U")
+
+        if (k == 1) {
+            pred_f <- pred
+        }
+
+        # Save MESS
+        cli::cli_alert_info("Generating MESS map.")
+        to_mess <- terra::aggregate(env_to_pred, 12)
+        mess_map <- ecospat::ecospat.mess(
+            na.omit(as.data.frame(to_mess, xy = T)),
+            cbind(sp_data$coord_training, sp_data$training[, 2:ncol(sp_data$training)])
+        )
+        mess_map_t <- to_mess[[1]]
+        mess_map_t[] <- NA
+        mess_map_t[cellFromXY(mess_map_t, mess_map[, 1:2])] <- mess_map[, 5]
+        mess_map <- mess_map_t
+
+        names(mess_map) <- names(pred) <- paste0(scenarios$scenario[k], ifelse(is.null(period), "", paste0("_", period)))
+
+        if (k == 1) {
+            pred_mess <- mess_map
+        } else {
+            pred_mess <- c(pred_mess, mess_map)
+        }
+
+        cli::cli_alert_info("Generating SHAPE map.")
+        # Reduce dataset for faster implementing
+        shape_data <- sp_data$training
+        which_p <- which(shape_data$presence == 1)
+        if (sum(shape_data$presence) > 1000) {
+            which_p <- sample(which_p, 1000)
+        }
+        which_a <- sample(which(shape_data$presence == 0), 1000)
+        shape_data <- shape_data[c(which_p, which_a), ]
+        shape_data_coords <- sp_data$coord_training[c(which_p, which_a), ]
+        names(shape_data_coords) <- c("x", "y")
+
+        shape_res <- try(flexsdm::extra_eval(
+            shape_data,
+            "presence",
+            projection_data = env_to_pred,
+            aggreg_factor = 12 # For faster implementing
+        ), silent = T)
+
+        if (!inherits(shape_res, "try-error")) {
+            if (k == 1) {
+                outpath_fig <- paste0(pred_out, "/figures/")
+                if (!dir.exists(outpath_fig)) fs::dir_create(outpath_fig)
+                outfile_fig <- paste0(
+                    outpath_fig,
+                    "taxonid=", species, "_model=", outacro, "_method=", model_name,
+                    "_what=shape.png"
+                )
+                shape_plot <- suppressMessages(
+                    try(flexsdm::p_extra(
+                        training_data = cbind(shape_data_coords, shape_data),
+                        pr_ab = "presence",
+                        extra_suit_data = terra::aggregate(shape_res, 12),
+                        projection_data = terra::aggregate(env_to_pred, 12),
+                        geo_space = TRUE,
+                        prop_points = 0.05,
+                        alpha_p = 0.2
+                    ), silent = T)
+                )
+
+                ragg::agg_png(outfile_fig, width = 6, height = 2.5, units = "in", res = 300, scaling = 0.4)
+                print(shape_plot)
+                dof <- dev.off()
+                rm(dof, shape_plot)
+            }
+
+            shape_res <- aggregate(shape_res, fact = 12)
+            shape_res <- as.int(shape_res)
+            names(shape_res) <- paste0(scenarios$scenario[k], ifelse(is.null(period), "", paste0("_", period)))
+
+            if (k == 1) {
+                pred_shape <- shape_res
+            } else {
+                pred_shape <- c(pred_shape, shape_res)
+            }
+        }
+    }
+
+    pred_mess <- as.int(pred_mess)
+    writeRaster(pred_mess, outmess, overwrite = T, datatype = "INT1U")
+    writeRaster(pred_shape, outshape, overwrite = T, datatype = "INT2U")
+
+    cat("Predictions concluded")
+    return(invisible(NULL))
+}
+
+pred_model(model_fit, "results", species = species_id, outacro = "myrun")
+```
+
+With that our modelling and prediction is concluded. You may want to experiment creating [other masks](https://github.com/iobis/mpaeu_sdm/blob/main/functions/model_species.R#L874) or trying other [thresholds](https://github.com/iobis/mpaeu_sdm/blob/main/functions/model_species.R#L835).

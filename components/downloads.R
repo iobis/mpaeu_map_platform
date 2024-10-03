@@ -44,6 +44,7 @@ output$downloadSpeciesReport <- downloadHandler(
 
 # Species data download ------
 source("scripts/download_handlers_species.R", local = TRUE)
+source("scripts/create_local_fit_file.R", local = TRUE)
 
 observe({
   showModal(
@@ -85,6 +86,36 @@ output$downloadSpeciesAction <- downloadHandler(
     }
     on.exit(removeModal())
     zip::zip(file, sel_files, mode = "cherry-pick")
+  }
+)
+
+# Species code download ------
+observe({
+  showModal(
+    species_code_download(
+      species = sp_info$species,
+      key = sp_info$spkey,
+      model = sp_info$model
+  )
+  )
+}) %>%
+  bindEvent(input$runModelSpecies)
+
+output$downloadCodeSpeciesAction <- downloadHandler(
+  filename = function() {
+    pf <- paste0("taxonid=", sp_info$spkey, "_modelcode")
+    pf <- paste0(pf,
+                 ifelse(input$speciesCodeDownloadType == "ipynb", ".ipynb", ".qmd"))
+    pf
+  },
+  content = function(file) {
+    if (input$speciesCodeDownloadType == "ipynb") {
+      model_code_f <- get_local_file(sp_info$species, sp_info$spkey, sp_info$model)
+    } else {
+      model_code_f <- get_local_file(sp_info$species, sp_info$spkey, sp_info$model, type = "qmd")
+    }
+    on.exit(removeModal())
+    writeLines(model_code_f, file)
   }
 )
 
