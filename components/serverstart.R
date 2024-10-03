@@ -73,6 +73,7 @@ m <- m %>%
 speciesinfo <- readRDS("data/app_splist.rds")
 speciesinfo$key <- speciesinfo$taxonID
 speciesinfo$species <- speciesinfo$scientificName
+speciesinfo <- speciesinfo[order(speciesinfo$scientificName),]
 
 avmodels <- lapply(speciesinfo$taxonID, function(id) {
   jfile <- paste0("data/maps/taxonid=", id, "/model=mpaeu/taxonid=", id,

@@ -64,17 +64,12 @@ filtered_data <- reactiveValues(species = list(species = NULL, n = 0),
 
 # Observe filtering
 observe({
+  req(input$filterSpecies != 0)
   filt_list <- filter_opts(speciesinfo, input$groupSelect, input$commonSelect, input$seaSelect, input$includeProjects,
     input$phylumSelect, input$classSelect, input$orderSelect, input$familySelect)
 
   filtered_data$species$species <- filt_list$species
   filtered_data$species$n <- nrow(filt_list)
-
-  if (length(filt_list$species) > 0) {
-    shiny::updateActionButton(inputId = "speciesActionOK", label = "OK", disabled = FALSE)
-  } else {
-    shiny::updateActionButton(inputId = "speciesActionOK", label = "OK", disabled = TRUE)
-  }
 
 })
 
@@ -83,18 +78,22 @@ output$filterN <- renderText({filtered_data$species$n})
 # Clear the selection before updating choices
 # https://github.com/rstudio/shiny/issues/3966
 observeEvent(input$speciesActionOK, {
-  updateSelectizeInput(
-    inputId = "speciesSelect",
-    selected = NULL,
-    server = TRUE
-  )
+  if (length(filtered_data$species$species) > 0) {
+    updateSelectizeInput(
+      inputId = "speciesSelect",
+      selected = NULL,
+      server = TRUE
+    )
+  }
 })
 
 observe({
-  updateSelectizeInput(session, "speciesSelect",
-    choices = filtered_data$species$species,
-    selected = NULL,#filtered_data$species$species[1],
-    server = TRUE)
+ if (length(filtered_data$species$species) > 0) {
+    updateSelectizeInput(session, "speciesSelect",
+      choices = filtered_data$species$species,
+      selected = NULL,#filtered_data$species$species[1],
+      server = TRUE)
+ }
 }) %>% bindEvent(input$speciesActionOK)
 
 
@@ -116,18 +115,13 @@ observeEvent(input$speciesThermalActionOK, {
 
 # Observe filtering
 observe({
+  req(input$filterThermalSpecies != 0)
   filt_list <- filter_opts(speciesinfo, input$groupThermalSelect, input$commonThermalSelect,
     input$seaThermalSelect, input$includeThermalProjects,
     input$phylumThermalSelect, input$classThermalSelect, input$orderThermalSelect, input$familyThermalSelect)
 
   filtered_data$thermal$species <- filt_list$species
   filtered_data$thermal$n <- nrow(filt_list)
-
-  if (length(filt_list$species) > 0) {
-    shiny::updateActionButton(inputId = "speciesThermalActionOK", label = "OK", disabled = FALSE)
-  } else {
-    shiny::updateActionButton(inputId = "speciesThermalActionOK", label = "OK", disabled = TRUE)
-  }
 
 })
 
@@ -136,16 +130,20 @@ output$filterThermalN <- renderText({filtered_data$thermal$n})
 # Clear the selection before updating choices
 # https://github.com/rstudio/shiny/issues/3966
 observeEvent(input$speciesThermalActionOK, {
-  updateSelectizeInput(
-    inputId = "speciesSelectThermal",
-    selected = NULL,
-    server = TRUE
-  )
+  if (length(filtered_data$thermal$species) > 0) {
+    updateSelectizeInput(
+      inputId = "speciesSelectThermal",
+      selected = NULL,
+      server = TRUE
+    )
+  }
 })
 
 observe({
-  updateSelectizeInput(session, "speciesSelectThermal",
-    choices = filtered_data$thermal$species,
-    selected = NULL,#filtered_data$species$species[1],
-    server = TRUE)
+  if (length(filtered_data$thermal$species) > 0) {
+      updateSelectizeInput(session, "speciesSelectThermal",
+                           choices = filtered_data$thermal$species,
+                           selected = NULL,#filtered_data$species$species[1],
+                           server = TRUE)
+  }
 }) %>% bindEvent(input$speciesThermalActionOK)
