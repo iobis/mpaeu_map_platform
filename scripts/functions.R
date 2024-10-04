@@ -54,7 +54,7 @@ gen_plotly_resp <- function(respcurves) {
 
 
 # Generate quarto report
-gen_quarto_report <- function(file, folder, basepath, species_aphia, model, sp_name, acronym) {
+gen_quarto_report <- function(folder, basepath, species_aphia, model, sp_name, acronym) {
   
   tg_species <- species_aphia
   
@@ -72,6 +72,7 @@ r <- r[[1]]
 r <- terra::mask(r, masks[[1]])
 r <- terra::crop(r, ecoreg_sel)
 r <- r/100
+r <- terra::aggregate(r, fact = 10)
 r <- as.data.frame(r, xy=T)
 colnames(r)[3] <- "vals"
 
@@ -136,8 +137,8 @@ ggplot() +
   new_file <- paste0(outfolder, "/taxonid=", sp_code, "_model=", acronym, "_what=report.qmd")
   
   writeLines(new_code_cont, new_file)
-  
-  try(quarto::quarto_render(new_file, output_format = "html"))
+
+  quarto::quarto_render(new_file, output_format = "html", quiet = F)
   
   return(gsub("qmd", "html", new_file))
   

@@ -27,6 +27,8 @@ report_download_modal <- function(species, key, model) {
       ),
       bslib::card(
         bslib::card_body(
+           htmltools::h5("Note"),
+          "The report takes a few minutes to generate. During this time, it is not possible to use the app.",
           htmltools::h5("Tips"),
           "The report is downloaded in html format. You can convert it to
                          PDF by opening it in your browser and then printing/saving as a PDF. You can also use the
@@ -37,7 +39,7 @@ report_download_modal <- function(species, key, model) {
     ),
     footer = tagList(
       modalButton("Cancel"),
-      downloadButton("downloadSpeciesReport", label = "Download")
+      actionButton("startSpeciesReport", label = "Generate report")
     ), size = "m"
   )
 }
@@ -49,39 +51,70 @@ observe({
 }) %>%
   bindEvent(input$speciesReportAction)
 
+download_result <- reactiveValues(original = NULL, copy = NULL)
+
+observe({
+  removeModal()
+  showModal(
+    modalDialog(
+      htmltools::span("Generating species report, that may take a few minutes...",
+        style = "color: #097da5; padding-top: 10px; font-size: 25px"
+      ),
+      footer = NULL
+    )
+  )
+
+  file <- paste0("taxonid=", sp_info$spkey, "_date=", format(Sys.time(), "%Y-%m-%d_%H-%M%Z"), "_report.html")
+
+  mdebug("Starting report download")
+
+  tdir <- tempdir()
+  outfolder <- fs::dir_create(paste0(tdir, "/temp_aphiaid_", sp_info$spkey, "_", sample(1:10000, 1)))
+
+  basepath <- getwd()
+
+  mdebug("Trying report generation")
+  rep_result <- try(gen_quarto_report(
+    outfolder, basepath,
+    sp_info$spkey, sp_info$model, sp_info$species, sp_info$acro
+  ))
+
+  if (inherits(rep_result, "try-error")) {
+    print(rep_result)
+    rep_result <- NULL
+  } else {
+    mdebug(paste("File created:", rep_result, "Output:", file))
+  }
+
+  download_result$original <- rep_result
+  download_result$copy <- file
+
+  removeModal()
+  showModal(
+    modalDialog(
+      htmltools::span("Your report is ready.",
+        style = "color: #097da5; padding-top: 10px; font-size: 25px"
+      ),
+      footer = downloadButton("downloadSpeciesReport")
+    )
+  )
+}) %>%
+  bindEvent(input$startSpeciesReport)
+
 output$downloadSpeciesReport <- downloadHandler(
   filename = function() {
-    paste0("taxonid=", sp_info$spkey, "_date=", format(Sys.time(), "%Y-%m-%d_%H-%M%Z"), "_report.html")
+    download_result$copy
   },
   content = function(file) {
-
-    removeModal()
-    showModal(
-      modalDialog(
-        htmltools::span("Generating species report, that may take a few minutes... 
-        This message will be automatically closed when the download is concluded.",
-                          style = "color: #097da5; padding-top: 10px; font-size: 25px"),
-                          footer = NULL
-      )
-    )
-
-    tdir <- tempdir()
-    outfolder <- fs::dir_create(paste0(tdir, "/temp_aphiaid_", sp_info$spkey, "_", sample(1:10000, 1)))
-
-    basepath <- getwd()
-
-    rep_result <- try(gen_quarto_report(file, outfolder, basepath,
-                                        sp_info$spkey, sp_info$model, sp_info$species, sp_info$acro))
-
-    if (inherits(rep_result, "try-error")) {
+    on.exit(removeModal())
+    if (is.null(download_result$original)) {
       pdf(gsub("html", "pdf", file))
       plot.new()
       text(x = 0.5, y = 0.5, labels = "Report failed. Try again or contact the OBIS team: helpdesk@obis.org")
       dev.off()
     } else {
-      file.copy(rep_result, file)
+      file.copy(download_result$original, file)
     }
-    on.exit(removeModal())
   }
 )
 
