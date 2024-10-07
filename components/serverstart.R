@@ -138,3 +138,9 @@ starea <- sf::read_sf("data/studyarea.fgb")
 # Load additional data
 eez <- sfarrow::st_read_parquet("data/EEZ_IHO_simp_edited.parquet")
 realms <- sf::st_read("data/MarineRealms_BO.shp")
+
+# See available diversity groups
+av_div_groups <- list.files("data/diversity")
+av_div_groups <- gsub(".*group=([^_]+)_type.*", "\\1", av_div_groups)
+av_div_groups <- unique(av_div_groups)
+names(av_div_groups) <- stringr::str_to_title(av_div_groups)

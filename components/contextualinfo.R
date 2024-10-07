@@ -11,6 +11,8 @@ continfo <- reactiveValues()
 
 # Observe input changes
 observe({
+
+  mdebug("Contextual info triggered")
   
   if (active_tab$current == "species" & input$speciesSelect == "") {
     continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
@@ -267,7 +269,7 @@ observe({
   }
   
 }) %>%
-  bindEvent(input$speciesSelect, input$modelSelect,
+  bindEvent(sp_info$spkey, input$modelSelect,
             input$speciesSelectThermal, sp_info$metric, sp_info$habitat,
             input$diversityGroup,
             active_tab$current, ignoreInit = TRUE)

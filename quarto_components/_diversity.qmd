@@ -16,8 +16,7 @@ selectInput(
 selectInput(
    inputId = "diversityGroup",
    label = "Select level", 
-   choices = c("All" = "all", "Fishes" = "fishes"),
-   selected = "all"
+   choices = c("Select one" = "")
 )
 
 # Add contextual information ----
@@ -31,8 +30,40 @@ tags$div(
 tags$div(
   id = "context_info_div",
   class = "context_info",
-  textOutput("contextMetric")
+  textOutput("contextMetric"), htmltools::br()
 )
+
+conditionalPanel("input.diversitySelect == 'richness' && input.modelSelectDiversity != 'raw'",
+tags$div(
+  id = "scenario_box_diversity",
+  class = "scenario_class",
+      selectInput(
+        inputId = "diversityType",
+        label = "Map type",
+        choices = c("Sens+Spec" = "max_spec_sens", "P10" = "p10", "MTP" = "mtp")
+      ))
+)
+
+conditionalPanel("input.diversitySelect == 'richness' && input.modelSelectDiversity == 'raw'",
+tags$div(
+  id = "scenario_box_diversity",
+  class = "scenario_class",
+      selectInput(
+        inputId = "diversityTypeRaw",
+        label = "Map type",
+        choices = c("Aggregated" = "aggregated", "Original" = "original")
+      ))
+)
+
+conditionalPanel("input.diversitySelect == 'richness' && input.modelSelectDiversity != 'raw'",
+tags$div(
+  id = "scenario_box_diversity",
+  class = "scenario_class",
+      selectInput(
+        inputId = "diversityMode",
+        label = "Mode",
+        choices = c("Binary" = "bin", "Continuous" = "cont")
+      )))
 ```
 
 <div class="bottom-container"> 
@@ -46,7 +77,7 @@ tags$div(
 selectInput(
         inputId = "modelSelectDiversity",
         label = "Model",
-        choices = c("Raw", "Modeled")
+        choices = c("Raw" = "raw", "RandomForest" = "rf", "MAXENT" = "maxent", "XGBoost" = "xgboost", "Ensemble" = "ensemble")
       ))
 ```
 :::

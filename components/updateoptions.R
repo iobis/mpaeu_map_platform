@@ -10,6 +10,8 @@
 updateSelectizeInput(session, "speciesSelect", choices = sp_options, server = TRUE)
 # Create thermal selectize ----
 updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options, server = TRUE)
+# Create diversity select
+updateSelectInput(session, "diversityGroup", choices = av_div_groups, selected = av_div_groups[1])
 
 # Change model options based on available models
 observe({
