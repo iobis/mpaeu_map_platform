@@ -27,16 +27,28 @@ diversity_f_data <- reactive({
 observe({
   
   mdebug("Processing diversity update")
-  print(diversity_f_data())
   proxy <- leafletProxy("mainMap")
+
+  tr <- terra::rast(diversity_f_data())
+  terra::setMinMax(tr)
+  lims <- terra::minmax(tr)[,1]
   
   suppressWarnings({
       proxy <- proxy %>%
         clearMarkers() %>%
         clearShapes() %>%
-        addGeotiff(file = diversity_f_data(), opacity = 1,
-                   colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                                               na.color = NA), autozoom = F)
+        addGeotiff(file = diversity_f_data(), opacity = 1, layerId = "mapLayer1",
+                   colorOptions = colorOptions(palette = RColorBrewer::brewer.pal("BuPu", n = 9),
+                                               na.color = NA), autozoom = F) %>%
+        leaflegend::addLegendNumeric(
+          pal = colorNumeric(
+              domain = lims,
+              palette = RColorBrewer::brewer.pal("BuPu", n = 9),
+              na.color = NA
+          ), title = stringr::str_to_title(sp_info$metric), layerId = "legend", values = lims,
+          orientation = "horizontal", fillOpacity = .7, width = 75,
+          height = 15, position = "topright"
+        )
     })
   
 }) %>%

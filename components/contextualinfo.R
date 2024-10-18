@@ -271,7 +271,7 @@ observe({
     req(sp_info$metric)
     
     # Table 1
-    if (sp_info$group != "all") {
+    if (sp_info$group != "all" & input$modelSelectDiversity != "raw") {
       scenario_f <- ifelse(sp_info$scenario_d == "current",
                         sp_info$scenario_d, paste0(sp_info$scenario_d, "_", sp_info$decade_d))
       eez_f <- glue::glue("data/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}_area=eez.txt")
@@ -317,5 +317,5 @@ observe({
 }) %>%
   bindEvent(sp_info$spkey, input$modelSelect,
             input$speciesSelectThermal, sp_info$metric, sp_info$habitat,
-            input$diversityGroup,
+            input$diversityGroup, input$modelSelectDiversity,
             active_tab$current, ignoreInit = TRUE)

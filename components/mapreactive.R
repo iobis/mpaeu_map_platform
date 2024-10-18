@@ -198,10 +198,22 @@ observe({
       pts_pal <- colorFactor("Blues", habitatpts()$species)
       
       # Add the habitat layer to the map and enable the toolbar for drawing and editing
+      tr <- terra::rast(sel_habitat)
+      terra::setMinMax(tr)
+      lims <- terra::minmax(tr)[,1]
       proxy %>%
         addGeotiff(file = sel_habitat, opacity = 1, layerId = "mapLayer1",
-                   colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
+                   colorOptions = colorOptions(palette = RColorBrewer::brewer.pal("PuRd", n = 9),
                                                na.color = NA), autozoom = F) %>%
+        leaflegend::addLegendNumeric(
+          pal = colorNumeric(
+              domain = lims,
+              palette = RColorBrewer::brewer.pal("PuRd", n = 9),
+              na.color = NA
+          ), title = "ROR", layerId = "legend", values = lims,
+          orientation = "horizontal", fillOpacity = .7, width = 75,
+          height = 15, position = "topright", labels = c("Low", "High")
+        ) %>%
         addCircleMarkers(data = habitatpts(),
                          clusterOptions = NULL, # markerClusterOptions(),
                          group = "Points",

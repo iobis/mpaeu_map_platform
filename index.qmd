@@ -9,6 +9,7 @@ format:
       <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       <style> @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap'); #title-block-header { display: none;} #quarto-content>* {padding-top: 0px;} </style>
+      <link rel="shortcut icon" href="www/favicon.ico"/>
 mainfont: Montserrat
 server: shiny
 ---
