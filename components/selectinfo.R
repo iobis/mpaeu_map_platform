@@ -21,9 +21,15 @@ sp_info <- reactiveValues(species = "", # Species
                           # Habitat
                           habitat = "",
                           acro_h = "mpaeu",
+                          scenario_h = "",
+                          decade_h = "",
+                          model_h = "",
+                          bintype_h = "",
+                          threshold_h = "",
                           # Diversity
                           metric = "",
                           group = "",
+                          acro_d = "mpaeu",
                           map_type = "",
                           div_type = "",
                           scenario_d = "",
@@ -84,9 +90,12 @@ observe({
   if (active_tab$current == "habitat") {
     # Update habitat information from input selections
     sp_info$habitat <- input$habitatSelect
-    sp_info$scenario <- tolower(input$scenarioSelectHabitat)
-    sp_info$decade <- ifelse(is.null(input$periodSelectHabitat), NULL,
+    sp_info$scenario_h <- tolower(input$scenarioSelectHabitat)
+    sp_info$decade_h <- ifelse(is.null(input$periodSelectHabitat), NULL,
                              ifelse(input$periodSelectHabitat == 2050, "dec50", "dec100"))
+    sp_info$model_h <- input$modelSelectHabitat
+    sp_info$bintype_h <- ifelse(input$habitatBinaryFull, "bin", "cont")
+    sp_info$threshold_h <- input$habitatBin
   }
   
   # When the active tab is "diversity"

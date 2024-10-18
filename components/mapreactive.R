@@ -183,18 +183,35 @@ observe({
         leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
     } else {
       # Select the habitat file based on the scenario and decade
-      sel_habitat <- paste0("data/habitats/habitat=", tolower(sp_info$habitat), "_model=", sp_info$acro_h, "_scen=",
-                            ifelse(sp_info$scenario == "current", "current", paste0(sp_info$scenario, "_", sp_info$decade)), "_cog.tif")
+      # Example: "habitat=bivalves_beds_model=mpaeu_method=ensemble_scen=current_type=bin_threshold=max_spec_sens_cog.tif"
+      sel_habitat <- paste0("data/habitats/habitat=", tolower(sp_info$habitat), "_model=", sp_info$acro_h,
+                            "_method=", sp_info$model_h,
+                            "_scen=", ifelse(sp_info$scenario_h == "current",
+                                             "current", paste0(sp_info$scenario_h, "_", sp_info$decade_h)),
+                            "_type=", sp_info$bintype_h, "_threshold=", sp_info$threshold_h,
+                            "_cog.tif")
       mdebug(sel_habitat)
       files_inuse_habdiv$file_habitat <- sel_habitat
       # Disable the mask state
       maskstate(FALSE)
+
+      pts_pal <- colorFactor("Blues", habitatpts()$species)
       
       # Add the habitat layer to the map and enable the toolbar for drawing and editing
       proxy %>%
-        addGeotiff(file = sel_habitat, opacity = 1,
+        addGeotiff(file = sel_habitat, opacity = 1, layerId = "mapLayer1",
                    colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
                                                na.color = NA), autozoom = F) %>%
+        addCircleMarkers(data = habitatpts(),
+                         clusterOptions = NULL, # markerClusterOptions(),
+                         group = "Points",
+                         weight = 2,
+                         radius = 2,
+                         opacity = 1,
+                         fillOpacity = 0.1,
+                         color = pts_pal(habitatpts()$species), #"black",#~pts_pal(species),
+                         popup = ~species) %>% 
+        hideGroup("Points") %>%
         addPmToolbar(toolbarOptions = pmToolbarOptions(drawMarker = FALSE,
                                                        drawPolyline = FALSE,
                                                        drawCircle = FALSE,
@@ -202,6 +219,7 @@ observe({
                                                        position = "topleft"),
                      drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
                      editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE))
+
     }
   }
   

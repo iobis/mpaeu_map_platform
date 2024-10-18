@@ -4,8 +4,9 @@
 # Load/set options ----
 # Load habitat options
 hab_options <- c("Select a habitat" = "",
- "Seagrass" = "seagrass", "Kelp" = "kelp", "Colonial corals" = "colonialcorals",
- "Maerl" = "maerl", "Bivalve beds" = "bivalvebeds")
+ "Seagrass" = "seagrass", "Polychaete reefs" = "polychaete_reefs",
+ "Maerl" = "maerl", "Kelp" = "kelp", "Corals" = "corals",
+ "Bivalves beds" = "bivalves_beds")
 
 # Add selectors ----
 # Filter selector
@@ -18,11 +19,11 @@ selectInput(
 selectInput(
    inputId = "habitatBin",
    label = "Binary mode", 
-   choices = c("P10" = "p10", "MSS" = "maxsss", "MTP" = "mtp")
+   choices = c("P10" = "p10", "MSS" = "max_spec_sens", "MTP" = "mtp")
 )
 
 label_switch_eunis <- bslib::tooltip(span("Show EUNIS biogenic map", bsicons::bs_icon("info-circle", size = "0.7em")),
-       "Show EUNIS biogenic substrate according to EMODNET Seabed Habitats product (https://emodnet.ec.europa.eu/en/seabed-habitats).",
+       "Show EUNIS biogenic substrate according to EMODnet Seabed Habitats product (https://emodnet.ec.europa.eu/en/seabed-habitats). Not available at this moment.",
         placement = "bottom")
 span(bslib::input_switch("habitatEUNIS", label_switch_eunis, FALSE), style = "display: flex; margin-top: 25px; margin-bottom: 5px; margin-left: 5px;")
 
@@ -49,10 +50,21 @@ tags$div(
 <div class="bottom-container"> 
 ::: {.grid .gridaltsm}
 
-::: {.g-col-6}
+::: {.g-col-5}
 ```{r}
 tags$div(
-  id = "scenario_box_habitat",
+  class = "scenario_class",
+  selectInput(
+        inputId = "modelSelectHabitat",
+        label = "Model",
+        choices = model_options
+      ))
+```
+:::
+
+::: {.g-col-4}
+```{r}
+tags$div(
   class = "scenario_class",
       selectInput(
         inputId = "scenarioSelectHabitat",
@@ -63,10 +75,9 @@ tags$div(
 
 :::
 
-::: {.g-col-6}
+::: {.g-col-3}
 ```{r}
 tags$div(
-  id = "scenario_box_thermal",
   class = "scenario_class",
       selectInput(
         inputId = "periodSelectHabitat",

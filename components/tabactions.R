@@ -90,7 +90,7 @@ observe({
         title_state$to_print <- list(
           tableA = "Distribution by areas",
           graph = "Areas with known biogenic habitat occurrence",
-          tableB = "Extents",
+          tableB = "Species information",
           modelTitle = "What is a biogenic habitat?"
         )
       } else {

@@ -20,3 +20,11 @@ speciespts <- reactive({
   colnames(pts) <- c("longitude", "latitude")
   pts
 })
+
+habitatpts <- reactive({
+  pts <- arrow::read_parquet(paste0("data/habitats/habitat=", sp_info$habitat,
+   "_model=", sp_info$acro_h, "_what=points.parquet"))
+  colnames(pts)[1:2] <- c("longitude", "latitude")
+  pts$species <- as.factor(pts$species)
+  pts
+})

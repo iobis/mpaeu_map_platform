@@ -75,6 +75,10 @@ speciesinfo$key <- speciesinfo$taxonID
 speciesinfo$species <- speciesinfo$scientificName
 speciesinfo <- speciesinfo[order(speciesinfo$scientificName),]
 
+# Create a "copy" for other uses
+# TO BE REMOVED IN NEXT VERSION
+speciesinfo_full <- speciesinfo
+
 avmodels <- lapply(speciesinfo$taxonID, function(id) {
   jfile <- paste0("data/maps/taxonid=", id, "/model=mpaeu/taxonid=", id,
                   "_model=mpaeu_what=log.json")
