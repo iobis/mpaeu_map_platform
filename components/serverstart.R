@@ -121,6 +121,13 @@ available_ids <- gsub("taxonid=", "", available_species)
 speciesinfo <- speciesinfo[speciesinfo$taxonID %in% as.numeric(available_ids), ]
 sp_options <- c("", speciesinfo$scientificName)
 
+# Temporary - to be removed in next version
+thermal_ok <- unlist(lapply(speciesinfo$taxonID, function(x){
+  file.exists(paste0("data/maps/taxonid=", x, "/model=mpaeu/predictions/taxonid=", x, "_model=mpaeu_what=thermenvelope.parquet"))
+}))
+sp_options_thermal <- c("", speciesinfo$scientificName[thermal_ok])
+rm(thermal_ok)
+
 # Verify most recent acronym
 build_json <- jsonlite::read_json("data/platform_build.json")
 if (length(unlist(build_json$acronyms_available)) > 1) {

@@ -9,7 +9,7 @@
 # Create species selectize ----
 updateSelectizeInput(session, "speciesSelect", choices = sp_options, server = TRUE)
 # Create thermal selectize ----
-updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options, server = TRUE)
+updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options_thermal, server = TRUE)
 # Create diversity select
 updateSelectInput(session, "diversityGroup", choices = av_div_groups, selected = av_div_groups[1])
 
@@ -72,8 +72,9 @@ observe({
 
   filtered_data$species$species <- filt_list$species
   filtered_data$species$n <- nrow(filt_list)
-
-})
+}) %>%
+  bindEvent(input$groupSelect, input$commonSelect, input$seaSelect, input$includeProjects,
+    input$phylumSelect, input$classSelect, input$orderSelect, input$familySelect)
 
 output$filterN <- renderText({filtered_data$species$n})
 
@@ -125,7 +126,10 @@ observe({
   filtered_data$thermal$species <- filt_list$species
   filtered_data$thermal$n <- nrow(filt_list)
 
-})
+}) %>%
+  bindEvent(input$groupThermalSelect, input$commonThermalSelect,
+    input$seaThermalSelect, input$includeThermalProjects,
+    input$phylumThermalSelect, input$classThermalSelect, input$orderThermalSelect, input$familyThermalSelect)
 
 output$filterThermalN <- renderText({filtered_data$thermal$n})
 
