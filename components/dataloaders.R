@@ -9,9 +9,11 @@
 # Load species points ----
 speciespts <- reactive({
   if (active_tab$current == "species") {
+    req(!is.null(input$speciesSelect) && input$speciesSelect != "")
     sel_species <- input$speciesSelect
   }
   if (active_tab$current == "thermal") {
+    req(!is.null(input$speciesSelectThermal) && input$speciesSelectThermal != "")
     sel_species <- input$speciesSelectThermal
   }
   spkey <- speciesinfo$key[speciesinfo$species == sel_species]
