@@ -467,6 +467,7 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
   display: flex;
   min-height: 45px;
   font-size: 14px;
+  justify-content: flex-start;
   /*justify-content: space-between;*/
   /* max-width: 400px; */
   margin: 0 auto;
@@ -496,7 +497,7 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
 }
 
 .ecsp-controls .form-switch {
-  padding-left: 15px;
+  padding-left: 10px;
   padding-top: 10px;
 }
 

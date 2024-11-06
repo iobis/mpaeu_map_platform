@@ -4,8 +4,9 @@
 # Load/set options ----
 # Load habitat options
 hab_options <- c("Select a habitat" = "",
- "Seagrass" = "seagrass", "Kelp" = "kelp", "Colonial corals" = "colonialcorals",
- "Maerl" = "maerl", "Bivalve beds" = "bivalvebeds")
+ "Seagrass" = "seagrass", "Polychaete reefs" = "polychaete_reefs",
+ "Maerl" = "maerl", "Kelp" = "kelp", "Corals" = "corals",
+ "Bivalves beds" = "bivalves_beds")
 
 # Add selectors ----
 # Filter selector
@@ -18,13 +19,18 @@ selectInput(
 selectInput(
    inputId = "habitatBin",
    label = "Binary mode", 
-   choices = c("P10" = "p10", "MSS" = "maxsss", "MTP" = "mtp")
+   choices = c("P10" = "p10", "MSS" = "max_spec_sens", "MTP" = "mtp")
 )
 
-label_switch_eunis <- bslib::tooltip(span("Show EUNIS biogenic substrate", bsicons::bs_icon("info-circle")),
-       "Show EUNIS biogenic substrate according to EMODNET Seabed Habitats product (https://emodnet.ec.europa.eu/en/seabed-habitats).",
+label_switch_eunis <- bslib::tooltip(span("Show EUNIS biogenic map", bsicons::bs_icon("info-circle", size = "0.7em")),
+       "Show EUNIS biogenic substrate according to EMODnet Seabed Habitats product (https://emodnet.ec.europa.eu/en/seabed-habitats). Not available at this moment.",
         placement = "bottom")
 span(bslib::input_switch("habitatEUNIS", label_switch_eunis, FALSE), style = "display: flex; margin-top: 25px; margin-bottom: 5px; margin-left: 5px;")
+
+label_switch_bin <- bslib::tooltip(span("Show binary", bsicons::bs_icon("info-circle", size = "0.7em")),
+       "Show maps in fully binary (presence/absence) mode. Otherwise, just removes the lower limit according to the metric on the 'Binary mode' selector.",
+        placement = "bottom")
+span(bslib::input_switch("habitatBinaryFull", label_switch_bin, FALSE), style = "display: flex; margin-top: 2px; margin-bottom: 5px; margin-left: 5px;")
 
 # Add contextual information ----
 tags$div(
@@ -44,10 +50,21 @@ tags$div(
 <div class="bottom-container"> 
 ::: {.grid .gridaltsm}
 
-::: {.g-col-6}
+::: {.g-col-5}
 ```{r}
 tags$div(
-  id = "scenario_box_habitat",
+  class = "scenario_class",
+  selectInput(
+        inputId = "modelSelectHabitat",
+        label = "Model",
+        choices = model_options
+      ))
+```
+:::
+
+::: {.g-col-4}
+```{r}
+tags$div(
   class = "scenario_class",
       selectInput(
         inputId = "scenarioSelectHabitat",
@@ -58,10 +75,9 @@ tags$div(
 
 :::
 
-::: {.g-col-6}
+::: {.g-col-3}
 ```{r}
 tags$div(
-  id = "scenario_box_thermal",
   class = "scenario_class",
       selectInput(
         inputId = "periodSelectHabitat",
@@ -77,11 +93,19 @@ tags$div(
 
 <div class="context-icons">
 
-<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa download >}} DOWNLOAD THE FILE</div>
+```{r}
+button <- htmltools::tags$span(
+  bsicons::bs_icon("download"),
+  "DOWNLOAD THE DATA",
+  style = "color: #545454 !important;"
+)
+htmltools::div(
+  downloadLink("downloadDataHabitat", label = button),
+  class = "context-icons-box"
+)
+```
 
-<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa brands github >}} ACCESS THE CODE</div>
-
-<div class="context-icons-box" onclick="location.href='https://obis.org';">{{< fa play >}} RUN THE MODEL</div>
+<div class="context-icons-box" onclick="location.href='https://github.com/iobis/mpaeu_sdm/blob/main/codes/post_habitat.R';">{{< fa brands github >}} ACCESS THE CODE</div>
 
 </div>
 

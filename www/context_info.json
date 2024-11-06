@@ -13,9 +13,10 @@
   },
   "habitats": {
     "seagrass": ["Definition: long-lived | Species: <i>Posidonia oceanica</i>, <i>Cymodocea nodosa</i>, <i>Zostera marina</i>"],
-    "kelp": [],
-    "colonialcorals": [],
-    "maerl": [],
-    "bivalvebeds": []
+    "kelp": ["Definition: three-dimensional | Species: <i>Laminaria hyperborea</i>, <i>Laminaria ochroleuca</i>, <i>Laminaira saccharina</i>, <i>Saccorhiza polyschides</i>"],
+    "polychaete_reefs": ["Definition: large enough to provide habitat for other groups | Species: <i>Sabellaria alveolata</i>, <i>Sabellaria spinulosa</i>"],
+    "maerl": ["Definition: three-dimensional | Species: <i>Lithothamnion corallioides</i>, <i>Lithothamnion glaciale</i>, <i>Phymatolithon calcareum</i>" ],
+    "bivalves_beds": ["Definition: three-dimensional | Species: <i>Mytilus edulis</i>, <i>Mytilus galloprovincialis</i>, <i>Modiolus modiolus</i>, <i>Ostrea edulis</i>"],
+    "corals": ["Definition: large enough to provide habitat for fish | Species: <i>Desmophyllum pertusum</i>, <i>Madreporia oculata</i>, <i>Solenosmilia variabilis</i>"]
   }
 }

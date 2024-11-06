@@ -73,6 +73,30 @@ m <- m %>%
 speciesinfo <- readRDS("data/app_splist.rds")
 speciesinfo$key <- speciesinfo$taxonID
 speciesinfo$species <- speciesinfo$scientificName
+speciesinfo <- speciesinfo[order(speciesinfo$scientificName),]
+
+# Create a "copy" for other uses
+# TO BE REMOVED IN NEXT VERSION
+speciesinfo_full <- speciesinfo
+
+avmodels <- lapply(speciesinfo$taxonID, function(id) {
+  jfile <- paste0("data/maps/taxonid=", id, "/model=mpaeu/taxonid=", id,
+                  "_model=mpaeu_what=log.json")
+
+  if (file.exists(jfile)) {
+    logf <- jsonlite::read_json(jfile)
+
+    mod_names <- names(logf$model_posteval)[unlist(lapply(logf$model_posteval, function(x) if (length(x) > 0) TRUE else FALSE))]
+    available_models <- mod_names[!grepl("niche", mod_names)]
+    # available_models <- gsub("maxent", "maxnet", available_models)
+    available_models <- gsub("rf", "rf_classification_ds", available_models)
+    available_models <- paste0(available_models, collapse = ";")
+  } else {
+    available_models <- NA
+  }
+  return(available_models)
+})
+speciesinfo$models <- unlist(avmodels)
 
 available_groups <- c("all", unique(speciesinfo$sdm_group))
 names(available_groups) <- stringr::str_to_title(available_groups)
@@ -97,6 +121,13 @@ available_ids <- gsub("taxonid=", "", available_species)
 speciesinfo <- speciesinfo[speciesinfo$taxonID %in% as.numeric(available_ids), ]
 sp_options <- c("", speciesinfo$scientificName)
 
+# Temporary - to be removed in next version
+thermal_ok <- unlist(lapply(speciesinfo$taxonID, function(x){
+  file.exists(paste0("data/maps/taxonid=", x, "/model=mpaeu/predictions/taxonid=", x, "_model=mpaeu_what=thermenvelope.parquet"))
+}))
+sp_options_thermal <- c("", speciesinfo$scientificName[thermal_ok])
+rm(thermal_ok)
+
 # Verify most recent acronym
 build_json <- jsonlite::read_json("data/platform_build.json")
 if (length(unlist(build_json$acronyms_available)) > 1) {
@@ -118,3 +149,10 @@ starea <- sf::read_sf("data/studyarea.fgb")
 # Load additional data
 eez <- sfarrow::st_read_parquet("data/EEZ_IHO_simp_edited.parquet")
 realms <- sf::st_read("data/MarineRealms_BO.shp")
+
+# See available diversity groups
+av_div_groups <- list.files("data/diversity")
+av_div_groups <- av_div_groups[!grepl("txt", av_div_groups)]
+av_div_groups <- gsub(".*group=([^_]+)_type.*", "\\1", av_div_groups)
+av_div_groups <- unique(av_div_groups)
+names(av_div_groups) <- stringr::str_to_title(av_div_groups)

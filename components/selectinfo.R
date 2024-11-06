@@ -21,8 +21,17 @@ sp_info <- reactiveValues(species = "", # Species
                           # Habitat
                           habitat = "",
                           acro_h = "mpaeu",
+                          scenario_h = "",
+                          decade_h = "",
+                          model_h = "",
+                          bintype_h = "",
+                          threshold_h = "",
                           # Diversity
                           metric = "",
+                          group = "",
+                          acro_d = "mpaeu",
+                          map_type = "",
+                          div_type = "",
                           scenario_d = "",
                           decade_d = "",
                           model_d = "")
@@ -46,13 +55,15 @@ observe({
     
     # Check available models for the selected species
     if (input$speciesSelect != "") {
-      logf <- jsonlite::read_json(paste0("data/maps/taxonid=", key,
-                                         "/model=mpaeu/taxonid=", key, "_model=mpaeu_what=log.json"))
-      mod_names <- names(logf$model_posteval)[unlist(lapply(logf$model_posteval,
-                                                            function(x) if (length(x) > 0) TRUE else FALSE))]
-      available_models <- mod_names[!grepl("niche", mod_names)]
+      # logf <- jsonlite::read_json(paste0("data/maps/taxonid=", key,
+      #                                    "/model=mpaeu/taxonid=", key, "_model=mpaeu_what=log.json"))
+      # mod_names <- names(logf$model_posteval)[unlist(lapply(logf$model_posteval,
+      #                                                       function(x) if (length(x) > 0) TRUE else FALSE))]
+      # available_models <- mod_names[!grepl("niche", mod_names)]
       #available_models <- gsub("maxent", "maxnet", available_models)
-      available_models <- gsub("rf", "rf_classification_ds", available_models)
+      # available_models <- gsub("rf", "rf_classification_ds", available_models)
+      available_models <- speciesinfo$model[speciesinfo$species == input$speciesSelect]
+      available_models <- strsplit(available_models, split = ";")[[1]]
       
       # Set the model in use based on availability and priority
       if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
@@ -79,18 +90,29 @@ observe({
   if (active_tab$current == "habitat") {
     # Update habitat information from input selections
     sp_info$habitat <- input$habitatSelect
-    sp_info$scenario <- tolower(input$scenarioSelectHabitat)
-    sp_info$decade <- ifelse(is.null(input$periodSelectHabitat), NULL,
+    sp_info$scenario_h <- tolower(input$scenarioSelectHabitat)
+    sp_info$decade_h <- ifelse(is.null(input$periodSelectHabitat), NULL,
                              ifelse(input$periodSelectHabitat == 2050, "dec50", "dec100"))
+    sp_info$model_h <- input$modelSelectHabitat
+    sp_info$bintype_h <- ifelse(input$habitatBinaryFull, "bin", "cont")
+    sp_info$threshold_h <- input$habitatBin
   }
   
   # When the active tab is "diversity"
   if (active_tab$current == "diversity") {
     # Update diversity metric and model information from input selections
     sp_info$metric <- input$diversitySelect
+    sp_info$group <- input$diversityGroup
     sp_info$model_d <- input$modelSelectDiversity
     sp_info$scenario_d <- tolower(input$scenarioSelectDiversity)
     sp_info$decade_d <- ifelse(is.null(input$periodSelectDiversity), NULL,
                              ifelse(input$periodSelectDiversity == 2050, "dec50", "dec100"))
+    if (input$modelSelectDiversity == "raw") {
+      sp_info$map_type <- ""
+      sp_info$div_type <- input$diversityTypeRaw
+    } else {
+      sp_info$map_type <- paste0("_", input$diversityMode)
+      sp_info$div_type <- input$diversityType
+    }
   }
 })

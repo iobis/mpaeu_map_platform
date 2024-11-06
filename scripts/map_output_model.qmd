@@ -217,3 +217,4 @@ if (inherits(sore, "try-error")) {
 ---
 Produced by the [OBIS](https://obis.org/) team.  
 `obissdm` version `r logf$obissdm_version[[1]]`
+Note: for this report, raster layers are aggregated at 0.5 degree resolution.

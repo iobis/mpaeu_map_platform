@@ -62,7 +62,7 @@ output$contextSpeciesThermal <- renderText({
 # Habitat ----
 # Species title
 output$selectedHabitat <- renderText({
-  stringr::str_to_title(input$habitatSelect)
+  gsub("_", " ", stringr::str_to_title(input$habitatSelect))
 }) %>%
   bindEvent(input$habitatSelect, ignoreInit = T)
 
@@ -74,9 +74,10 @@ output$contextHabitat <- renderText({
       switch(input$habitatSelect,
         seagrass = unlist(context_file$habitats[["seagrass"]]),
         kelp = unlist(context_file$habitats[["kelp"]]),
-        colonialcorals = unlist(context_file$habitats[["colonialcorals"]]),
+        polychaete_reefs = unlist(context_file$habitats[["polychaete_reefs"]]),
         maerl = unlist(context_file$habitats[["maerl"]]),
-        bivalvebeds = unlist(context_file$habitats[["bivalvebeds"]])
+        bivalves_beds = unlist(context_file$habitats[["bivalves_beds"]]),
+        corals = unlist(context_file$habitats[["corals"]])
       )
     )
   }

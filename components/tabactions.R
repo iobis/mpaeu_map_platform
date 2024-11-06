@@ -88,10 +88,10 @@ observe({
       if (input$habitatSelect != "") {
         title_state$current <- "habitat"
         title_state$to_print <- list(
-          tableA = "Model metrics",
-          graph = "Thresholded map",
-          tableB = "Habitat metrics",
-          modelTitle = "Model explanation"
+          tableA = "Distribution by areas",
+          graph = "Areas with known biogenic habitat occurrence",
+          tableB = "Species information",
+          modelTitle = "What is a biogenic habitat?"
         )
       } else {
         title_state$to_print <- base_list
@@ -103,9 +103,9 @@ observe({
       if (input$diversitySelect != "") {
         title_state$current <- "diversity"
         title_state$to_print <- list(
-          tableA = "Model details",
+          tableA = "Diversity by areas",
           graph = "Protected areas",
-          tableB = "By group",
+          tableB = "Composition",
           modelTitle = "Metric explanation"
         )
       } else {

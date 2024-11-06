@@ -9,23 +9,22 @@
 # Create species selectize ----
 updateSelectizeInput(session, "speciesSelect", choices = sp_options, server = TRUE)
 # Create thermal selectize ----
-updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options, server = TRUE)
+updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options_thermal, server = TRUE)
+# Create diversity select
+updateSelectInput(session, "diversityGroup", choices = av_div_groups, selected = av_div_groups[1])
 
 # Change model options based on available models
 observe({
+  req(input$speciesSelect != "")
   mdebug("Changing options")
-  spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
-  logf <- jsonlite::read_json(paste0("data/maps/taxonid=",spkey,"/model=mpaeu/taxonid=",spkey,"_model=mpaeu_what=log.json"))
-  
-  mod_names <- names(logf$model_posteval)[unlist(lapply(logf$model_posteval, function(x) if (length(x) > 0) TRUE else FALSE))]
-  available_models <- mod_names[!grepl("niche", mod_names)]
-  #available_models <- gsub("maxent", "maxnet", available_models)
-  available_models <- gsub("rf", "rf_classification_ds", available_models)
+
+  available_models <- speciesinfo$models[speciesinfo$species == input$speciesSelect]
+  available_models <- unlist(strsplit(available_models, ";"))
   
   if (any(grepl(substr(input$modelSelect,1,3), available_models))) {
     model_inuse <- input$modelSelect
   } else {
-    priority <- c("ensemble", "maxnet", "rf_classification_ds", "xgboost", "glm")
+    priority <- c("ensemble", "maxent", "rf_classification_ds", "xgboost", "glm")
     model_inuse <- priority[priority %in% available_models][1]
   }
   
@@ -67,24 +66,37 @@ filtered_data <- reactiveValues(species = list(species = NULL, n = 0),
 
 # Observe filtering
 observe({
+  req(input$filterSpecies != 0)
   filt_list <- filter_opts(speciesinfo, input$groupSelect, input$commonSelect, input$seaSelect, input$includeProjects,
     input$phylumSelect, input$classSelect, input$orderSelect, input$familySelect)
 
   filtered_data$species$species <- filt_list$species
   filtered_data$species$n <- nrow(filt_list)
-
-  if (length(filt_list$species) > 0) {
-    shiny::updateActionButton(inputId = "speciesActionOK", label = "OK", disabled = FALSE)
-  } else {
-    shiny::updateActionButton(inputId = "speciesActionOK", label = "OK", disabled = TRUE)
-  }
-
-})
+}) %>%
+  bindEvent(input$groupSelect, input$commonSelect, input$seaSelect, input$includeProjects,
+    input$phylumSelect, input$classSelect, input$orderSelect, input$familySelect)
 
 output$filterN <- renderText({filtered_data$species$n})
 
+# Clear the selection before updating choices
+# https://github.com/rstudio/shiny/issues/3966
+observeEvent(input$speciesActionOK, {
+  if (length(filtered_data$species$species) > 0) {
+    updateSelectizeInput(
+      inputId = "speciesSelect",
+      selected = NULL,
+      server = TRUE
+    )
+  }
+})
+
 observe({
-  updateSelectizeInput(session, "speciesSelect", choices = filtered_data$species$species, server = TRUE)
+ if (length(filtered_data$species$species) > 0) {
+    updateSelectizeInput(session, "speciesSelect",
+      choices = filtered_data$species$species,
+      selected = NULL,#filtered_data$species$species[1],
+      server = TRUE)
+ }
 }) %>% bindEvent(input$speciesActionOK)
 
 
@@ -106,6 +118,7 @@ observeEvent(input$speciesThermalActionOK, {
 
 # Observe filtering
 observe({
+  req(input$filterThermalSpecies != 0)
   filt_list <- filter_opts(speciesinfo, input$groupThermalSelect, input$commonThermalSelect,
     input$seaThermalSelect, input$includeThermalProjects,
     input$phylumThermalSelect, input$classThermalSelect, input$orderThermalSelect, input$familyThermalSelect)
@@ -113,16 +126,30 @@ observe({
   filtered_data$thermal$species <- filt_list$species
   filtered_data$thermal$n <- nrow(filt_list)
 
-  if (length(filt_list$species) > 0) {
-    shiny::updateActionButton(inputId = "speciesThermalActionOK", label = "OK", disabled = FALSE)
-  } else {
-    shiny::updateActionButton(inputId = "speciesThermalActionOK", label = "OK", disabled = TRUE)
-  }
-
-})
+}) %>%
+  bindEvent(input$groupThermalSelect, input$commonThermalSelect,
+    input$seaThermalSelect, input$includeThermalProjects,
+    input$phylumThermalSelect, input$classThermalSelect, input$orderThermalSelect, input$familyThermalSelect)
 
 output$filterThermalN <- renderText({filtered_data$thermal$n})
 
+# Clear the selection before updating choices
+# https://github.com/rstudio/shiny/issues/3966
+observeEvent(input$speciesThermalActionOK, {
+  if (length(filtered_data$thermal$species) > 0) {
+    updateSelectizeInput(
+      inputId = "speciesSelectThermal",
+      selected = NULL,
+      server = TRUE
+    )
+  }
+})
+
 observe({
-  updateSelectizeInput(session, "speciesSelectThermal", choices = filtered_data$thermal$species, server = TRUE)
+  if (length(filtered_data$thermal$species) > 0) {
+      updateSelectizeInput(session, "speciesSelectThermal",
+                           choices = filtered_data$thermal$species,
+                           selected = NULL,#filtered_data$species$species[1],
+                           server = TRUE)
+  }
 }) %>% bindEvent(input$speciesThermalActionOK)
