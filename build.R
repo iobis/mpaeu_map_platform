@@ -2,6 +2,8 @@ get_s3_list <- function(bucket = "mpaeu-dist", folder = "results") {
     
     cat("Retrieving S3 list, this may take a while...")
 
+    require(dplyr)
+
     bucket_list <- aws.s3::get_bucket_df(
         bucket = bucket,
         prefix = folder,
@@ -54,8 +56,6 @@ get_s3_list <- function(bucket = "mpaeu-dist", folder = "results") {
         mutate(is_boot = ifelse(grepl("bootcv", Key), TRUE, FALSE))
 
     arrow::write_parquet(bucket_list, "data/s3_list.parquet")
-
-    require(dplyr)
 
     species_data <- bucket_list %>%
         filter(category == "species") %>%
