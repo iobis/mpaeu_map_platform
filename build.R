@@ -116,3 +116,5 @@ get_s3_list <- function(bucket = "mpaeu-dist", folder = "results") {
     return(invisible(NULL))
 
 }
+
+get_s3_list()
