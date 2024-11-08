@@ -16,7 +16,7 @@ output$selectedSpecies <- renderText({
 output$contextSpecies <- renderText({
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelect,]
   if (input$speciesSelect != "") {
-    spmodinfo <- jsonlite::read_json(glue::glue("data/maps/taxonid={selinf$key}/model={selinf$acro}/taxonid={selinf$key}_model={selinf$acro}_what=log.json"))
+    spmodinfo <- jsonlite::read_json(glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid={selinf$key}/model={selinf$acro}/taxonid={selinf$key}_model={selinf$acro}_what=log.json"))
   } else {
     spmodinfo <- NULL
   }
@@ -47,7 +47,7 @@ output$selectedSpeciesThermal <- renderText({
 output$contextSpeciesThermal <- renderText({
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelectThermal,]
   if (input$speciesSelectThermal != "") {
-    spmodinfo <- jsonlite::read_json(glue::glue("data/maps/taxonid={selinf$key}/model={selinf$acro}/taxonid={selinf$key}_model={selinf$acro}_what=log.json"))
+    spmodinfo <- jsonlite::read_json(glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid={selinf$key}/model={selinf$acro}/taxonid={selinf$key}_model={selinf$acro}_what=log.json"))
   } else {
     spmodinfo <- NULL
   }

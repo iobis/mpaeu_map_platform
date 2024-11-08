@@ -49,19 +49,12 @@ observe({
     sp_info$scenario <- tolower(input$scenarioSelect)
     sp_info$decade <- ifelse(is.null(input$periodSelect), NULL,
                              ifelse(input$periodSelect == 2050, "dec50", "dec100"))
-    key <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
-    sp_info$spkey <- key
-    sp_info$acro <- speciesinfo$acro[speciesinfo$species == input$speciesSelect]
+    index <- match(input$speciesSelect, speciesinfo$species, nomatch = 0)
+    sp_info$spkey <- speciesinfo$key[index]
+    sp_info$acro <- speciesinfo$acro[index]
     
     # Check available models for the selected species
     if (input$speciesSelect != "") {
-      # logf <- jsonlite::read_json(paste0("data/maps/taxonid=", key,
-      #                                    "/model=mpaeu/taxonid=", key, "_model=mpaeu_what=log.json"))
-      # mod_names <- names(logf$model_posteval)[unlist(lapply(logf$model_posteval,
-      #                                                       function(x) if (length(x) > 0) TRUE else FALSE))]
-      # available_models <- mod_names[!grepl("niche", mod_names)]
-      #available_models <- gsub("maxent", "maxnet", available_models)
-      # available_models <- gsub("rf", "rf_classification_ds", available_models)
       available_models <- speciesinfo$model[speciesinfo$species == input$speciesSelect]
       available_models <- strsplit(available_models, split = ";")[[1]]
       
@@ -82,8 +75,9 @@ observe({
     sp_info$scenario_t <- tolower(input$scenarioSelectThermal)
     sp_info$decade_t <- ifelse(is.null(input$periodSelectThermal), NULL,
                              ifelse(input$periodSelectThermal == 2050, "dec50", "dec100"))
-    sp_info$spkey_t <- speciesinfo$key[speciesinfo$species == input$speciesSelectThermal]
-    sp_info$acro_t <- speciesinfo$acro[speciesinfo$species == input$speciesSelectThermal]
+    index <- match(input$speciesSelectThermal, speciesinfo$species, nomatch = 0)
+    sp_info$spkey_t <- speciesinfo$key[index]
+    sp_info$acro_t <- speciesinfo$acro[index]
   }
   
   # When the active tab is "habitat"

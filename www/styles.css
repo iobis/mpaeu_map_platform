@@ -537,3 +537,8 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
     width: 300px !important;
   }
 }
+
+.spinner--1 {
+  border-top: 4px solid #8e929a!important;
+  color: #8e929a !important;
+}

@@ -18,7 +18,8 @@ observe({
   req(input$speciesSelect != "")
   mdebug("Changing options")
 
-  available_models <- speciesinfo$models[speciesinfo$species == input$speciesSelect]
+  index <- match(input$speciesSelect, speciesinfo$species)
+  available_models <- speciesinfo$models[index]
   available_models <- unlist(strsplit(available_models, ";"))
   
   if (any(grepl(substr(input$modelSelect,1,3), available_models))) {

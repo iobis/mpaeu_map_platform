@@ -18,13 +18,13 @@ speciespts <- reactive({
   }
   spkey <- speciesinfo$key[speciesinfo$species == sel_species]
   sel_acro <- speciesinfo$acro[speciesinfo$species == sel_species]
-  pts <- arrow::read_parquet(paste0("data/maps/taxonid=", spkey, "/model=", sel_acro, "/taxonid=", spkey, "_model=", sel_acro, "_what=fitocc.parquet"))[,1:2]
+  pts <- arrow::read_parquet(paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", spkey, "/model=", sel_acro, "/taxonid=", spkey, "_model=", sel_acro, "_what=fitocc.parquet"))[,1:2]
   colnames(pts) <- c("longitude", "latitude")
   pts
 })
 
 habitatpts <- reactive({
-  pts <- arrow::read_parquet(paste0("data/habitats/habitat=", sp_info$habitat,
+  pts <- arrow::read_parquet(paste0("https://mpaeu-dist.s3.amazonaws.com/results/habitat/habitat=", sp_info$habitat,
    "_model=", sp_info$acro_h, "_what=points.parquet"))
   colnames(pts)[1:2] <- c("longitude", "latitude")
   pts$species <- as.factor(pts$species)

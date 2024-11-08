@@ -30,6 +30,7 @@ library(leaflet.providers)
 
 includeCSS("www/styles.css")
 includeScript("www/addons.js")
+waiter::useWaiter()
 # 
 shiny_busy <- function() {
   # use &nbsp; for some alignment, if needed
@@ -47,7 +48,7 @@ shiny_busy <- function() {
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #| out-width: 100%
 # Create a div to show messages if busy
-shiny_busy()
+#shiny_busy() #try to remove global busy
 
 # Create a sample graph div with a close button
 graph_div <- htmltools::tags$div(

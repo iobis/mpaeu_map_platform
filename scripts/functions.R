@@ -180,3 +180,10 @@ verify_posteval <- function(log_obj) {
   ))
   
 }
+
+
+s3_exists <- function(file) {
+  bucket <- sub("https://([^.]+)\\.s3\\.amazonaws\\.com.*", "\\1", file)
+  object <- sub("https://[^/]+\\.s3\\.amazonaws\\.com/", "", file)
+  aws.s3::object_exists(object, bucket = bucket)
+}
