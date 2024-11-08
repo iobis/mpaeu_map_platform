@@ -6,6 +6,17 @@
 #
 ##################### Add/update contextual information ########################
 
+# Create waiters
+w <- waiter::Waiter$new(
+  id = c("tableA", "plotA", "tableB"),
+  color = "white",
+  html = htmltools::div(
+    "Loading data...",
+    htmltools::br(), htmltools::br(),
+    waiter::spin_1(), style = "color: #8e929a; font-size: 18px; font-weight: 700"
+  )
+)
+
 # Create a reactive list for contextual info
 continfo <- reactiveValues()
 
@@ -13,6 +24,10 @@ continfo <- reactiveValues()
 observe({
 
   mdebug("Contextual info triggered")
+  w$show()
+  on.exit({
+    w$hide()
+  })
   
   if (active_tab$current == "species" & input$speciesSelect == "") {
     continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
@@ -31,7 +46,7 @@ observe({
   if (active_tab$current == "species") {
     req(!is.null(model_inuse$model) && sp_info$spkey != "")
     
-    basepath <- paste0("data/maps/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/metrics/")
+    basepath <- paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/metrics/")
     
     # Table 1
     metrics <- arrow::read_parquet(
@@ -141,7 +156,7 @@ observe({
     
     req(sp_info$spkey_t)
     thermal_envelope <- jsonlite::read_json(
-      paste0("data/maps/taxonid=", sp_info$spkey_t, "/model=", sp_info$acro_t, "/metrics/taxonid=",
+      paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey_t, "/model=", sp_info$acro_t, "/metrics/taxonid=",
              sp_info$spkey_t, "_model=", sp_info$acro_t, "_what=thermmetrics.json"))
     
     # Table 1
@@ -172,7 +187,7 @@ observe({
     areas$Decade <- limits$Decade
     
     # Graph
-    sst <- rast(paste0("data/thetao_baseline_",thermal_envelope$sst_depth[[1]],"_mean_cog.tif"))
+    sst <- terra::rast(paste0("data/thetao_baseline_",thermal_envelope$sst_depth[[1]],"_mean_cog.tif"))
     sst_data <- terra::extract(sst, speciespts()[,1:2], ID = F)
     colnames(sst_data) <- "sst"
     
@@ -216,7 +231,7 @@ observe({
     
     # Table 1
     hab_eez <- arrow::read_parquet(paste0(
-      "data/habitats/habitat=", sp_info$habitat,
+      "https://mpaeu-dist.s3.amazonaws.com/results/habitat/habitat=", sp_info$habitat,
       "_model=", sp_info$acro_h, 
       "_what=eezstats.parquet"
     ))
@@ -227,7 +242,7 @@ observe({
     #   filter(threshold == input$threshold_h)
     
     # Table 2
-    hab_file <- jsonlite::read_json(paste0("data/habitats/habitat=", sp_info$habitat, 
+    hab_file <- jsonlite::read_json(paste0("https://mpaeu-dist.s3.amazonaws.com/results/habitat/habitat=", sp_info$habitat, 
       "_model=", sp_info$acro_h, "_what=log.json"))
     hab_file_sp <- unlist(hab_file$species)
     hab_sel_species <- speciesinfo_full %>% # Change to speciesinfo in next version!
@@ -274,11 +289,11 @@ observe({
     if (sp_info$group != "all" & input$modelSelectDiversity != "raw") {
       scenario_f <- ifelse(sp_info$scenario_d == "current",
                         sp_info$scenario_d, paste0(sp_info$scenario_d, "_", sp_info$decade_d))
-      eez_f <- glue::glue("data/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}_area=eez.txt")
+      eez_f <- glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}_area=eez.txt")
       table_eez <- read.table(eez_f, header = T)
       colnames(table_eez) <- c("EEZ/Protected area code", "Number of species")
 
-      mpa_f <- glue::glue("data/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}_area=mpa.txt")
+      mpa_f <- glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}_area=mpa.txt")
       table_mpa <- read.table(mpa_f)
       colnames(table_mpa) <- c("EEZ/Protected area code", "Number of species")
 
@@ -315,7 +330,10 @@ observe({
   }
   
 }) %>%
-  bindEvent(sp_info$spkey, input$modelSelect,
-            input$speciesSelectThermal, sp_info$metric, sp_info$habitat,
-            input$diversityGroup, input$modelSelectDiversity,
-            active_tab$current, ignoreInit = TRUE)
+  bindEvent(
+    input$additionalInfo,
+    # sp_info$spkey, input$modelSelect,
+    #         input$speciesSelectThermal, sp_info$metric, sp_info$habitat,
+    #         input$diversityGroup, input$modelSelectDiversity,
+    #         active_tab$current,
+             ignoreInit = TRUE)

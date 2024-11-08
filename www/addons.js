@@ -88,6 +88,12 @@ document.addEventListener('DOMContentLoaded', function() {
        divToRemove.remove();
     }
   }
+
+// Add handler for execution after map
+Shiny.addCustomMessageHandler('additionalInfoTrigger', function(value) {
+  var message = {id: "id1", nonce: Math.random()};
+  Shiny.onInputChange("additionalInfo", message)
+});
   
   //TEMPORARY!!!
   Shiny.addCustomMessageHandler('backToTab', backTotabtemp);

@@ -6,6 +6,25 @@
 #
 ########################### Control mask over map ##############################
 
+# Create waiters
+wMask <- waiter::Waiter$new(
+  id = "mainMap",
+  color = "#ffffff00",
+  html = htmltools::div(
+    htmltools::tags$span("Loading mask", bsicons::bs_icon("eye-fill")),
+    style = "color: #8e929a; font-size: 24px; font-weight: 700; white-space: nowrap; display: inline-block; background-color: rgba(255, 255, 255, 0.95); border-radius: 10px; padding: 20px;"
+  )
+)
+
+wShapes <- waiter::Waiter$new(
+  id = "mainMap",
+  color = "#ffffff00",
+  html = htmltools::div(
+    htmltools::tags$span("Loading shape", bsicons::bs_icon("back")),
+    style = "color: #8e929a; font-size: 24px; font-weight: 700; white-space: nowrap; display: inline-block; background-color: rgba(255, 255, 255, 0.95); border-radius: 10px; padding: 20px;"
+  )
+)
+
 # Create a reactive with mask state ----
 maskstate <- reactiveVal(TRUE)
 
@@ -29,9 +48,15 @@ observe({
 observe({
   req(input$speciesSelect)
   mdebug("Processing mask")
+
+  wMask$show()
+  on.exit({
+    wMask$hide()
+  })
+
   proxy <- leafletProxy("mainMap")
   spkey <- speciesinfo$key[speciesinfo$species == input$speciesSelect]
-  mask_layer <- paste0("data/maps/taxonid=", spkey, "/model=", sp_info$acro, "/predictions/taxonid=", spkey, "_model=", sp_info$acro, "_mask_cog.tif")
+  mask_layer <- paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", spkey, "/model=", sp_info$acro, "/predictions/taxonid=", spkey, "_model=", sp_info$acro, "_mask_cog.tif")
   avmasks <- c("native_ecoregions", "fit_ecoregions", "fit_region", "convex_hull", "minbounding_circle", "buffer100m")
   sel_mask <- input$ecspMask
   which_band <- match(sel_mask, avmasks)
@@ -58,7 +83,10 @@ observe({
   }
   
 }) %>%
-  bindEvent(maskstate(), input$ecspMask, input$speciesSelect, input$scenarioSelect, input$modelSelect, input$periodSelect, input$sideSelect)
+  bindEvent(maskstate(), input$ecspMask, 
+  input$additionalInfo
+  #input$speciesSelect, input$scenarioSelect, input$modelSelect, input$periodSelect, input$sideSelect
+  )
 
 
 observe({
@@ -66,6 +94,10 @@ observe({
   proxy <- leafletProxy("mainMap")
   
   if (input$ecspRealms) {
+    wShapes$show()
+    on.exit({
+      wShapes$hide()
+    })
     proxy %>% leaflet::addPolygons(data = realms, color = "#454545", opacity = 0.3,
       popup = ~as.character(Realm), fillColor = ~colorQuantile("YlOrRd", Realm)(Realm),
       fillOpacity = 0.05, weight = 2, layerId = paste0("realmsShape", 1:nrow(realms)), options = pathOptions(pane = "extraPane"))
@@ -73,13 +105,18 @@ observe({
     proxy %>% leaflet::removeShape(layerId = paste0("realmsShape", 1:nrow(realms)))
   }
   
-})
+}) %>%
+  bindEvent(input$ecspRealms)
 
 observe({
   mdebug("Processing EEZ")
   proxy <- leafletProxy("mainMap")
   
   if (input$ecspEEZ) {
+    wShapes$show()
+    on.exit({
+      wShapes$hide()
+    })
     proxy %>% leaflet::addPolygons(data = eez, color = "#454545", opacity = 0.3,
       popup = ~EEZ, fillColor = "#0d7edb",
       fillOpacity = 0.05, weight = 2, layerId = paste0("eezShape", 1:nrow(eez)), options = pathOptions(pane = "extraPane"))
@@ -87,4 +124,5 @@ observe({
     proxy %>% leaflet::removeShape(layerId = paste0("eezShape", 1:nrow(eez)))
   }
   
-})
+}) %>%
+  bindEvent(input$ecspEEZ)

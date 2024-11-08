@@ -17,7 +17,7 @@ diversity_f_data <- reactive({
     scenario_f <- ifelse(sp_info$scenario_d == "current",
                         sp_info$scenario_d, paste0(sp_info$scenario_d, "_", sp_info$decade_d))
 
-    glue::glue("data/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}{sp_info$map_type}_cog.tif")
+    glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}{sp_info$map_type}_cog.tif")
   } else {NULL}
   
 }) %>%
