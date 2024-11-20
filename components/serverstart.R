@@ -32,12 +32,13 @@ mdebug <- function(text, toprint = debug) {
 
 # Create leaflet object ----
 m <- leaflet() %>% 
-  addTiles(group = "Open Street Maps", layerId = "baseid") %>%
-  addProviderTiles(providers$CartoDB.Positron, group = "CartoDB") %>%
-  addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark") %>%
+  addTiles(urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", layerId = "baseid") %>%
+  # addTiles(group = "Open Street Maps", layerId = "baseid") %>%
+  # addProviderTiles(providers$CartoDB.Positron, group = "CartoDB") %>%
+  # addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark") %>%
   addLayersControl(
     overlayGroups = c("Points"),
-    baseGroups = c("Open Street Maps", "CartoDB", "CartoDB Dark"),
+    baseGroups = c("Open Street Maps"),
     options = layersControlOptions(collapsed = T),
     position = "bottomright"
   ) %>%

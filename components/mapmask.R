@@ -74,7 +74,7 @@ observe({
                  bands = which_band,
                  options = pathOptions(pane = "maskPane"),
                  colorOptions = colorOptions(
-                   palette = c("#aad3df", "#0a626500"),
+                   palette = c("#d4dadc", "#0a626500"),
                    domain = c(0,1),
                    na.color = NA
                  ), autozoom = F) %>%

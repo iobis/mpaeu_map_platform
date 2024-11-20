@@ -1,6 +1,6 @@
 get_s3_list <- function(bucket = "mpaeu-dist", folder = "results") {
     
-    cat("Retrieving S3 list, this may take a while...")
+    cat("Retrieving S3 list, this may take a while...\n")
 
     require(dplyr)
 
@@ -11,7 +11,7 @@ get_s3_list <- function(bucket = "mpaeu-dist", folder = "results") {
         max = Inf
     )
 
-    cat("Processing...")
+    cat("Processing...\n")
 
     bucket_list <- bucket_list[grepl("results", bucket_list$Key),]
 
