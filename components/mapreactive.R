@@ -190,12 +190,14 @@ observe({
         proxy %>%
           removeTiles("baseid") %>%
           removeLayersControl() %>%
-          addTiles(group = "Open Street", layerId = "leftbaseid", options = pathOptions(pane = "left")) %>%
+          addTiles(urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
+            group = "Open Street", layerId = "leftbaseid", options = pathOptions(pane = "left")) %>%
           addGeotiff(file = file_a, layerId = "mapLayer1", opacity = 1,
                      colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
                                                  domain = c(min_range, 100), na.color = NA),
                      options = pathOptions(pane = "left"), autozoom = F) %>%
-          addTiles(group = "Open Street B", layerId = "rightbaseid", options = pathOptions(pane = "right")) %>%
+          addTiles(urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
+            group = "Open Street B", layerId = "rightbaseid", options = pathOptions(pane = "right")) %>%
           addGeotiff(file = file_b, opacity = 1, layerId = "mapLayer2",
                      colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
                                                  domain = c(min_range, 100), na.color = NA),
