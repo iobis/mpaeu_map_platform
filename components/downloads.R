@@ -149,8 +149,11 @@ output$downloadSpeciesAction <- downloadHandler(
     pf
   },
   content = function(file) {
-    all_files <- list.files(paste0("data/maps/taxonid=", sp_info$spkey, "/model=", sp_info$acro),
-     recursive = T, full.names = T)
+    all_files <- s3_list %>%
+      filter(taxonID == sp_info$spkey) %>%
+      collect()
+    tfold <- tempdir()
+    all_files <- all_files$Key
     if (input$speciesDownloadType == "selected") {
       model_f <- all_files[grepl(sp_info$model, all_files)]
       model_scen_f <- model_f[grepl(sp_info$scenario, model_f)]
@@ -161,6 +164,13 @@ output$downloadSpeciesAction <- downloadHandler(
     } else {
       sel_files <- all_files
     }
+    addr <- "https://mpaeu-dist.s3.amazonaws.com/"
+    directories <- dirname(sel_files)
+    directories <- gsub("results/species/", "", directories)
+    fs::dir_create(file.path(tfold, directories))
+    download.file(paste0(addr, sel_files), file.path(tfold, sel_files), method = "libcurl")
+    sel_files <- list.files(tfold, full.names = T)
+    sel_files <- sel_files[!grepl("vscode-R", sel_files)]
     on.exit(removeModal())
     zip::zip(file, sel_files, mode = "cherry-pick")
   }
@@ -214,7 +224,7 @@ output$downloadDataThermal <- downloadHandler(
 
     if (input$speciesSelectThermal != "" & active_tab$current == "thermal") {
       thermal_envelope <- paste0(
-          "data/maps/taxonid=", sp_info$spkey_t, "/model=", sp_info$acro_t, "/predictions/taxonid=",
+          "https://mpaeu-dist.s3.amazonaws.com/", "results/species/taxonid=", sp_info$spkey_t, "/model=", sp_info$acro_t, "/predictions/taxonid=",
           sp_info$spkey_t, "_model=", sp_info$acro_t, "_what=thermenvelope.parquet"
         )
       p <- sfarrow::st_read_parquet(thermal_envelope)

@@ -69,3 +69,19 @@ retrieve <- function(species, what, acro = NULL, results_folder = "results/",
   
 }
   
+
+retrieve_s3 <- function(species, what, s3_list, model = NULL, s3path = "https://mpaeu-dist.s3.amazonaws.com/") {
+  all_files <- s3_list %>%
+      filter(taxonID == species) %>%
+      collect()
+
+  if (!is.null(model)) {
+    all_files <- all_files %>%
+      filter(models == model)
+  }
+
+  all_files <- all_files %>%
+    filter(grepl(what, Key))
+
+  paste0(s3path, all_files$Key)
+}
