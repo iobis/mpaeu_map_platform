@@ -57,8 +57,12 @@ observe({
   removeModal()
   showModal(
     modalDialog(
-      htmltools::span("Generating species report, that may take a few minutes...",
-        style = "color: #097da5; padding-top: 10px; font-size: 25px"
+      htmltools::div(
+        htmltools::span("Generating species report, that may take a few minutes...",
+          style = "color: #097da5; padding-top: 10px; font-size: 25px"
+        ), htmltools::br(), htmltools::br(),
+        htmltools::span(class="loader"), 
+        style = "display: flex; flex-direction: column; justify-content: center; align-items: center;"
       ),
       footer = NULL
     )
