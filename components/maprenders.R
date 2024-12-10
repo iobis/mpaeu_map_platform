@@ -25,4 +25,4 @@ When using the models, it is important to explore all the details to evaluate th
   )
 )
 
-shinyalert("Welcome", welcome_message, type = "info", html = T, size = "m")
+shinyalert("Welcome", welcome_message, type = "info", html = T, size = "s")

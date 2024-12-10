@@ -18,20 +18,21 @@ mainfont: Noto Sans
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 library(ggplot2)
 library(dplyr)
-source("{WD_PATH}/scripts/auxiliary_modelfit.R")
-outfolder <- "{WD_PATH}/data/maps"#"../data/maps/"
+source(file.path("{WD_PATH}", "/scripts/auxiliary_modelfit.R"))
+outfolder <- file.path("{WD_PATH}", "/data/maps")#"../data/maps/"
 model_acro <- "{ACRO_CODE}"
+s3_list <- arrow::open_dataset(file.path("{WD_PATH}", "/data/s3_list.parquet"))
 
 sp <- {SPECIES_CODE}
 
 wrld <- rnaturalearth::ne_countries(returnclass = "sf")
 sf::st_crs(wrld) <- sf::st_crs("EPSG:4326")
 
-masks <- retrieve(sp, "mask_cog.tif$", acro = model_acro, results_folder = outfolder)
+masks <- terra::rast(retrieve_s3(sp, "mask_cog.tif$", s3_list))
 
-ecoreg <- sf::st_read("{WD_PATH}/data/MarineRealms_BO.shp")
+ecoreg <- sf::st_read(file.path("{WD_PATH}", "/data/MarineRealms_BO.shp"))
 
-logf <- jsonlite::read_json(retrieve(sp, "log.json", acro = model_acro, results_folder = outfolder, load = F))
+logf <- jsonlite::read_json(retrieve_s3(sp, "log.json$", s3_list))
 
 ecoreg_sel <- ecoreg[ecoreg$Realm %in% unlist(logf$model_details$ecoregions_included),]
 
@@ -106,7 +107,7 @@ timings$diff[1] <- timings$time[1]
 ## Species data
 
 ```{r echo=FALSE}
-pts <- retrieve(sp, "fitocc", acro = model_acro, results_folder = outfolder)
+pts <- arrow::read_parquet(retrieve_s3(sp, "fitocc", s3_list))
 
 ext_dat <- terra::ext(terra::vect(pts, geom = c("decimalLongitude", "decimalLatitude"), crs = "EPSG:4326"))
 
@@ -140,7 +141,7 @@ ggplot() +
 ### Metrics
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-cv <- retrieve(sp, paste0("method=",which_model,"_what=cvmetrics"), acro = model_acro, results_folder = outfolder)
+cv <- arrow::read_parquet(retrieve_s3(sp, paste0("method=",which_model,"_what=cvmetrics"), s3_list))
 if (which_model == "ensemble") {
   cols <- colnames(cv)[!colnames(cv) %in% c("what", "origin")]
   cv <- cv %>%
@@ -161,14 +162,14 @@ knitr::kable(cv)
 ### Variable importance
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-imp <- retrieve(sp, paste0("method=",which_model,"_what=varimp"), acro = model_acro, results_folder = outfolder)
+imp <- arrow::read_parquet(retrieve_s3(sp, paste0("method=",which_model,"_what=varimp"), s3_list))
 knitr::kable(imp)
 ```
 
 ### Response curves
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-rc <- retrieve(sp, paste0("method=",which_model,"_what=respcurv"), acro = model_acro, results_folder = outfolder)
+rc <- arrow::read_parquet(retrieve_s3(sp, paste0("method=",which_model,"_what=respcur"), s3_list))
 obissdm:::plot.sdm_respcur(rc)
 ```
 

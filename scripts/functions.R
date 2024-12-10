@@ -66,7 +66,8 @@ gen_quarto_report <- function(folder, basepath, species_aphia, model, sp_name, a
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 which_scenario <- SCENARIO
-r <- retrieve(sp, paste0("method=", which_model, "_scen=", which_scenario), acro = model_acro, results_folder = outfolder)
+r <- terra::rast(retrieve_s3(sp, paste0("method=", which_model, "_scen=", which_scenario), s3_list))
+# r <- retrieve(sp, paste0("method=", which_model, "_scen=", which_scenario), acro = model_acro, results_folder = outfolder)
 r <- r[[1]]
 
 r <- terra::mask(r, masks[[1]])
