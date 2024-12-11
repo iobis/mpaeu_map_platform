@@ -153,10 +153,21 @@ output$downloadSpeciesAction <- downloadHandler(
     pf
   },
   content = function(file) {
+    removeModal()
+    shiny::showModal(modalDialog(
+       htmltools::div(
+          htmltools::span("Your download is being prepared, please wait.",
+            style = "color: #097da5; padding-top: 10px; font-size: 25px"
+          ), htmltools::br(), htmltools::br(),
+          htmltools::span(class="loader"), 
+          style = "display: flex; flex-direction: column; justify-content: center; align-items: center;"
+        ),
+        footer = NULL
+    ))
     all_files <- s3_list %>%
       filter(taxonID == sp_info$spkey) %>%
       collect()
-    tfold <- tempdir()
+    tfold <- tempdir(check = TRUE)
     all_files <- all_files$Key
     if (input$speciesDownloadType == "selected") {
       model_f <- all_files[grepl(sp_info$model, all_files)]
@@ -170,11 +181,15 @@ output$downloadSpeciesAction <- downloadHandler(
     }
     addr <- "https://mpaeu-dist.s3.amazonaws.com/"
     directories <- dirname(sel_files)
-    directories <- gsub("results/species/", "", directories)
+    directories <- unique(gsub("results/species/", "", directories))
     fs::dir_create(file.path(tfold, directories))
-    download.file(paste0(addr, sel_files), file.path(tfold, sel_files), method = "libcurl")
+    for (k in seq_along(sel_files)) {
+      download.file(paste0(addr, sel_files[k]), file.path(tfold, gsub("results/species/", "", sel_files[k])))
+    }
+    #download.file(paste0(addr, sel_files), file.path(tfold, sel_files), method = "libcurl")
     sel_files <- list.files(tfold, full.names = T)
     sel_files <- sel_files[!grepl("vscode-R", sel_files)]
+    sel_files <- sel_files[grepl(paste0("taxonid=", sp_info$spkey), sel_files)]
     on.exit(removeModal())
     zip::zip(file, sel_files, mode = "cherry-pick")
   }
