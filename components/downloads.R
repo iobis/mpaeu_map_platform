@@ -174,7 +174,7 @@ output$downloadSpeciesAction <- downloadHandler(
       model_scen_f <- model_f[grepl(sp_info$scenario, model_f)]
       model_scen_f <- model_scen_f[grepl(sp_info$decade, model_scen_f)]
       model_f <- model_f[grepl("cvmetrics|respcurves|fullmetrics|varimp", model_f)]
-      other_f <- all_files[grepl("shape_|mess_|thresholds|log.j", all_files)]
+      other_f <- all_files[grepl("shape_|mess_|thresholds|log.j|fitocc", all_files)]
       sel_files <- c(model_scen_f, model_f, other_f)
     } else {
       sel_files <- all_files
@@ -190,7 +190,10 @@ output$downloadSpeciesAction <- downloadHandler(
     sel_files <- list.files(tfold, full.names = T)
     sel_files <- sel_files[!grepl("vscode-R", sel_files)]
     sel_files <- sel_files[grepl(paste0("taxonid=", sp_info$spkey), sel_files)]
-    on.exit(removeModal())
+    on.exit({
+      removeModal()
+      fs::dir_delete(sel_files)
+    })
     zip::zip(file, sel_files, mode = "cherry-pick")
   }
 )
