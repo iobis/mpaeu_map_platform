@@ -85,6 +85,7 @@ observe({
     
     # Habitat condition
     if (active_tab$current == "habitat") {
+      shinyalert("Important", "Some features of the habitat tab are not available yet.", type = "info", html = T, size = "s") # Temporary
       if (input$habitatSelect != "") {
         title_state$current <- "habitat"
         title_state$to_print <- list(
@@ -100,6 +101,7 @@ observe({
     
     # Diversity condition
     if (active_tab$current == "diversity") {
+      shinyalert("Important", "The diversity data is currently being updated, and the current maps do not include the full range of models.", type = "info", html = T, size = "s") # Temporary
       if (input$diversitySelect != "") {
         title_state$current <- "diversity"
         title_state$to_print <- list(
