@@ -1,13 +1,13 @@
 library(aws.s3)
 
-local_folder <- "species"
-fs::dir_create(local_folder)
+output_folder <- "species"
+fs::dir_create(output_folder)
 
 bucket <- "mpaeu-dist"
 s3_folder <- "results/species"
 
 # Create a function to download
-download_objs <- function(s3_objects) {
+download_objs <- function(s3_objects, local_folder) {
     i <- 0
     total <- length(s3_objects)
     for (obj in s3_objects) {
@@ -41,7 +41,7 @@ for (sp in species) {
         use_https = TRUE, max = Inf
     )
 
-    download_objs(s3_objects)
+    download_objs(s3_objects, file.path(output_folder, paste0("taxonid=", sp)))
 
 }
 
@@ -54,25 +54,7 @@ for (sp in species) {
 if (readline("Do you want to download all data? Y/N\n") == "Y") {
     s3_objects <- get_bucket(bucket = bucket, prefix = s3_folder, use_https = TRUE, max = Inf)
 
-    i <- 0
-    total <- length(s3_objects)
-    for (obj in s3_objects) {
-        i <- i + 1
-        cat("Downloading", i, "out of", total, "\n")
-        s3_key <- obj$Key
-        local_file <- file.path(local_folder, s3_key)
-
-        if (!endsWith(s3_key, "/")) {
-            save_object(
-                object = s3_key,
-                bucket = bucket,
-                file = local_file,
-                region = "",
-                use_https = TRUE 
-            )
-            message(paste("Downloaded:", s3_key, "to", local_file))
-        }
-    }
+    download_objs(s3_objects, output_folder)
 }
 
 # FOR HABITATS:
