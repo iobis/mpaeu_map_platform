@@ -18,4 +18,4 @@ jobs:
         SSH_USER: ${{ secrets.SSH_USER }}
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
       run: |
-        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER"@shiny.obis.org 'cd .. && cd data/shiny/shinyapps/distmaps && git pull && Rscript build.R && docker restart shiny'
+        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER"@shiny.obis.org 'cd .. && cd data/shiny/shinyapps/distmaps && git pull && docker restart shiny'
