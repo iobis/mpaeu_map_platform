@@ -141,6 +141,64 @@ observe({
 }) %>%
   bindEvent(input$downloadDataSpecies)
 
+downloadFiles <- reactiveValues(files = NULL)
+
+observe({
+  showModal(
+    modalDialog(
+      htmltools::div(
+          htmltools::span("Your download is being prepared, please wait.",
+            style = "color: #097da5; padding-top: 10px; font-size: 25px"
+          ), htmltools::br(), htmltools::br(),
+          htmltools::span(class="loader"), 
+          style = "display: flex; flex-direction: column; justify-content: center; align-items: center;"
+        ),
+      footer = NULL
+    )
+  )
+
+  # Prepare download files
+  all_files <- s3_list %>%
+      filter(taxonID == sp_info$spkey) %>%
+      collect()
+  tfold <- tempdir(check = TRUE)
+  all_files <- all_files$Key
+  if (input$speciesDownloadType == "selected") {
+    model_f <- all_files[grepl(sp_info$model, all_files)]
+    model_scen_f <- model_f[grepl(sp_info$scenario, model_f)]
+    if (sp_info$scenario != "current") {
+      model_scen_f <- model_scen_f[grepl(sp_info$decade, model_scen_f)]
+    }
+    model_f <- model_f[grepl("cvmetrics|respcurves|fullmetrics|varimp", model_f)]
+    other_f <- all_files[grepl("shape_|mess_|mask_|thresholds|log.j|fitocc", all_files)]
+    sel_files <- c(model_scen_f, model_f, other_f)
+  } else {
+    sel_files <- all_files
+  }
+  addr <- "https://mpaeu-dist.s3.amazonaws.com/"
+  directories <- dirname(sel_files)
+  directories <- unique(gsub("results/species/", "", directories))
+  fs::dir_create(file.path(tfold, directories))
+  for (k in seq_along(sel_files)) {
+    download.file(paste0(addr, sel_files[k]), file.path(tfold, gsub("results/species/", "", sel_files[k])))
+  }
+  #download.file(paste0(addr, sel_files), file.path(tfold, sel_files), method = "libcurl")
+  sel_files <- list.files(tfold, full.names = T)
+  sel_files <- sel_files[!grepl("vscode-R", sel_files)]
+  sel_files <- sel_files[grepl(paste0("taxonid=", sp_info$spkey), sel_files)]
+
+  # Assign to list
+  downloadFiles$files <- sel_files
+
+  showModal(modalDialog(
+    htmltools::span("The data is ready for download.",
+            style = "color: #097da5; padding-top: 10px; font-size: 25px"
+    ),
+    footer = downloadButton("downloadSpeciesAction", label = "Download")
+  ))
+}) %>%
+  bindEvent(input$downloadSpeciesInterm)
+
 output$downloadSpeciesAction <- downloadHandler(
   filename = function() {
     pf <- paste0("taxonid=", sp_info$spkey)
@@ -154,47 +212,10 @@ output$downloadSpeciesAction <- downloadHandler(
   },
   content = function(file) {
     removeModal()
-    shiny::showModal(modalDialog(
-       htmltools::div(
-          htmltools::span("Your download is being prepared, please wait.",
-            style = "color: #097da5; padding-top: 10px; font-size: 25px"
-          ), htmltools::br(), htmltools::br(),
-          htmltools::span(class="loader"), 
-          style = "display: flex; flex-direction: column; justify-content: center; align-items: center;"
-        ),
-        footer = NULL
-    ))
-    all_files <- s3_list %>%
-      filter(taxonID == sp_info$spkey) %>%
-      collect()
-    tfold <- tempdir(check = TRUE)
-    all_files <- all_files$Key
-    if (input$speciesDownloadType == "selected") {
-      model_f <- all_files[grepl(sp_info$model, all_files)]
-      model_scen_f <- model_f[grepl(sp_info$scenario, model_f)]
-      model_scen_f <- model_scen_f[grepl(sp_info$decade, model_scen_f)]
-      model_f <- model_f[grepl("cvmetrics|respcurves|fullmetrics|varimp", model_f)]
-      other_f <- all_files[grepl("shape_|mess_|thresholds|log.j|fitocc", all_files)]
-      sel_files <- c(model_scen_f, model_f, other_f)
-    } else {
-      sel_files <- all_files
-    }
-    addr <- "https://mpaeu-dist.s3.amazonaws.com/"
-    directories <- dirname(sel_files)
-    directories <- unique(gsub("results/species/", "", directories))
-    fs::dir_create(file.path(tfold, directories))
-    for (k in seq_along(sel_files)) {
-      download.file(paste0(addr, sel_files[k]), file.path(tfold, gsub("results/species/", "", sel_files[k])))
-    }
-    #download.file(paste0(addr, sel_files), file.path(tfold, sel_files), method = "libcurl")
-    sel_files <- list.files(tfold, full.names = T)
-    sel_files <- sel_files[!grepl("vscode-R", sel_files)]
-    sel_files <- sel_files[grepl(paste0("taxonid=", sp_info$spkey), sel_files)]
     on.exit({
-      removeModal()
-      fs::dir_delete(sel_files)
+      fs::dir_delete(downloadFiles$files)
     })
-    zip::zip(file, sel_files, mode = "cherry-pick")
+    zip::zip(file, downloadFiles$files, mode = "cherry-pick")
   }
 )
 
