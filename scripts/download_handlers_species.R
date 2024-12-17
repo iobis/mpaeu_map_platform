@@ -81,7 +81,8 @@ species_download_modal <- function(species, key, model, scenario, decade, acro) 
             ),
             footer = tagList(
                 modalButton("Cancel"),
-                downloadButton("downloadSpeciesAction", label = "Download")
+                shiny::actionButton("downloadSpeciesInterm", label = "Download", icon = icon("download"))
+                #downloadButton("downloadSpeciesAction", label = "Download")
             ), size = "l"
         )
     }
@@ -98,7 +99,7 @@ species_code_download <- function(species, key, model) {
                         htmltools::h5("Want to see all the framework?"),
                         htmltools::span(htmltools::HTML(
                             "<p>You can also explore our approach through 
-                            <a href='https://mpaeu-dist.s3.amazonaws.com/index.html' target='_blank'>
+                            <a href='https://github.com/iobis/mpaeu_sdm' target='_blank'>
                             the GitHub repository</a>"
                         )),
                         full_screen = F
