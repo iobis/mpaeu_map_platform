@@ -190,6 +190,8 @@ observe({
   # Assign to list
   downloadFiles$files <- sel_files
 
+  removeModal()
+
   showModal(modalDialog(
     htmltools::span("The data is ready for download.",
             style = "color: #097da5; padding-top: 10px; font-size: 25px"
@@ -211,8 +213,8 @@ output$downloadSpeciesAction <- downloadHandler(
     pf
   },
   content = function(file) {
-    removeModal()
     on.exit({
+      removeModal()
       fs::dir_delete(downloadFiles$files)
     })
     zip::zip(file, downloadFiles$files, mode = "cherry-pick")
