@@ -9,6 +9,12 @@ Models were created using a point-process framework. Details on the modelling fr
 
 Species Distribution Models (SDMs) provide valuable insights for both research and conservation efforts. These maps depict the relative and potential suitability of habitats for a particular species, aiding researchers and conservationists in understanding where a species could potentially occur. It is important to note that SDMs show suitability rather than presence, meaning the species may not actually occur throughout the entire extent indicated on the map. Additionally, there is inherent uncertainty associated with all SDM maps, stemming from various factors such as data quality, model assumptions, and environmental variability. Therefore, while SDMs offer valuable information, their results should be interpreted critically, considering the limitations and uncertainties associated with the models. 
 
+## How to cite
+
+When using data from this platform, please cite it as follows:
+
+Ocean Biogeographic information System (OBIS). (2024). Species distribution dashboard for MPA Europe. (version 0.1.0). https://shiny.obis.org/distmaps. Zenodo. https://doi.org/10.5281/zenodo.14524781
+
 :::
 
 <!-- HERE STARTS THE FOOTER -->
