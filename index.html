@@ -1639,7 +1639,7 @@ Show MPAs
 <div class="body-section">
 <div class="grid">
 <!-- Table 1 --->
-<div class="g-col-md-6 g-col-12">
+<div class="g-col-md-6 g-col-12" data-display-if="!input.jsValue || !(input.jsValue.id == 'habitat' || input.jsValue.id == 'diversity')">
 <p></p><div id="table1-title" class="body-title"> <div id="tableATitle" class="shiny-text-output"></div> </div><p></p>
 <div class="cell">
 <div class="cell-output-display">
@@ -1648,7 +1648,7 @@ Show MPAs
 </div>
 </div>
 <!-- Graphic 1 -->
-<div class="g-col-md-6 g-col-12">
+<div class="g-col-md-6 g-col-12" data-display-if="!input.jsValue || !(input.jsValue.id == 'habitat' || input.jsValue.id == 'diversity')">
 <p></p><div id="graph-title" class="body-title"> <div id="graphTitle" class="shiny-text-output"></div> </div><p></p>
 <div class="cell">
 <div class="cell-output-display">

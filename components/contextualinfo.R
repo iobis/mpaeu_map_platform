@@ -230,11 +230,12 @@ observe({
     req(sp_info$habitat)
     
     # Table 1
-    hab_eez <- arrow::read_parquet(paste0(
-      "https://mpaeu-dist.s3.amazonaws.com/results/habitat/habitat=", sp_info$habitat,
-      "_model=", sp_info$acro_h, 
-      "_what=eezstats.parquet"
-    ))
+    # hab_eez <- arrow::read_parquet(paste0(
+    #   "https://mpaeu-dist.s3.amazonaws.com/results/habitat/habitat=", sp_info$habitat,
+    #   "_model=", sp_info$acro_h, 
+    #   "_what=eezstats.parquet"
+    # ))
+    hab_eez <- data.frame()
     # hab_eez <- hab_eez %>%
     #   filter(method == sp_info$model_h) %>%
     #   filter(scen == ifelse(sp_info$scenario_h == "current",
@@ -252,28 +253,28 @@ observe({
     colnames(hab_sel_species)[10:12] <- c("GBIF speciesKey", "GBIF scientificName", "Common names")
 
     # Graph
-    base <- rnaturalearth::ne_countries(returnclass = "sf")
-    hab_true_data <- "data/teste.pnd"
-    if (file.exists(hab_true_data)) {
-      hab_true_data <- arrow::read_parquet(hab_true_data)
-      p <- ggplot() +
-        geom_sf(data = base, color = "grey70", fill = "grey70") +
-        geom_point(data = hab_true_data, aes(x = x, y = y)) +
-        xlab(NULL) + ylab(NULL) +
-        coord_sf() +
-        theme_light()
-    } else {
-      p <- ggplot() +
-        geom_sf(data = base, color = "grey70", fill = "grey70") +
-        geom_text(data = data.frame(label = "No data available", x = 0, y = 0), aes(x = x, y = y, label = label)) +
-        xlab(NULL) + ylab(NULL) +
-        coord_sf() +
-        theme_light()
-    }
+    # base <- rnaturalearth::ne_countries(returnclass = "sf")
+    # hab_true_data <- "data/teste.pnd"
+    # if (file.exists(hab_true_data)) {
+    #   hab_true_data <- arrow::read_parquet(hab_true_data)
+    #   p <- ggplot() +
+    #     geom_sf(data = base, color = "grey70", fill = "grey70") +
+    #     geom_point(data = hab_true_data, aes(x = x, y = y)) +
+    #     xlab(NULL) + ylab(NULL) +
+    #     coord_sf() +
+    #     theme_light()
+    # } else {
+    #   p <- ggplot() +
+    #     geom_sf(data = base, color = "grey70", fill = "grey70") +
+    #     geom_text(data = data.frame(label = "No data available", x = 0, y = 0), aes(x = x, y = y, label = label)) +
+    #     xlab(NULL) + ylab(NULL) +
+    #     coord_sf() +
+    #     theme_light()
+    # }
     
     continfo$tableA <- hab_eez
     continfo$tableB <- hab_sel_species
-    continfo$plotA <- plotly::ggplotly(p)
+    continfo$plotA <- plot(1,1)#plotly::ggplotly(p)
     
     # Text
     continfo$text[[1]] <- "What is a biogenic habitat?"
@@ -286,21 +287,22 @@ observe({
     req(sp_info$metric)
     
     # Table 1
-    if (sp_info$group != "all" & input$modelSelectDiversity != "raw") {
-      scenario_f <- ifelse(sp_info$scenario_d == "current",
-                        sp_info$scenario_d, paste0(sp_info$scenario_d, "_", sp_info$decade_d))
-      eez_f <- glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}_area=eez.txt")
-      table_eez <- read.table(eez_f, header = T)
-      colnames(table_eez) <- c("EEZ/Protected area code", "Number of species")
+    # if (sp_info$group != "all" & input$modelSelectDiversity != "raw") {
+    #   scenario_f <- ifelse(sp_info$scenario_d == "current",
+    #                     sp_info$scenario_d, paste0(sp_info$scenario_d, "_", sp_info$decade_d))
+    #   eez_f <- glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}_area=eez.txt")
+    #   table_eez <- read.table(eez_f, header = T)
+    #   colnames(table_eez) <- c("EEZ/Protected area code", "Number of species")
 
-      mpa_f <- glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}_area=mpa.txt")
-      table_mpa <- read.table(mpa_f)
-      colnames(table_mpa) <- c("EEZ/Protected area code", "Number of species")
+    #   mpa_f <- glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}_area=mpa.txt")
+    #   table_mpa <- read.table(mpa_f)
+    #   colnames(table_mpa) <- c("EEZ/Protected area code", "Number of species")
 
-      table_a <- rbind(table_eez, table_mpa)
-    } else {
-      table_a <- data.frame()
-    }
+    #   table_a <- rbind(table_eez, table_mpa)
+    # } else {
+    #   table_a <- data.frame()
+    # }
+    table_a <- data.frame()
     
     # Table 2
     if (input$diversityGroup == "all") {
@@ -310,19 +312,19 @@ observe({
     }
     
     # Graph
-    base <- rnaturalearth::ne_countries(returnclass = "sf")
-    p <- ggplot() +
-      geom_sf(data = base, color = "grey70", fill = "grey70") +
-      geom_text(data = data.frame(x = 0, y = 0, label = "Information not available"), aes(x = x, y = y, label = label)) +
-      #geom_point(data = data.frame(x = rnorm(10), y = rnorm(10)), aes(x = x, y = y)) +
-      xlab(NULL) + ylab(NULL) +
-      coord_sf() +
-      theme_light()
+    # base <- rnaturalearth::ne_countries(returnclass = "sf")
+    # p <- ggplot() +
+    #   geom_sf(data = base, color = "grey70", fill = "grey70") +
+    #   geom_text(data = data.frame(x = 0, y = 0, label = "Information not available"), aes(x = x, y = y, label = label)) +
+    #   #geom_point(data = data.frame(x = rnorm(10), y = rnorm(10)), aes(x = x, y = y)) +
+    #   xlab(NULL) + ylab(NULL) +
+    #   coord_sf() +
+    #   theme_light()
 
     
     continfo$tableA <- table_a
     continfo$tableB <- table_b
-    continfo$plotA <- plotly::ggplotly(p)
+    continfo$plotA <- plot(1,1)#plotly::ggplotly(p)
     
     # Text
     continfo$text[[1]] <- paste("What is", sp_info$metric)
