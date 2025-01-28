@@ -274,7 +274,7 @@ observe({
     
     continfo$tableA <- hab_eez
     continfo$tableB <- hab_sel_species
-    continfo$plotA <- plot(1,1)#plotly::ggplotly(p)
+    continfo$plotA <- plotly::ggplotly(ggplot2::ggplot(data.frame(x = 1, y = 1)) + ggplot2::geom_point(aes(x = x, y = y)))
     
     # Text
     continfo$text[[1]] <- "What is a biogenic habitat?"
@@ -324,7 +324,7 @@ observe({
     
     continfo$tableA <- table_a
     continfo$tableB <- table_b
-    continfo$plotA <- plot(1,1)#plotly::ggplotly(p)
+    continfo$plotA <- plotly::ggplotly(ggplot2::ggplot(data.frame(x = 1, y = 1)) + ggplot2::geom_point(aes(x = x, y = y)))
     
     # Text
     continfo$text[[1]] <- paste("What is", sp_info$metric)
