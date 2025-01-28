@@ -76,7 +76,7 @@ conditionalPanel(
 ::: {.grid}
 
 <!-- Table 1 --->
-::: {.g-col-md-6 .g-col-12}
+::: {.g-col-md-6 .g-col-12 data-display-if="!input.jsValue || !(input.jsValue.id == 'habitat' || input.jsValue.id == 'diversity')"}
 `r tags$div(id="table1-title", class="body-title", textOutput("tableATitle"))`
 
 ```{r}
@@ -86,7 +86,7 @@ DT::dataTableOutput("tableA")
 :::
 
 <!-- Graphic 1 -->
-::: {.g-col-md-6 .g-col-12}
+::: {.g-col-md-6 .g-col-12 data-display-if="!input.jsValue || !(input.jsValue.id == 'habitat' || input.jsValue.id == 'diversity')"}
 `r tags$div(id="graph-title", class="body-title", textOutput("graphTitle"))`
 
 ```{r}
