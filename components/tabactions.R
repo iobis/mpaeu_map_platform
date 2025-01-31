@@ -103,7 +103,7 @@ observe({
     
     # Diversity condition
     if (active_tab$current == "diversity") {
-      shinyalert("Important", "The diversity data is currently being updated. New maps will be available in 2025-01-29 22:00 CET", type = "info", html = T, size = "s") # Temporary
+      shinyalert("Important", "The diversity data is currently being updated. New maps will be available in 2025-02-01 22:00 CET", type = "info", html = T, size = "s") # Temporary
       if (input$diversitySelect != "") {
         title_state$current <- "diversity"
         title_state$to_print <- list(
