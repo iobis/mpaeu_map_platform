@@ -113,3 +113,10 @@ realms <- sf::st_read("data/MarineRealms_BO.shp")
 # See available diversity groups
 av_div_groups <- unlist(s3_divhab$diversity$groups)
 names(av_div_groups) <- stringr::str_to_title(av_div_groups)
+
+# Load citation info
+cit_species_ds <- arrow::open_dataset("data/reg_datasets_species.parquet")
+cit_general_ds <- arrow::open_dataset("data/reg_datasets_context.parquet")
+
+# Load diversity species list
+div_sp_list <- arrow::open_dataset("data/metric=richness_model=mpaeu_what=splist.parquet")
