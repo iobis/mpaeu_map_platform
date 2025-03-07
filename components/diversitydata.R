@@ -16,12 +16,13 @@ diversity_f_data <- reactive({
   if (input$diversitySelect != "" && input$diversityGroup != "" && active_tab$current == "diversity") {
     scenario_f <- ifelse(sp_info$scenario_d == "current",
                         sp_info$scenario_d, paste0(sp_info$scenario_d, "_", sp_info$decade_d))
+    sel_method <- ifelse(sp_info$model_d == "which_valid", "combined", sp_info$model_d)
 
-    glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric={sp_info$metric}_model=mpaeu_method={sp_info$model_d}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}{sp_info$map_type}_cog.tif")
+    glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric={sp_info$metric}_model=mpaeu_method={sel_method}_scen={scenario_f}_group={sp_info$group}_type={sp_info$div_type}{sp_info$map_type}_cog.tif")
   } else {NULL}
   
 }) %>%
-  bindEvent(sp_info$metric, sp_info$scenario_d,
+  bindEvent(sp_info$metric, sp_info$scenario_d, sp_info$group,
             sp_info$decade_d, sp_info$model_d, sp_info$map_type, sp_info$div_type, ignoreInit = T)
 
 observe({

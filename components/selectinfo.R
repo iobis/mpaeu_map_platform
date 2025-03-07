@@ -96,7 +96,7 @@ observe({
   if (active_tab$current == "diversity") {
     # Update diversity metric and model information from input selections
     sp_info$metric <- input$diversitySelect
-    sp_info$group <- input$diversityGroup
+    sp_info$group <- tolower(input$diversityGroup)
     sp_info$model_d <- input$modelSelectDiversity
     sp_info$scenario_d <- tolower(input$scenarioSelectDiversity)
     sp_info$decade_d <- ifelse(is.null(input$periodSelectDiversity), NULL,

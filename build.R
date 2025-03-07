@@ -76,11 +76,16 @@ get_s3_list <- function(bucket = "mpaeu-dist", folder = "results") {
 
     div_hab_json <- list(
         diversity = NA,
-        habitat = NA
+        habitat = NA,
+        diversity_sp_list = NA
     )
 
     diversity_groups <- bucket_list %>%
         filter(category == "diversity")
+
+    div_hab_json$diversity_sp_list <- diversity_groups$Key[grepl("what=splist", diversity_groups$Key)]
+
+    diversity_groups <- diversity_groups[!grepl("what=splist", diversity_groups$Key), ]
 
     diversity_groups$group <- gsub("group=", "", regmatches(diversity_groups$Key, regexpr("group=[^_]+", diversity_groups$Key)))
 
@@ -118,3 +123,23 @@ get_s3_list <- function(bucket = "mpaeu-dist", folder = "results") {
 }
 
 get_s3_list()
+
+download_local_files <- function() {
+    cat("Downloading diversity lists\n")
+    download.file(
+        "https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric=richness_model=mpaeu_what=splist.parquet",
+        "data/metric=richness_model=mpaeu_what=splist.parquet"
+    )
+    cat("Downloading citation lists\n")
+    download.file(
+        "https://mpaeu-dist.s3.amazonaws.com/source/citations/reg_datasets_context.parquet",
+        "data/reg_datasets_context.parquet"
+    )
+    download.file(
+        "https://mpaeu-dist.s3.amazonaws.com/source/citations/reg_datasets_species.parquet",
+        "data/reg_datasets_species.parquet"
+    )
+    cat("Download concluded.\n")
+}
+
+download_local_files()

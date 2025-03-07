@@ -40,7 +40,7 @@ tags$div(
       selectInput(
         inputId = "diversityType",
         label = "Map type",
-        choices = c("Sens+Spec" = "max_spec_sens", "P10" = "p10", "MTP" = "mtp")
+        choices = c("Sens+Spec" = "mss", "P10" = "p10", "MTP" = "mtp")
       ))
 )
 
@@ -77,7 +77,7 @@ tags$div(
 selectInput(
         inputId = "modelSelectDiversity",
         label = "Model",
-        choices = c("Raw" = "raw", "RandomForest" = "rf", "MAXENT" = "maxent", "XGBoost" = "xgboost", "Ensemble" = "ensemble")
+        choices = c("Raw" = "raw", "RandomForest" = "rf", "MAXENT" = "maxent", "XGBoost" = "xgboost", "Ensemble" = "ensemble", "ESM" = "esm", "Valids" = "which_valid")
       ))
 ```
 :::

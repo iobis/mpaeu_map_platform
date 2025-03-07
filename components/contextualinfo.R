@@ -305,11 +305,17 @@ observe({
     table_a <- data.frame()
     
     # Table 2
-    if (input$diversityGroup == "all") {
-      table_b <- data.frame(species = "Not available")
+    if (sp_info$group == "all") {
+      table_b <- div_sp_list |> collect()
     } else {
-      table_b <- data.frame(species = "Not available")
+      table_b <- div_sp_list |>
+        filter(tolower(group) == sp_info$group) |>
+        collect()
     }
+    if (sp_info$model_d != "raw") {
+      table_b <- table_b[table_b[[sp_info$model_d]], ]
+    }
+    table_b <- table_b[, c("taxonID", "scientificName", "group")]
     
     # Graph
     # base <- rnaturalearth::ne_countries(returnclass = "sf")
@@ -333,7 +339,7 @@ observe({
   
 }) %>%
   bindEvent(
-    input$additionalInfo,
+    input$additionalInfo, sp_info$model_d, sp_info$group,
     # sp_info$spkey, input$modelSelect,
     #         input$speciesSelectThermal, sp_info$metric, sp_info$habitat,
     #         input$diversityGroup, input$modelSelectDiversity,

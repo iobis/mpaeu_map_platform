@@ -195,6 +195,47 @@ if (!file.exists("data/app_splist.rds") || force) {
 
     joint_list_sea$region_name[is.na(joint_list_sea$region_name)] <- "Other"
 
+    # Add red list status
+    if (!file.exists("data/redlist.csv")) {
+        # Code from the eDNA dashboard pipeline
+        suppressPackageStartupMessages(library(rredlist))
+        suppressPackageStartupMessages(library(dplyr))
+
+        redlist <- data.frame()
+
+        page <- 0
+
+        while (TRUE) {
+            res <- rl_sp(page, key = "a936c4f78881e79a326e73c4f97f34a6e7d8f9f9e84342bff73c3ceda14992b9")$result
+            if (length(res) == 0) {
+                break
+            }
+            redlist <- bind_rows(redlist, res)
+            page <- page + 1
+        }
+
+        redlist <- redlist %>%
+            filter(is.na(population)) %>%
+            select(species = scientific_name, category)
+
+        write.csv(redlist, "data/redlist.csv", row.names = FALSE, quote = TRUE)
+    }
+
+    redlist <- read.csv("data/redlist.csv")
+    colnames(redlist) <- c("scientificName", "redlist_category")
+
+    joint_list_sea <- left_join(joint_list_sea, redlist)
+    joint_list_sea$redlist_category[is.na(joint_list_sea$redlist_category)] <- "Not available"
+    joint_list_sea$redlist_category[grepl("LR", joint_list_sea$redlist_category)] <- "LR"
+
+    if (file.exists("data/sdm_review.csv")) {
+        sdm_status <- read.csv("data/sdm_review.csv")
+        joint_list_sea <- left_join(joint_list_sea, sdm_status)
+    } else {
+        joint_list_sea$sdm_quality <- "Not assessed"
+        joint_list_sea$sdm_reviewed <- "No"
+    }
+
     saveRDS(joint_list_sea, "data/app_splist.rds")
 
 } else {

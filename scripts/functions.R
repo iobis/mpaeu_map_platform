@@ -188,3 +188,114 @@ s3_exists <- function(file) {
   object <- sub("https://[^/]+\\.s3\\.amazonaws\\.com/", "", file)
   aws.s3::object_exists(object, bucket = bucket)
 }
+
+
+gen_context_boxes <- function(model_quality = "Not assessed",
+                             reviewed = "No",
+                             conservation_status = "Not available",
+                             type = "species") {
+
+  if (is.null(model_quality) || is.na(model_quality) || length(model_quality) < 1) {
+    return("")
+  }
+
+  if (model_quality == "Good") {
+    mqc <- "#199651"
+  } else if (model_quality == "Average") {
+    mqc <- "#C18820"
+  } else if (model_quality == "Poor"){
+    mqc <- "#a51c3c"
+  } else {
+    mqc <- "#B4B4B4"
+  }
+
+  if (reviewed == "No") {
+    rec <- "#a51c3c"
+  } else {
+    rec <- "#199651"
+  }
+
+  if (conservation_status == "Not available") {
+    csc <- "#adadad"
+  } else if (conservation_status == "DD") {
+    csc <- "#727272"
+  } else if (conservation_status == "LC") {
+    csc <- "#51bc1d"
+  } else if (conservation_status == "NT") {
+    csc <- "#97c115"
+  } else if (conservation_status == "VU") {
+    csc <- "#ffc90e"
+  } else if (conservation_status == "EN") {
+    csc <- "#f28533"
+  } else if (conservation_status == "CR") {
+    csc <- "#c52412"
+  } else if (conservation_status == "EW") {
+    csc <- "#85618d"
+  } else {
+    csc <- "white"
+  }
+
+  tooltip_1 <- bslib::tooltip("Model quality",
+    "This takes into account both the peer-review of the models and the metrics.",
+    placement = "auto")
+  tooltip_2 <- bslib::tooltip("Reviewed",
+    "Model revision done by specialists.",
+    placement = "auto")
+  tooltip_3 <- bslib::tooltip("Threatened status",
+    "According to IUCN Red List.",
+    placement = "auto")
+  
+  if (type == "species") {
+    html_content <- glue::glue(
+      '
+<div style="display: flex; margin-top: 18px; margin-bottom: 18px;">
+  <div style="display: flex; flex-direction: column; padding-right: 10px;">
+    <span style="text-align: center;">{tooltip_1}</span> <span style="background-color: {mqc}; border-radius: 5px; padding: 3px; color: white; text-align: center;">{model_quality}</span>
+  </div>
+  <div style="display: flex; flex-direction: column; padding-right: 10px;">
+    <span style="text-align: center;">{tooltip_2}</span> <span style="background-color: {rec}; border-radius: 5px; padding: 3px; color: white; text-align: center;">{reviewed}</span>
+  </div>
+  <div style="display: flex; flex-direction: column; padding-right: 10px;">
+    <span style="text-align: center;">{tooltip_3}</span> <span style="background-color: {csc}; border-radius: 5px; padding: 3px; color: white; text-align: center;">{conservation_status}</span>
+  </div>
+</div>
+      '
+    )
+  } else if (type == "habitat") {
+    html_content <- ""
+  } else {
+    html_content <- ""
+  }
+
+  return(html_content)
+}
+
+
+citation_mod <- function(spkey, cit_species_ds, cit_general_ds) {
+
+  sp_data <- cit_species_ds |> 
+    filter(key == spkey) |> 
+    collect()
+
+  sp_context <- cit_general_ds |> 
+    select(-source, -description) |> 
+    filter(dataset_id %in% sp_data$dataset_id) |> 
+    collect()
+
+  sp_data <- left_join(sp_data, sp_context, by = "dataset_id")
+
+  colnames(sp_data) <- c("AphiaID", "Dataset ID", "Records", "Source", "Title", "Citation", "Nodes", "DOI")
+
+  sp_data$Source <- toupper(sp_data$Source)
+
+  nodes_info <- strsplit(sp_data$Nodes, "\\|")
+  nodes_info <- lapply(nodes_info, function(x){
+    x <- strsplit(x, ";")
+    xe <- unlist(lapply(x, function(x) x[2]), use.names = F)
+    paste(xe, collapse = ", ")
+  })
+  sp_data$Nodes <- unlist(nodes_info, use.names = F)
+
+  reactable::reactable(sp_data, searchable = T)
+  
+}

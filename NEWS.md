@@ -3,8 +3,16 @@
 ## General
 
 - Number of species available: 12,684
-- Next species update: no more updates in number of models are expected. Thermal range maps and bootstrap are not available for all species and are currently being added.  
+- Next species update: no more updates in number of models are expected. Thermal range maps and bootstrap are now available for all species.  
 - Next steps: model checking and validation; comparison with other modelling projects; improvements and implementation of other approaches (e.g. monotonic responses).  
+
+## 2025-03-07
+
+Diversity tab improved.
+
+## 2025-02-24
+
+Modal and warning added to highlight validation phase. Per species datasets citation added. Contextual tags (e.g. conservation status) added to "species" tab.
 
 ## 2024-12-09
 
