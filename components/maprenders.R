@@ -68,7 +68,7 @@ welcome_message <- htmltools::tagList(
             ),
             htmltools::div(
               htmltools::h4(htmltools::HTML('<span style="color: #184e77;">Learn how to interpret range maps</span> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.85em; color: #b2b2b2;"></i>'), style = "margin-top: 0px !important;"),
-              htmltools::p("SSpecies distribution models (SDMs) are powerful tools, but it's important to understand how to interpret their results correctly."),
+              htmltools::p("Species distribution models (SDMs) are valuable tools, but it's important to understand how to interpret their results correctly."),
               style = "text-align: left;")
           ),
           class = "card",
