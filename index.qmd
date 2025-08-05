@@ -17,7 +17,7 @@ server: shiny
 <!-- Temporary announcement --->
 <div id="quarto-announcement" data-announcement-id="9616bfb5c47a60811ea96e08f2ae1bd0" class="alert alert-primary" style="display: flex; justify-content: space-between; padding-bottom: 0px !important; margin: 0px; padding-top: 5px !important;">
 <div style="display: flex;"><i class="bi bi-info-circle quarto-announcement-icon" style="padding-right: 15px;"></i><div class="quarto-announcement-content">
-<p><strong>Note</strong> - we are currently validating the model outputs and will soon launch an optimized version. In the meantime, you may explore the maps, but they should be carefully and critically assessed before drawing any conclusions. Public release of version 2 in July 2025.</p>
+<p><strong>Note</strong> - we are currently validating the model outputs and will soon launch an optimized version. In the meantime, you may explore the maps, but they should be carefully and critically assessed before drawing any conclusions. Public release of version 2 in September 2025.</p>
 </div></div>
 <i class="bi bi-x-lg quarto-announcement-action" onclick='const element = document.getElementById("quarto-announcement"); element.remove();' style="cursor: pointer;"></i></div>
 
