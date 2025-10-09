@@ -30,3 +30,10 @@ habitatpts <- reactive({
   pts$species <- as.factor(pts$species)
   pts
 })
+
+threshold_table <- reactive({
+  thresholds <- arrow::read_parquet(paste0(
+    "https://obis-maps.s3.amazonaws.com/sdm/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/metrics/taxonid=", 
+    sp_info$spkey, "_model=", sp_info$acro, "_what=thresholds.parquet"
+  ))
+})

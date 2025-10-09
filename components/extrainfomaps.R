@@ -40,7 +40,8 @@ observe({
     #   spkey = speciesinfo$key[speciesinfo$species == input$speciesSelect]
     # )
     
-    vals <- terra::extract(terra::rast(files_inuse$file_a), vect_obj)
+    vsi_file <- paste0("/vsis3/", gsub("\\.s3.us-east-1.amazonaws.com", "", gsub("https://", "", files_inuse$file_a)))
+    vals <- terra::extract(terra::rast(vsi_file), vect_obj)
     vals <- vals[,2]
     vals <- vals[!is.na(vals)]
     
@@ -59,7 +60,7 @@ observe({
             axis.text.y = element_blank())
     
     continfo_leaf$density <- p
-    
+
     continfo_leaf$text <- glue::glue(
       "<span style='font-size:larger;'><b>Selected area</b></span> <br> 
     <b>Mean Relative Occurrence Rate:</b> {round(mean(vals), 2)} <br>
@@ -84,3 +85,4 @@ output$contextMapText <- renderText({
   bindEvent(continfo_leaf$text)
 
 outputOptions(output, "contextMap", suspendWhenHidden = FALSE)
+outputOptions(output, "contextMapText", suspendWhenHidden = FALSE)

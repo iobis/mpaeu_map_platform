@@ -183,10 +183,11 @@ build_catalogue <- function(cleanup = TRUE) {
             }
             href <- gsub("s3://obis-maps", "https://obis-maps.s3.us-east-1.amazonaws.com", obj[["href"]])
             if (grepl("prediction|uncertainty", nam)) {
-                data.frame(type = obj[["class"]], scenario = scenario, period = period, file = href)
+                data.frame(type = obj[["class"]], scenario = scenario, period = period,
+                           method = obj[["method"]], file = href)
             } else {
                 type <- gsub("^.*what=", "", nam)
-                data.frame(type = type, scenario = NA, period = NA, file = href)
+                data.frame(type = type, scenario = NA, period = NA, method = NA, file = href)
             }
         })
         cont <- tibble::tibble(dplyr::bind_rows(cont))

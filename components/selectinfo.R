@@ -212,7 +212,9 @@ select_params <- reactiveValues(
 
 observe({
   # Species
-  select_params$species$species <- db_info$species$scientificName
+  if (!is.null(db_info$species$scientificName)) {
+    select_params$species$species <- db_info$species$scientificName
+  }
   select_params$species$spkey <- db_info$species$taxonid
   select_params$species$acro <- global_acro
   select_params$species$model <- input$modelSelect
