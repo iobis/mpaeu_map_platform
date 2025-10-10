@@ -19,12 +19,12 @@ observeEvent(input$jsValue, {
     # Update current status
     active_tab$current <- input$jsValue$id
     
-    #Temporary workaround while other features will be added!
-    if (!active_tab$current %in% c("species", "thermal", "habitat", "diversity")) {
-      shinyalert::shinyalert("Feature not available", "For now only species distribution/thermal range maps are available.", type = "info")
-      active_tab$current <- "species"
-      session$sendCustomMessage("backToTab", "nothing")
-    }
+    # #Temporary workaround while other features will be added!
+    # if (!active_tab$current %in% c("species", "thermal", "habitat", "diversity")) {
+    #   shinyalert::shinyalert("Feature not available", "For now only species distribution/thermal range maps are available.", type = "info")
+    #   active_tab$current <- "species"
+    #   session$sendCustomMessage("backToTab", "nothing")
+    # }
   }
 })
 
@@ -38,6 +38,8 @@ bindEvent(observe({input_state$status <- 3}), input$habitatSelect,
           once = TRUE, ignoreInit = TRUE)
 bindEvent(observe({input_state$status <- 4}), input$diversitySelect,
           once = TRUE, ignoreInit = TRUE)
+# bindEvent(observe({input_state$status <- 5}), input$diversitySelect,
+#           once = TRUE, ignoreInit = TRUE)
 
 # Create a reactive for titles
 title_state <- reactiveValues()

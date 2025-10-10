@@ -6,6 +6,11 @@
 #
 ######################### Main reactive for map change #########################
 
+# Start server code ------
+# Update map with study area to begin
+leafletProxy("mainMap") |>
+  leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
+
 # Objects ------
 # Palettes
 main_palette <- RColorBrewer::brewer.pal(9, "Blues")
@@ -195,7 +200,7 @@ observe({
     wMap$hide()
     session$sendCustomMessage("additionalInfoTrigger", "")
   })
-  
+
   proxy <- init_proxy()
 
   # Species tab
@@ -281,6 +286,13 @@ observe({
     # Diversity tab
   } else if (active_tab$current == "diversity") {
 
+  } else if (active_tab$current == "atlas") {
+
   }
 }) |>
-  bindEvent(select_params$species, active_tab$current, ignoreInit = TRUE)
+  bindEvent(
+    select_params$species,
+    active_tab$current,
+    input$ecspBoot,
+    ignoreInit = TRUE
+  )

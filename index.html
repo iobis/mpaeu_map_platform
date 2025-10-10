@@ -794,6 +794,15 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
             // Change value in the app
             var active_tab = {id: "diversity", nonce: Math.random()};
             Shiny.onInputChange("jsValue", active_tab)
+          } else if (tab.id === 'tabset-1-5-tab') {
+            divs.forEach(function(div) {
+              div.style.color = '#2da4c9'; 
+            });
+            colorChangingDiv.style.backgroundColor = '#2da4c9'; 
+            
+            // Change value in the app
+            var active_tab = {id: "atlas", nonce: Math.random()};
+            Shiny.onInputChange("jsValue", active_tab)
           }
         }
       });
@@ -1451,7 +1460,7 @@ DOWNLOAD THE DATA
 </div>
 </div>
 <div id="tabset-1-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-5-tab">
-<p>Test</p>
+<p>Available soon.</p>
 </div>
 </div>
 </div>

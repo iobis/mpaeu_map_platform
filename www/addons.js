@@ -54,6 +54,15 @@ document.addEventListener('DOMContentLoaded', function() {
             // Change value in the app
             var active_tab = {id: "diversity", nonce: Math.random()};
             Shiny.onInputChange("jsValue", active_tab)
+          } else if (tab.id === 'tabset-1-5-tab') {
+            divs.forEach(function(div) {
+              div.style.color = '#2da4c9'; 
+            });
+            colorChangingDiv.style.backgroundColor = '#2da4c9'; 
+            
+            // Change value in the app
+            var active_tab = {id: "atlas", nonce: Math.random()};
+            Shiny.onInputChange("jsValue", active_tab)
           }
         }
       });

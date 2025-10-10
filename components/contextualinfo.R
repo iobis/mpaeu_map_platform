@@ -150,15 +150,18 @@ observe({
                                  lgb = unlist(context_file$models[["lightgbm"]]),
                                  ens = unlist(context_file$models[["ensemble"]]))
     
-  }
-  
-  # If active tab is thermal
-  if (active_tab$current == "thermal") {
+  } else if (active_tab$current == "thermal") {   # If active tab is thermal
     
     req(!is.null(db_info$thermal))
-    thermal_envelope <- jsonlite::read_json(
-      paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey_t, "/model=", sp_info$acro_t, "/metrics/taxonid=",
-             sp_info$spkey_t, "_model=", sp_info$acro_t, "_what=thermmetrics.json"))
+
+    thermal_files <- db_info$thermal |>
+      select(-available_models) |>
+      tidyr::unnest(files)
+
+    thermal_envelope <- thermal_files |>
+      filter(type == "thermmetrics") |> #check model_inuse$model
+      pull() |>
+      jsonlite::read_json()
     
     # Table 1
     thermal_envelope$limits[[1]]$decade <- NA
