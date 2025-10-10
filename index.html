@@ -878,7 +878,10 @@ Shiny.addCustomMessageHandler('additionalInfoTrigger', function(value) {
 </div>
 </div>
 <div id="checkDiv" class="checkDiv">
-<div class="shiny-panel-conditional" data-display-if="input.scenarioSelect != 'Current'" data-ns-prefix="">
+<div class="shiny-panel-conditional" data-display-if="(
+  ((input.jsValue?.id === &quot;species&quot; || input.jsValue == null) &amp;&amp; input.scenarioSelect !== &quot;Current&quot;) ||
+  (input.jsValue?.id === &quot;thermal&quot; &amp;&amp; input.scenarioSelectThermal !== &quot;Current&quot;)
+)" data-ns-prefix="">
 <div id="sideside_box" class="sideside_class">
 <div class="form-group shiny-input-container">
 <div class="checkbox">
@@ -1092,6 +1095,7 @@ Search species
 <div class="g-col-6">
 <div class="cell">
 <div class="cell-output-display no-overflow-x">
+<div class="shiny-panel-conditional" data-display-if="input.jsValue?.id === &quot;thermal&quot; &amp;&amp; input.scenarioSelectThermal !== &quot;Current&quot;" data-ns-prefix="">
 <div id="scenario_box_thermal" class="scenario_class">
 <div class="form-group shiny-input-container">
 <label class="control-label" id="periodSelectThermal-label" for="periodSelectThermal">Period</label>
@@ -1099,6 +1103,7 @@ Search species
 <select id="periodSelectThermal" class="shiny-input-select"><option value="2050" selected="">2050</option>
 <option value="2100">2100</option></select>
 <script type="application/json" data-for="periodSelectThermal" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
+</div>
 </div>
 </div>
 </div>

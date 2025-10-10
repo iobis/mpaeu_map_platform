@@ -11,6 +11,7 @@
 main_palette <- RColorBrewer::brewer.pal(9, "Blues")
 alt_palette <- rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265"))
 diversity_palette <- ""
+binary_palette <- c("#f7fbff", "#08519c")
 
 # Create waiters
 wMap <- waiter::Waiter$new(
@@ -48,8 +49,23 @@ clean_proxy <- function(proxy) {
 }
 
 # Function to add layers
-add_layer_sp <- function(proxy, layer_1, layer_2 = NULL, min_range = 0) {
+add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
+                         min_range = 0, band_1 = NULL, band_2 = NULL,
+                         binary = FALSE) {
   session$sendCustomMessage("removeEye", "nothing")
+
+  if (!binary) {
+    col_opt <- colorOptions(
+      palette = main_palette,
+      domain = c(min_range, 100), na.color = NA
+    )
+  } else {
+    col_opt <- colorOptions(
+      palette = binary_palette,
+      domain = c(min_range, 1), na.color = NA
+    )
+  }
+
   proxy |>
     addCircleMarkers(
       data = speciespts(),
@@ -82,11 +98,8 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL, min_range = 0) {
       ) |>
       addGeotiff(
         file = layer_1, layerId = "mapLayer1", opacity = 1,
-        colorOptions = colorOptions(
-          palette = main_palette,
-          domain = c(min_range, 100), na.color = NA
-        ),
-        options = pathOptions(pane = "left"), autozoom = F
+        colorOptions = col_opt,
+        options = pathOptions(pane = "left"), autozoom = F, bands = band_1
       ) |>
       addTiles(
         urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
@@ -94,50 +107,67 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL, min_range = 0) {
       ) |>
       addGeotiff(
         file = layer_2, opacity = 1, layerId = "mapLayer2",
-        colorOptions = colorOptions(
-          palette = main_palette,
-          domain = c(min_range, 100), na.color = NA
-        ),
-        options = pathOptions(pane = "right"), autozoom = F
+        colorOptions = col_opt,
+        options = pathOptions(pane = "right"), autozoom = F, bands = band_2
       ) |>
       addSidebyside(layerId = "sidecontrols", rightId = "rightbaseid", leftId = "leftbaseid")
   } else {
     proxy |>
       addGeotiff(
         file = layer_1, opacity = 1, layerId = "mapLayer1",
-        colorOptions = colorOptions(
-          palette = main_palette,
-          domain = c(min_range, 100), na.color = NA
-        ), autozoom = F
-      ) |>
-      leaflegend::addLegendNumeric(
-        pal = colorNumeric(
-          palette = main_palette,
-          domain = c(0, 100), na.color = NA
-        ),
-        values = c(0, 100), title = boot$legend, layerId = "legend",
-        orientation = "horizontal", fillOpacity = .7, width = 75,
-        height = 15, position = "topright", labels = c("Low", "High")
-      ) |>
-      addPmToolbar(
-        toolbarOptions = pmToolbarOptions(
-          drawMarker = FALSE,
-          drawPolyline = FALSE,
-          drawCircle = FALSE,
-          cutPolygon = FALSE,
-          position = "topleft"
-        ),
-        drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
-        editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE)
-      )
+        colorOptions = col_opt, autozoom = F, bands = band_1
+      ) 
+      
+    if (!binary) {
+      proxy |>
+        leaflegend::addLegendNumeric(
+          pal = colorNumeric(
+            palette = main_palette,
+            domain = c(0, 100), na.color = NA
+          ),
+          values = c(0, 100), title = boot$legend, layerId = "legend",
+          orientation = "horizontal", fillOpacity = .7, width = 75,
+          height = 15, position = "topright", labels = c("Low", "High")
+        ) 
+      } else {
+        proxy |>
+        leaflegend::addLegendFactor(
+          pal = colorFactor(
+            palette = binary_palette[2],
+            domain = NULL
+          ),
+          values = c("Suitable"), title = boot$legend, layerId = "legend",
+          orientation = "horizontal", fillOpacity = .7, width = 40,
+          height = 15, position = "topright"
+        )
+      }
+      
+      proxy |>
+        addPmToolbar(
+          toolbarOptions = pmToolbarOptions(
+            drawMarker = FALSE,
+            drawPolyline = FALSE,
+            drawCircle = FALSE,
+            cutPolygon = FALSE,
+            position = "topleft"
+          ),
+          drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
+          editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE)
+        )
   }
 }
 
 # Function to pull info from the DBs
 extract_sp <- function(.data, ty = "prediction", sc = "current", me = NULL, pe = NULL) {
-  sld <- .data |>
-    tidyr::unnest("files") |>
-    filter(type == ty, scenario == sc, method == me)
+  if (ty %in% c("prediction", "uncertainty")) {
+    sld <- .data |>
+      tidyr::unnest("files") |>
+      filter(type == ty, scenario == sc, method == me)
+  } else {
+    sld <- .data |>
+      tidyr::unnest("files") |>
+      filter(type == ty)
+  }
   if (!is.null(pe) & sc != "current") {
     sld <- sld |> filter(period == pe)
   }
@@ -162,7 +192,7 @@ observe({
   mdebug(active_tab$current)
   wMap$show()
   on.exit({
-    wMap$hide() # Try without removing...
+    wMap$hide()
     session$sendCustomMessage("additionalInfoTrigger", "")
   })
 
@@ -202,12 +232,54 @@ observe({
     } else {
       proxy |> clean_proxy()
     }
+    # Thermal tab
+  } else if (active_tab$current == "thermal") {
+      if (select_params$thermal$species_t != "") {
+        file_type <- "thermenvelope"
+        boot$status <- FALSE
+        boot$legend <- htmltools::HTML("Thermal range")
+        layer_2 <- layer_1 <- db_info$thermal |> 
+          extract_sp(ty = file_type)
+        bands_list <- c(
+          "current", paste(
+            rep(paste0("ssp", c(126, 245, 370, 460, 585)), each = 2), c("dec50", "dec100"), sep = "_"
+          )
+        )
+        # bands_list <- terra::describe(
+        #   paste0("/vsicurl/", layer_1)
+        # )
+        # bands_list <- bands_list[grepl("Description = ", bands_list)]
+        # bands_list <- gsub(" ", "", gsub("Description =", "", bands_list))
+        if (input$sideSelect) {
+          sel_band_1 <- which(bands_list == "current")
+          sel_band_2 <- which(bands_list == paste(
+            select_params$thermal$scenario_t,
+            select_params$thermal$decade_t, sep = "_"
+          ))
+        } else {
+          if (select_params$thermal$scenario_t == "current") {
+            sel_band_1 <- which(bands_list == "current")
+          } else {
+            sel_band_1 <- which(bands_list == paste(
+              select_params$thermal$scenario_t,
+              select_params$thermal$decade_t, sep = "_"
+            ))
+          }
+          sel_band_2 <- NULL
+          layer_2 <- NULL
+        }
+        proxy |> add_layer_sp(layer_1, layer_2,
+                              band_1 = sel_band_1, band_2 = sel_band_2, binary = TRUE)
+        files_inuse$file_a <- layer_1
+        files_inuse$file_b <- layer_2
+      } else {
+        proxy |> clean_proxy()
+      }
+    # Habitat tab
+  } else if (active_tab$current == "habitat") {
+
+    # Diversity tab
+  } else if (active_tab$current == "diversity") {
+
   }
-
-  # Thermal tab
-
-  # Habitat tab
-
-  # Diversity tab
-
 })

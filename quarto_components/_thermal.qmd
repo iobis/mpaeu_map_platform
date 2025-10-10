@@ -53,7 +53,9 @@ tags$div(
 
 ::: {.g-col-6}
 ```{r}
-tags$div(
+conditionalPanel(
+  'input.jsValue?.id === "thermal" && input.scenarioSelectThermal !== "Current"',
+  tags$div(
   id = "scenario_box_thermal",
   class = "scenario_class",
       selectInput(
@@ -61,6 +63,7 @@ tags$div(
         label = "Period",
         choices = period_options
       ))
+)
 ```
 
 :::

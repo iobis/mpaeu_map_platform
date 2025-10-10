@@ -224,7 +224,9 @@ observe({
   )
 
   # Thermal
-  select_params$thermal$species_t <- db_info$thermal$scientificName
+  if (!is.null(db_info$thermal$scientificName)) {
+    select_params$thermal$species_t <- db_info$thermal$scientificName
+  }
   select_params$thermal$spkey_t <- db_info$thermal$taxonid
   select_params$thermal$acro_t <- global_acro
   select_params$thermal$scenario_t <- tolower(input$scenarioSelectThermal)

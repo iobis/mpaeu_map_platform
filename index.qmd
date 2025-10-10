@@ -76,7 +76,10 @@ graph_div <- htmltools::tags$div(
 check_div <- htmltools::tags$div(
   id = "checkDiv",
   class = "checkDiv",
-  conditionalPanel("input.scenarioSelect != 'Current'",
+  conditionalPanel('(
+  ((input.jsValue?.id === "species" || input.jsValue == null) && input.scenarioSelect !== "Current") ||
+  (input.jsValue?.id === "thermal" && input.scenarioSelectThermal !== "Current")
+)',
                  tags$div(
                      id = "sideside_box",
                      class = "sideside_class",
