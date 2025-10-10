@@ -13,8 +13,10 @@ output$tableBTitle <- renderText({title_state$to_print$tableB})
 output$textTitle <- renderText({title_state$to_print$modelTitle})
 
 # Context info ----
-output$tableA <- DT::renderDT({
-  DT::datatable(continfo$tableA, options = list(paging =TRUE, pageLength = 5))
+output$tableA <- reactable::renderReactable({
+  reactable::reactable(continfo$tableA,
+                       pagination = TRUE,
+                       defaultPageSize = 5, filterable = TRUE, highlight = TRUE)
 }) %>%
   bindEvent(continfo$tableA)
 
@@ -23,8 +25,10 @@ output$plotA <- renderPlotly({
 }) %>%
   bindEvent(continfo$plotA)
 
-output$tableB <- DT::renderDT({
-  DT::datatable(continfo$tableB, options = list(paging =TRUE, pageLength = 5))
+output$tableB <- reactable::renderReactable({
+  reactable::reactable(continfo$tableB,
+                       pagination = TRUE,
+                       defaultPageSize = 5, filterable = TRUE, highlight = TRUE)
 }) %>%
   bindEvent(continfo$tableB)
 

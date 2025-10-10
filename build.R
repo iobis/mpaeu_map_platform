@@ -187,7 +187,15 @@ build_catalogue <- function(cleanup = TRUE) {
                            method = obj[["method"]], file = href)
             } else {
                 type <- gsub("^.*what=", "", nam)
-                data.frame(type = type, scenario = NA, period = NA, method = NA, file = href)
+                # TEMPORARY WHILE FIXING STAC
+                if (grepl("method", nam)) {
+                    me <- gsub("method=", "", gsub("_what=.*", "", nam))
+                } else {
+                    me <- NA
+                }
+                # obj[["method"]]
+                data.frame(type = type, scenario = NA, period = NA,
+                           method = me, file = href)
             }
         })
         cont <- tibble::tibble(dplyr::bind_rows(cont))

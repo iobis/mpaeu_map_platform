@@ -4,6 +4,7 @@ map_data <- reactiveValues(
     layer_2 = NULL,
     mask = NULL,
     mask_type = NULL,
+    mask_state = FALSE,
     filter = NULL,
     boot_1 = NULL,
     boot_2 = NULL,
@@ -38,11 +39,13 @@ observe({
             map_data$layer_2 <- sel_species |> 
                 extract_sp(sc = sp_info$scenario, pe = sp_info$decade)
             map_data$boot_2 <- sel_species |> 
-                    extract_sp(ty = "uncertainty", sc = sp_info$scenario, pe = sp_info$decade)
+                extract_sp(ty = "uncertainty", sc = sp_info$scenario, pe = sp_info$decade)
         }
-        
+
         map_data$mask <- sel_species |> 
-                    extract_sp(ty = "mask")
+                extract_sp(ty = "mask")
+        map_data$mask_state <- maskstate()
+
 
         
 
@@ -72,3 +75,20 @@ species_db <- tibble::tibble(
         files = paste0("file", 1:6)
     )
 )
+
+library(leaflet);library(leafem)
+tictoc::tic("normal")
+leaflet() %>% 
+  addTiles(urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", layerId = "baseid") |>
+  addGeotiff(
+    file = "https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=100599/model=mpaeu/predictions/taxonid=100599_model=mpaeu_method=esm_scen=current_cog.tif"
+  )
+tictoc::toc()
+
+tictoc::tic("cog")
+leaflet() %>% 
+  addTiles(urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", layerId = "baseid") |>
+  addCOG(
+    url = "https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=100599/model=mpaeu/predictions/taxonid=100599_model=mpaeu_method=esm_scen=current_cog.tif"
+  )
+tictoc::toc()

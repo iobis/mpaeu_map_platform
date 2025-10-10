@@ -195,7 +195,7 @@ observe({
     wMap$hide()
     session$sendCustomMessage("additionalInfoTrigger", "")
   })
-
+  
   proxy <- init_proxy()
 
   # Species tab
@@ -282,4 +282,5 @@ observe({
   } else if (active_tab$current == "diversity") {
 
   }
-})
+}) |>
+  bindEvent(select_params$species, active_tab$current, ignoreInit = TRUE)

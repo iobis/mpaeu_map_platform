@@ -80,7 +80,7 @@ conditionalPanel(
 `r tags$div(id="table1-title", class="body-title", textOutput("tableATitle"))`
 
 ```{r}
-DT::dataTableOutput("tableA")
+reactable::reactableOutput("tableA")
 ```
 
 :::
@@ -100,7 +100,7 @@ plotlyOutput("plotA")
 `r tags$div(id="table1-title", class="body-title", textOutput("tableBTitle"))`
 
 ```{r}
-DT::dataTableOutput("tableB")
+reactable::reactableOutput("tableB")
 ```
 
 :::

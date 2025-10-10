@@ -235,7 +235,9 @@ observe({
   )
 
   # Habitat
-  select_params$habitat$habitat <- db_info$habitat$habitat
+  if (!is.null(db_info$habitat$habitat)) {
+    select_params$habitat$habitat <- db_info$habitat$habitat
+  }
   select_params$habitat$acro_h <- global_acro
   select_params$habitat$model_h <- input$modelSelectHabitat
   select_params$habitat$scenario_h <- tolower(input$scenarioSelectHabitat)
@@ -246,7 +248,9 @@ observe({
   select_params$habitat$threshold_h <- input$habitatBin
 
   # Diversity
-  select_params$diversity$metric <- db_info$diversity$metric
+  if (!is.null(db_info$diversity$metric)) {
+    select_params$diversity$metric <- db_info$diversity$metric
+  }
   select_params$diversity$acro_d <- global_acro
   select_params$diversity$group <- tolower(input$diversityGroup)
   select_params$diversity$scenario_d <- tolower(input$scenarioSelectDiversity)

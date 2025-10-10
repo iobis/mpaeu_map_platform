@@ -28,67 +28,68 @@ observe({
   on.exit({
     w$hide()
   })
-  
-  if (active_tab$current == "species" & input$speciesSelect == "") {
+
+  if (active_tab$current == "species" & select_params$species$species == "") {
     continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
-  }
-  if (active_tab$current == "thermal" & input$speciesSelectThermal == "") {
+  } else if (active_tab$current == "thermal" & select_params$thermal$species_t == "") {
+    message('thermal aqui oh')
     continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
-  }
-  if (active_tab$current == "habitat" & input$habitatSelect == "") {
+  } else if (active_tab$current == "habitat" & select_params$habitat$habitat == "") {
     continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
-  }
-  if (active_tab$current == "diversity" & input$diversitySelect == "") {
+  } else if (active_tab$current == "diversity" & select_params$diversity$metric == "") {
     continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
   }
   
   # If active is species
   if (active_tab$current == "species") {
-    req(!is.null(model_inuse$model) && sp_info$spkey != "")
+    req(!is.null(db_info$species))
     
-    basepath <- paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/metrics/")
-    
+    species_files <- db_info$species |>
+      select(-available_models) |>
+      tidyr::unnest(files)
+
     # Table 1
-    metrics <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_method=", model_inuse$model,#input$modelSelect, 
-             "_what=cvmetrics.parquet")
-    )
-    if (model_inuse$model == "ensemble") {
-      metrics <- metrics %>% filter(what == "mean") %>% filter(origin == "avg_fit") %>% select(-origin, -what)
+    metrics <- species_files |>
+      filter(type == "cvmetrics", method == select_params$species$model) |> #check model_inuse$model
+      pull() |>
+      arrow::read_parquet()
+    if (select_params$species$model == "ensemble") {
+      metrics <- metrics |> filter(what == "mean") |> filter(origin == "avg_fit") |> select(-origin, -what)
     }
-    metrics_mean <- metrics %>%
+    metrics_mean <- metrics |>
       summarise(across(1:ncol(metrics), function(x) {round(mean(x), 2)}))
-    metrics_mean <- metrics_mean %>%
-      tidyr::pivot_longer(cols = 1:ncol(metrics_mean), names_to = "Metric", values_to = "Mean of 5 folds") %>%
+    metrics_mean <- metrics_mean |>
+      tidyr::pivot_longer(cols = 1:ncol(metrics_mean), names_to = "Metric", values_to = "Mean of 5 folds") |>
       mutate(Metric = toupper(Metric))
-    metrics_sd <- metrics %>%
+    metrics_sd <- metrics |>
       summarise(across(1:ncol(metrics), function(x) {round(sd(x), 2)}))
-    metrics_sd <- metrics_sd %>%
-      tidyr::pivot_longer(cols = 1:ncol(metrics_sd), names_to = "Metric", values_to = "SD") %>%
+    metrics_sd <- metrics_sd |>
+      tidyr::pivot_longer(cols = 1:ncol(metrics_sd), names_to = "Metric", values_to = "SD") |>
       mutate(Metric = toupper(Metric))
     metrics_mean <- left_join(metrics_mean, metrics_sd, by = "Metric")
 
-    metrics_mean <- metrics_mean %>% tidyr::separate_wider_delim(cols = Metric, delim = "_",
+    metrics_mean <- metrics_mean |> tidyr::separate_wider_delim(cols = Metric, delim = "_",
        names = c("Metric", "Threshold"),
-       too_few = "align_start") %>%
+       too_few = "align_start") |>
       mutate(Threshold = case_when(
         Threshold == "MAXSSS" ~ "Max. Sens. + Spec.",
         Threshold == "MTP" ~ "Min. train. pres.",
         Threshold == "P10" ~ "10th perc. train. pres."
       ))
-    # metrics_mean <- metrics_mean %>%
+    # metrics_mean <- metrics_mean |>
     #   filter(Metric %in% c("AUC", "CBI", "PR", "TSS_P10"))
     continfo$tableA <- metrics_mean
     
     # Table 2
-    varimp <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_method=", model_inuse$model,#input$modelSelect,
-             "_what=varimportance.parquet")
-    )
-    varimp <- varimp %>%
+    varimp <- species_files |>
+      filter(type == "varimportance", method == select_params$species$model) |> #check model_inuse$model
+      pull() |>
+      arrow::read_parquet()
+
+    varimp <- varimp |>
       tidyr::separate_wider_delim(cols = variable, delim = "_",
        names = c("variable", "variant"),
-       too_few = "align_start") %>%
+       too_few = "align_start") |>
       mutate(variable = case_when(
         variable == "tas" ~ "Air temperature",
         variable == "siconc" ~ "Sea ice concentration",
@@ -102,29 +103,29 @@ observe({
         variable == "par" ~ "Photosynthetically Available Radiation",
         variable == "rugosity" ~ "Rugosity",
         variable == "o2" ~ "Oxygen concentration"
-      )) %>%
+      )) |>
       mutate(variant = case_when(
         is.na(variant) ~ "",
         variant == "mean" ~ "Mean",
         variant == "max" ~ "Maximum",
         variant == "min" ~ "Minimum",
         variant == "range" ~ "Range"
-      )) %>%
+      )) |>
       select(Variable = variable, Variant = variant, Mean = mean, SD = sd)
 
     continfo$tableB <- varimp
     
     # Graph
-    response_curves <- arrow::read_parquet(
-      paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_method=", model_inuse$model,#input$modelSelect,
-             "_what=respcurves.parquet")
-    )
+    response_curves <- species_files |>
+      filter(type == "respcurves", method == select_params$species$model) |> #check model_inuse$model
+      pull() |>
+      arrow::read_parquet()
     
     continfo$plotA <- gen_plotly_resp(response_curves)
     
     # Text
     continfo$text[[1]] <- paste("Model explanation -",
-                                switch(strtrim(input$modelSelect, 3),
+                                switch(strtrim(select_params$species$model, 3),
                                        brt = "BRT",
                                        las = "LASSO",
                                        ela = "elasticnet",
@@ -137,7 +138,7 @@ observe({
                                        ens = "Ensemble"))
     
     context_file <- jsonlite::read_json("www/context_info.json")
-    continfo$text[[2]] <- switch(strtrim(input$modelSelect, 3),
+    continfo$text[[2]] <- switch(strtrim(select_params$species$model, 3),
                                  brt = unlist(context_file$models[["brt"]]),
                                  las = unlist(context_file$models[["lasso"]]),
                                  ela = unlist(context_file$models[["elasticnet"]]),
@@ -154,7 +155,7 @@ observe({
   # If active tab is thermal
   if (active_tab$current == "thermal") {
     
-    req(sp_info$spkey_t)
+    req(!is.null(db_info$thermal))
     thermal_envelope <- jsonlite::read_json(
       paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey_t, "/model=", sp_info$acro_t, "/metrics/taxonid=",
              sp_info$spkey_t, "_model=", sp_info$acro_t, "_what=thermmetrics.json"))
@@ -236,19 +237,19 @@ observe({
     #   "_what=eezstats.parquet"
     # ))
     hab_eez <- data.frame()
-    # hab_eez <- hab_eez %>%
-    #   filter(method == sp_info$model_h) %>%
+    # hab_eez <- hab_eez |>
+    #   filter(method == sp_info$model_h) |>
     #   filter(scen == ifelse(sp_info$scenario_h == "current",
-    #                                          "current", paste0(sp_info$scenario_h, "_", sp_info$decade_h))) %>%
+    #                                          "current", paste0(sp_info$scenario_h, "_", sp_info$decade_h))) |>
     #   filter(threshold == input$threshold_h)
     
     # Table 2
     hab_file <- jsonlite::read_json(paste0("https://mpaeu-dist.s3.amazonaws.com/results/habitat/habitat=", sp_info$habitat, 
       "_model=", sp_info$acro_h, "_what=log.json"))
     hab_file_sp <- unlist(hab_file$species)
-    hab_sel_species <- speciesinfo_full %>% # Change to speciesinfo in next version!
+    hab_sel_species <- speciesinfo_full |> # Change to speciesinfo in next version!
       select(AphiaID, scientificName, kingdom, phylum, class, order,
-      family, genus, authority, gbif_speciesKey, gbif_scientificName, common_names) %>%
+      family, genus, authority, gbif_speciesKey, gbif_scientificName, common_names) |>
       filter(AphiaID %in% hab_file_sp)
     colnames(hab_sel_species)[10:12] <- c("GBIF speciesKey", "GBIF scientificName", "Common names")
 
@@ -337,11 +338,11 @@ observe({
     continfo$text[[2]] <- "Species richness refers to the number of different species present in a specific area or ecosystem. It is a measure of biodiversity, indicating how many unique species are found in a given habitat, without considering their abundance. High species richness suggests a diverse ecosystem, while low species richness may indicate a more homogeneous or disturbed environment. It is commonly used in ecological studies to assess the health and complexity of ecosystems."
   }
   
-}) %>%
+}) |>
   bindEvent(
-    input$additionalInfo, sp_info$model_d, sp_info$group,
-    # sp_info$spkey, input$modelSelect,
-    #         input$speciesSelectThermal, sp_info$metric, sp_info$habitat,
-    #         input$diversityGroup, input$modelSelectDiversity,
-    #         active_tab$current,
-             ignoreInit = TRUE)
+    db_info$species,
+    db_info$thermal,
+    db_info$habitat,
+    db_info$diversity,
+    active_tab$current,
+    ignoreInit = TRUE)
