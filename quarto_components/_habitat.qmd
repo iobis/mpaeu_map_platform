@@ -18,8 +18,8 @@ selectInput(
 
 selectInput(
    inputId = "habitatBin",
-   label = "Binary mode", 
-   choices = c("P10" = "p10", "MSS" = "max_spec_sens", "MTP" = "mtp")
+   label = "Threshold", 
+   choices = c("P10" = "p10", "MSS" = "mss")
 )
 
 label_switch_eunis <- bslib::tooltip(span("Show EUNIS biogenic map", bsicons::bs_icon("info-circle", size = "0.7em")),
@@ -56,8 +56,8 @@ tags$div(
   class = "scenario_class",
   selectInput(
         inputId = "modelSelectHabitat",
-        label = "Model",
-        choices = model_options
+        label = "Post-treatment",
+        choices = c("Standard" = "std", "Constrained" = "const")
       ))
 ```
 :::

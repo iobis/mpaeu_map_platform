@@ -3,7 +3,7 @@
 ```{r}
 # Load/set options ----
 # Load metrics options
-metrics_options <- c("Select a metric" = "", "Richness" = "richness")
+metrics_options <- c("Select a metric" = "", "Richness" = "richness", "LCBD" = "lcbd")
 
 # Add selectors ----
 # Filter selector
@@ -33,37 +33,27 @@ tags$div(
   textOutput("contextMetric"), htmltools::br()
 )
 
-conditionalPanel("input.diversitySelect == 'richness' && input.modelSelectDiversity != 'raw'",
+conditionalPanel("input.diversitySelect == 'richness' && input.diversityMode != 'raw'",
 tags$div(
   id = "scenario_box_diversity",
   class = "scenario_class",
       selectInput(
         inputId = "diversityType",
-        label = "Map type",
-        choices = c("Sens+Spec" = "mss", "P10" = "p10", "MTP" = "mtp")
+        label = "Threshold",
+        choices = c("P10" = "p10", "Sens+Spec" = "mss")
       ))
 )
 
-conditionalPanel("input.diversitySelect == 'richness' && input.modelSelectDiversity == 'raw'",
+conditionalPanel("input.diversitySelect == 'richness' && input.diversityMode != 'raw'",
 tags$div(
-  id = "scenario_box_diversity",
+  id = "scenario_box_diversity2",
   class = "scenario_class",
       selectInput(
-        inputId = "diversityTypeRaw",
-        label = "Map type",
-        choices = c("Aggregated" = "aggregated", "Original" = "original")
+        inputId = "diversityPostTreat",
+        label = "Post-treatment",
+        choices = c("Standard" = "std", "Constrained" = "const")
       ))
 )
-
-conditionalPanel("input.diversitySelect == 'richness' && input.modelSelectDiversity != 'raw'",
-tags$div(
-  id = "scenario_box_diversity",
-  class = "scenario_class",
-      selectInput(
-        inputId = "diversityMode",
-        label = "Mode",
-        choices = c("Binary" = "bin", "Continuous" = "cont")
-      )))
 ```
 
 <div class="bottom-container"> 
@@ -71,19 +61,26 @@ tags$div(
 
 ::: {.g-col-5}
 ```{r}
-tags$div(
-  id = "scenario_box_diversity",
-  class = "scenario_class",
-selectInput(
-        inputId = "modelSelectDiversity",
-        label = "Model",
-        choices = c("Raw" = "raw", "RandomForest" = "rf", "MAXENT" = "maxent", "XGBoost" = "xgboost", "Ensemble" = "ensemble", "ESM" = "esm", "Valids" = "which_valid")
-      ))
+conditionalPanel(
+  "input.diversitySelect == 'richness'",
+  tags$div(
+    id = "scenario_box_diversity",
+    class = "scenario_class",
+  selectInput(
+          inputId = "diversityMode",
+          label = "Mode",
+          choices = c("Raw" = "raw", "Binary" = "binary", "Continuous" = "continuous", "SESAM" = "sesam")
+        ))
+)
 ```
 :::
 
 ::: {.g-col-4}
 ```{r}
+conditionalPanel("(
+(input.diversitySelect == 'richness' && input.diversityMode != 'raw') ||
+(input.diversitySelect != 'richness')
+)",
 tags$div(
   id = "scenario_box_diversity",
   class = "scenario_class",
@@ -92,12 +89,17 @@ tags$div(
         label = "Scenario",
         choices = scenario_options
       ))
+)
 ```
 
 :::
 
 ::: {.g-col-3}
 ```{r}
+conditionalPanel("(
+(input.diversitySelect == 'richness' && input.diversityMode != 'raw') ||
+(input.diversitySelect != 'richness')
+)",
 tags$div(
   id = "scenario_box_diversity",
   class = "scenario_class",
@@ -106,6 +108,7 @@ tags$div(
         label = "Period",
         choices = period_options
       ))
+)
 ```
 
 :::

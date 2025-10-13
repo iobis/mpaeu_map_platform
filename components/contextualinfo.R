@@ -226,12 +226,9 @@ observe({
     # Text
     continfo$text[[1]] <- "How this data is extracted?"
     continfo$text[[2]] <- "Thermal ranges are extracted based on the occurrence data and SST data from Bio-ORACLE v3.0 (https://www.bio-oracle.org/). For each occurrence record we extract the temperature and then calculates a kernel density. This follow the method developed on the 'speedy' package (https://github.com/iobis/speedy)."
-  }
-
-  # If active tab is habitat
-  if (active_tab$current == "habitat") {
-    
-    req(sp_info$habitat)
+  } else if (active_tab$current == "habitat") { # If active tab is habitat
+  
+    req(!is.null(db_info$habitat))
     
     # Table 1
     # hab_eez <- arrow::read_parquet(paste0(
@@ -239,7 +236,7 @@ observe({
     #   "_model=", sp_info$acro_h, 
     #   "_what=eezstats.parquet"
     # ))
-    hab_eez <- data.frame()
+    hab_eez <- data.frame(value = NA)
     # hab_eez <- hab_eez |>
     #   filter(method == sp_info$model_h) |>
     #   filter(scen == ifelse(sp_info$scenario_h == "current",
@@ -247,14 +244,15 @@ observe({
     #   filter(threshold == input$threshold_h)
     
     # Table 2
-    hab_file <- jsonlite::read_json(paste0("https://mpaeu-dist.s3.amazonaws.com/results/habitat/habitat=", sp_info$habitat, 
-      "_model=", sp_info$acro_h, "_what=log.json"))
-    hab_file_sp <- unlist(hab_file$species)
-    hab_sel_species <- speciesinfo_full |> # Change to speciesinfo in next version!
-      select(AphiaID, scientificName, kingdom, phylum, class, order,
-      family, genus, authority, gbif_speciesKey, gbif_scientificName, common_names) |>
-      filter(AphiaID %in% hab_file_sp)
-    colnames(hab_sel_species)[10:12] <- c("GBIF speciesKey", "GBIF scientificName", "Common names")
+    hab_sel_species <- data.frame(value = NA)
+    # hab_file <- jsonlite::read_json(paste0("https://mpaeu-dist.s3.amazonaws.com/results/habitat/habitat=", sp_info$habitat, 
+    #   "_model=", sp_info$acro_h, "_what=log.json"))
+    # hab_file_sp <- unlist(hab_file$species)
+    # hab_sel_species <- speciesinfo_full |> # Change to speciesinfo in next version!
+    #   select(AphiaID, scientificName, kingdom, phylum, class, order,
+    #   family, genus, authority, gbif_speciesKey, gbif_scientificName, common_names) |>
+    #   filter(AphiaID %in% hab_file_sp)
+    # colnames(hab_sel_species)[10:12] <- c("GBIF speciesKey", "GBIF scientificName", "Common names")
 
     # Graph
     # base <- rnaturalearth::ne_countries(returnclass = "sf")
@@ -283,12 +281,9 @@ observe({
     # Text
     continfo$text[[1]] <- "What is a biogenic habitat?"
     continfo$text[[2]] <- "A biogenic marine habitat is an environment created by living organisms, such as corals, seagrasses, mangroves, or oysters, that form complex structures in marine ecosystems. These habitats provide shelter, feeding grounds, and breeding areas for various marine species, enhancing biodiversity. They are crucial for ecosystem functions, such as nutrient cycling and shoreline protection. Examples include coral reefs, kelp forests, and oyster beds. Biogenic habitats are sensitive to environmental changes and human activities, making their conservation vital for maintaining marine biodiversity."
-  }
-
-   # If active tab is diversity
-  if (active_tab$current == "diversity") {
+  } else if (active_tab$current == "diversity") { # If active tab is diversity
     
-    req(sp_info$metric)
+    req(!is.null(db_info$diversity))
     
     # Table 1
     # if (sp_info$group != "all" & input$modelSelectDiversity != "raw") {
@@ -306,7 +301,7 @@ observe({
     # } else {
     #   table_a <- data.frame()
     # }
-    table_a <- data.frame()
+    table_a <- data.frame(value = NA)
     
     # Table 2
     if (sp_info$group == "all") {
@@ -337,7 +332,9 @@ observe({
     continfo$plotA <- plotly::ggplotly(ggplot2::ggplot(data.frame(x = 1, y = 1)) + ggplot2::geom_point(aes(x = x, y = y)))
     
     # Text
-    continfo$text[[1]] <- paste("What is", sp_info$metric)
+    continfo$text[[1]] <- paste("What is", ifelse(
+      select_params$diversity$metric == "lcbd", "LCBD", stringr::str_to_title(select_params$diversity$metric)
+    ))
     continfo$text[[2]] <- "Species richness refers to the number of different species present in a specific area or ecosystem. It is a measure of biodiversity, indicating how many unique species are found in a given habitat, without considering their abundance. High species richness suggests a diverse ecosystem, while low species richness may indicate a more homogeneous or disturbed environment. It is commonly used in ecological studies to assess the health and complexity of ecosystems."
   }
   

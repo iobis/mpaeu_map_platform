@@ -206,7 +206,7 @@ source("components/mapmask.R", local = TRUE)
 #source("components/thermaldata.R", local = TRUE)
 
 ### Diversity data updater ----
-source("components/diversitydata.R", local = TRUE)
+#source("components/diversitydata.R", local = TRUE)
   
 ### Contextual info ----
 source("components/contextualinfo.R", local = TRUE)

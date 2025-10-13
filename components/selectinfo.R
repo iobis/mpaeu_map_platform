@@ -97,11 +97,11 @@ observe({
     # Update diversity metric and model information from input selections
     sp_info$metric <- input$diversitySelect
     sp_info$group <- tolower(input$diversityGroup)
-    sp_info$model_d <- input$modelSelectDiversity
+    sp_info$model_d <- input$diversityMode
     sp_info$scenario_d <- tolower(input$scenarioSelectDiversity)
     sp_info$decade_d <- ifelse(is.null(input$periodSelectDiversity), NULL,
                              ifelse(input$periodSelectDiversity == 2050, "dec50", "dec100"))
-    if (input$modelSelectDiversity == "raw") {
+    if (input$diversityMode == "raw") {
       sp_info$map_type <- ""
       sp_info$div_type <- input$diversityTypeRaw
     } else {
@@ -202,11 +202,11 @@ select_params <- reactiveValues(
     metric = "",
     group = "",
     acro_d = "mpaeu",
-    map_type = "",
-    div_type = "",
+    type_d = "",
+    threshold_d = "",
+    posttreat_d = "",
     scenario_d = "",
-    decade_d = "",
-    model_d = ""
+    decade_d = ""
   )
 )
 
@@ -244,7 +244,7 @@ observe({
   select_params$habitat$decade_h <- ifelse(is.null(input$periodSelectHabitat), NULL,
     ifelse(input$periodSelectHabitat == 2050, "dec50", "dec100")
   )
-  select_params$habitat$bintype_h <- ifelse(input$habitatBinaryFull, "bin", "cont")
+  select_params$habitat$bintype_h <- ifelse(input$habitatBinaryFull, "binary", "continuous")
   select_params$habitat$threshold_h <- input$habitatBin
 
   # Diversity
@@ -257,11 +257,7 @@ observe({
   select_params$diversity$decade_d <- ifelse(is.null(input$periodSelectDiversity), NULL,
     ifelse(input$periodSelectDiversity == 2050, "dec50", "dec100")
   )
-  if (input$modelSelectDiversity == "raw") {
-    select_params$diversity$map_type <- ""
-    select_params$diversity$div_type <- input$diversityTypeRaw
-  } else {
-    select_params$diversity$map_type <- paste0("_", input$diversityMode)
-    select_params$diversity$div_type <- input$diversityType
-  }
+  select_params$diversity$type_d <- input$diversityMode
+  select_params$diversity$threshold_d <- input$diversityType
+  select_params$diversity$posttreat_d <- input$diversityPostTreat
 })

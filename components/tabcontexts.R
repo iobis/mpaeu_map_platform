@@ -103,7 +103,11 @@ output$contextHabitat <- renderText({
 # Diversity ----
 # Species title
 output$selectedMetric <- renderText({
-  stringr::str_to_title(input$diversitySelect)
+  if (input$diversitySelect == "lcbd") {
+    toupper(input$diversitySelect)
+  } else {
+    stringr::str_to_title(input$diversitySelect)
+  }
 }) %>%
   bindEvent(input$diversitySelect, ignoreInit = T)
 

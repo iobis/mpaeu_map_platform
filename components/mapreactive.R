@@ -15,6 +15,7 @@ leafletProxy("mainMap") |>
 # Palettes
 main_palette <- RColorBrewer::brewer.pal(9, "Blues")
 alt_palette <- rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265"))
+hab_palette <- RColorBrewer::brewer.pal("PuRd", n = 9)
 diversity_palette <- ""
 binary_palette <- c("#f7fbff", "#08519c")
 
@@ -162,6 +163,97 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
   }
 }
 
+add_layer_hab <- function(proxy, layer_1) {
+  session$sendCustomMessage("removeEye", "nothing")
+  maskstate(FALSE)
+
+  col_opt <- colorOptions(
+    palette = hab_palette, na.color = NA
+  )
+
+  pts_pal <- colorFactor("Blues", habitatpts()$species)
+
+  # tr <- terra::rast(paste0("/vsicurl/", sel_habitat))
+  # terra::setMinMax(tr)
+  # lims <- terra::minmax(tr)[,1]
+  proxy |>
+    addGeotiff(
+      file = layer_1, opacity = 1, layerId = "mapLayer1",
+      colorOptions = col_opt, autozoom = F
+    ) |>
+    leaflegend::addLegendNumeric(
+      pal = colorNumeric(
+        domain = c(0, 1),
+        palette = hab_palette,
+        na.color = NA
+      ), title = htmltools::HTML("Likelihood </br> of occurrence"), layerId = "legend", values = c(0, 1),
+      orientation = "horizontal", fillOpacity = .7, width = 75,
+      height = 15, position = "topright", labels = c("Low", "High")
+    ) |>
+    addCircleMarkers(
+      data = habitatpts(),
+      clusterOptions = NULL, # markerClusterOptions(),
+      group = "Points",
+      weight = 2,
+      radius = 2,
+      opacity = 1,
+      fillOpacity = 0.1,
+      color = pts_pal(habitatpts()$species), # "black",#~pts_pal(species),
+      popup = ~species
+    ) |>
+    hideGroup("Points") |>
+    addPmToolbar(
+      toolbarOptions = pmToolbarOptions(
+        drawMarker = FALSE,
+        drawPolyline = FALSE,
+        drawCircle = FALSE,
+        cutPolygon = FALSE,
+        position = "topleft"
+      ),
+      drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
+      editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE)
+    )
+}
+
+add_layer_div <- function(proxy, layer_1) {
+  session$sendCustomMessage("removeEye", "nothing")
+  maskstate(FALSE)
+
+  col_opt <- colorOptions(
+    palette = hab_palette, na.color = NA
+  )
+
+  # tr <- terra::rast(paste0("/vsicurl/", sel_habitat))
+  # terra::setMinMax(tr)
+  # lims <- terra::minmax(tr)[,1]
+  proxy |>
+    addGeotiff(
+      file = layer_1, opacity = 1, layerId = "mapLayer1",
+      colorOptions = col_opt, autozoom = F
+    ) |>
+    leaflegend::addLegendNumeric(
+      pal = colorNumeric(
+        domain = c(0, 1),
+        palette = hab_palette,
+        na.color = NA
+      ), title = htmltools::HTML("Likelihood </br> of occurrence"), layerId = "legend", values = c(0, 1),
+      orientation = "horizontal", fillOpacity = .7, width = 75,
+      height = 15, position = "topright", labels = c("Low", "High")
+    ) |>
+    addPmToolbar(
+      toolbarOptions = pmToolbarOptions(
+        drawMarker = FALSE,
+        drawPolyline = FALSE,
+        drawCircle = FALSE,
+        cutPolygon = FALSE,
+        position = "topleft"
+      ),
+      drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
+      editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE)
+    )
+}
+
+
 # Function to pull info from the DBs
 extract_sp <- function(.data, ty = "prediction", sc = "current", me = NULL, pe = NULL) {
   if (ty %in% c("prediction", "uncertainty")) {
@@ -176,7 +268,39 @@ extract_sp <- function(.data, ty = "prediction", sc = "current", me = NULL, pe =
   if (!is.null(pe) & sc != "current") {
     sld <- sld |> filter(period == pe)
   }
-  return(sld |> pull(file))
+  return(sld |> pull(file) |> (\(x) paste0("/vsicurl/", x))())
+}
+
+extract_hab <- function(.data, th = "p10", pt = "std", ty = "continuous", sc = "current", pe = NULL) {
+  sld <- .data |>
+    tidyr::unnest("files") |>
+    filter(threshold == th, post_treatment == pt, type == ty, scenario == sc)
+  if (!is.null(pe) & sc != "current") {
+    sld <- sld |> filter(period == pe)
+  }
+  return(sld |> pull(file) |> (\(x) paste0("/vsicurl/", x))())
+}
+
+extract_div <- function(.data, gr = "all", th = "p10", pt = "std", ty = "continuous", sc = "current", pe = NULL, me = "richness") {
+  if (me != "richness") {
+    ty <- ""
+  }
+  print(list(gr = gr, th = th, ty = ty, pt = pt, sc= sc, pe = pe, me = me))
+  print(.data |>
+      tidyr::unnest("files"))
+  if (ty == "raw") {
+    sld <- .data |>
+      tidyr::unnest("files") |>
+      filter(group == gr, type == ty)
+  } else {
+    sld <- .data |>
+      tidyr::unnest("files") |>
+      filter(group == gr, threshold == th, post_treatment == pt, type == ty, scenario == sc)
+  }
+  if (!is.null(pe) & sc != "current" & ty != "raw") {
+    sld <- sld |> filter(period == pe)
+  };message("ok extract")
+  return(sld |> pull(file) |> (\(x) paste0("/vsicurl/", x))())
 }
 
 # Function to get threshold
@@ -282,16 +406,45 @@ observe({
       }
     # Habitat tab
   } else if (active_tab$current == "habitat") {
-
+    if (select_params$habitat$habitat != "") {
+      layer_1 <- db_info$habitat |>
+        extract_hab(th = select_params$habitat$threshold_h,
+                    pt = select_params$habitat$model_h,
+                    ty = select_params$habitat$bintype_h,
+                    sc = select_params$habitat$scenario_h,
+                    pe = select_params$habitat$decade_h)
+      
+      proxy |> add_layer_hab(layer_1)
+      files_inuse_habdiv$file_habitat <- layer_1
+    } else {
+      proxy |> clean_proxy()
+    }
     # Diversity tab
   } else if (active_tab$current == "diversity") {
-
+    if (select_params$diversity$metric != "") {
+      layer_1 <- db_info$diversity |>
+        extract_div(gr = select_params$diversity$group,
+                    th = select_params$diversity$threshold_d,
+                    pt = select_params$diversity$posttreat_d,
+                    ty = select_params$diversity$type_d,
+                    sc = select_params$diversity$scenario_d,
+                    pe = select_params$diversity$decade_d,
+                    me = select_params$diversity$metric)
+      
+      proxy |> add_layer_div(layer_1)
+      files_inuse_habdiv$file_diversity <- layer_1
+    } else {
+      proxy |> clean_proxy()
+    }
   } else if (active_tab$current == "atlas") {
-
+    proxy |> clean_proxy()
   }
 }) |>
   bindEvent(
     select_params$species,
+    select_params$thermal,
+    select_params$habitat,
+    select_params$diversity,
     active_tab$current,
     input$ecspBoot,
     ignoreInit = TRUE
