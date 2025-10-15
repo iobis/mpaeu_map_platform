@@ -56,14 +56,14 @@ observe({
       metrics <- metrics |> filter(what == "mean") |> filter(origin == "avg_fit") |> select(-origin, -what)
     }
     metrics_mean <- metrics |>
-      summarise(across(1:ncol(metrics), function(x) {round(mean(x), 2)}))
+      summarise(across(seq_len(ncol(metrics)), function(x) {round(mean(x), 2)}))
     metrics_mean <- metrics_mean |>
-      tidyr::pivot_longer(cols = 1:ncol(metrics_mean), names_to = "Metric", values_to = "Mean of 5 folds") |>
+      tidyr::pivot_longer(cols = seq_len(ncol(metrics_mean)), names_to = "Metric", values_to = "Mean of 5 folds") |>
       mutate(Metric = toupper(Metric))
     metrics_sd <- metrics |>
-      summarise(across(1:ncol(metrics), function(x) {round(sd(x), 2)}))
+      summarise(across(seq_len(ncol(metrics)), function(x) {round(sd(x), 2)}))
     metrics_sd <- metrics_sd |>
-      tidyr::pivot_longer(cols = 1:ncol(metrics_sd), names_to = "Metric", values_to = "SD") |>
+      tidyr::pivot_longer(cols = seq_len(ncol(metrics_sd)), names_to = "Metric", values_to = "SD") |>
       mutate(Metric = toupper(Metric))
     metrics_mean <- left_join(metrics_mean, metrics_sd, by = "Metric")
 
@@ -251,16 +251,16 @@ observe({
     table_a <- data.frame(value = NA)
     
     # Table 2
-    if (sp_info$group == "all") {
+    if (select_params$habitat$group == "all") {
       table_b <- div_sp_list |> collect()
     } else {
       table_b <- div_sp_list |>
-        filter(tolower(group) == sp_info$group) |>
+        filter(tolower(group) == select_params$habitat$group) |>
         collect()
     }
-    if (sp_info$model_d != "raw") {
-      table_b <- table_b[table_b[[sp_info$model_d]], ]
-    }
+    # if (select_params$habitat$model_d != "raw") {
+    #   table_b <- table_b[table_b[[sp_info$model_d]], ]
+    # }
     table_b <- table_b[, c("taxonID", "scientificName", "group")]
     
     continfo$tableA <- table_a

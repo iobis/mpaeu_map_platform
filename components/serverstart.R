@@ -22,7 +22,7 @@ setGDALconfig("AWS_NO_SIGN_REQUEST", "YES")
 setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
 
 # Source functions
-source("scripts/functions.R")
+source("scripts/general_functions.R")
 
 # Create debug function
 mdebug <- function(text, toprint = debug) {
@@ -122,3 +122,5 @@ cit_general_ds <- arrow::open_dataset("data/reg_datasets_context.parquet")
 
 # Load diversity species list
 div_sp_list <- arrow::open_dataset("data/metric=richness_model=mpaeu_what=splist.parquet")
+
+global_acro <- "mpaeu"

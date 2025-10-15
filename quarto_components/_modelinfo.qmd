@@ -148,13 +148,19 @@ conditionalPanel(
 <!-- Graphic EXTRA -->
 ::: {.g-col-md-8 .g-col-12}
 ```{r}
+scenarios_dec <- paste(rep(paste0("ssp", c(126, 245, 370, 460, 585)), each = 2), c("dec50", "dec100"), sep = "_")
+names(scenarios_dec) <- paste(rep(paste0("SSP", 1:5), each = 2), c("2050", "2100"), sep = " ")
+scenarios_dec <- c("Current" = "current", scenarios_dec)
 conditionalPanel(
           condition = "input.extraButton != 0 && input.extraButton % 2 != 0 && (input.jsValue?.id ?? 'species') === 'species'",
+          tags$div(selectInput("extraPlotBSelect", "Scenario and period", choices = scenarios_dec),
+                   style = "font-size: smaller; width: min-content; justify-self: center;"),
           plotOutput("extraPlotB", height = "600px"),
           tags$div('The SHAPE is a new method of estimating model extrapolation. The higher the value of the SHAPE statistic, the higher is the extrapolation at that particular area. To know more', tags$a(href="https://doi.org/10.1111/ecog.06992", "read this article."), 'MESS also enable to see the areas where the model is extrapolating when making predictions. Areas with values different than 0 depict extrapolation. The value shows how many variables are causing the extrapolation in that cell. To learn more about MESS', tags$a( href="https://doi.org/10.1111/j.2041-210X.2010.00036.x", "read this article."))
         )
 ```
 :::
+
 :::
 
 ```{r}

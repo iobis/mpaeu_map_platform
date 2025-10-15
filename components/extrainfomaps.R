@@ -9,7 +9,7 @@
 # Observe draw on map
 observe({
   session$sendCustomMessage("showContext", "nothing")
-}) %>%
+}) |>
   bindEvent(input$mainMap_draw_new_feature)
 
 # Create list to hold information
@@ -30,15 +30,6 @@ observe({
   
   if (active_tab$current == "species") {
     mdebug(paste("Active tab for data extraction:", active_tab$current))
-    
-    # sp_info <- list(
-    #   species = input$speciesSelect,
-    #   model = input$modelSelect,
-    #   scenario = tolower(input$scenarioSelect),
-    #   decade = ifelse(is.null(input$periodSelect), NULL,
-    #                   ifelse(input$periodSelect == 2050, "dec50", "dec100")),
-    #   spkey = speciesinfo$key[speciesinfo$species == input$speciesSelect]
-    # )
     
     vsi_file <- paste0("/vsis3/", gsub("\\.s3.us-east-1.amazonaws.com", "", gsub("https://", "", files_inuse$file_a)))
     vals <- terra::extract(terra::rast(vsi_file), vect_obj)
@@ -70,18 +61,18 @@ observe({
   }
   
   
-}) %>%
+}) |>
   bindEvent(input$mainMap_draw_new_feature)
 
 # Output contextual info
 output$contextMap <- renderPlot({
   continfo_leaf$density
-}, height = 200, width = 200) %>%
+}, height = 200, width = 200) |>
   bindEvent(continfo_leaf$density)
 
 output$contextMapText <- renderText({
   continfo_leaf$text
-}) %>%
+}) |>
   bindEvent(continfo_leaf$text)
 
 outputOptions(output, "contextMap", suspendWhenHidden = FALSE)

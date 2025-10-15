@@ -47,7 +47,7 @@ output$contextSpecies <- renderText({
 # Data source modal
 observe({
   showModal(modalDialog(
-    citation_mod(sp_info$spkey, cit_species_ds, cit_general_ds),
+    citation_mod(select_params$species$spkey, cit_species_ds, cit_general_ds),
     size = "xl", easyClose = T
   ))
 }) %>%

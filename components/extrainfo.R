@@ -18,12 +18,17 @@ wExtra <- waiter::Waiter$new(
 )
 
 output$extraPlotA <- renderPlot({
+  mdebug("Extra info triggered")
   wExtra$show()
   on.exit({
     wExtra$hide()
   })
   if (input$extraButton != 0 && input$extraButton %% 2 != 0) {
-    tdf <- paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/metrics/taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_what=biasmetrics.rds")
+    tdf <- db_info$species |>
+      select(-available_models) |>
+      tidyr::unnest(files) |>
+      filter(type == "biasmetrics") |> #check model_inuse$model
+      pull()
     tmpf <- tempfile(fileext = ".rds")
     download.file(
       tdf, tmpf, quiet = TRUE
@@ -39,7 +44,8 @@ output$extraPlotA <- renderPlot({
   } else {
     plot.new()
   }
-})
+}) |>
+  bindEvent(input$extraButton, ignoreInit = TRUE)
 
 output$extraPlotB <- renderPlot({
   wExtra$show()
@@ -47,9 +53,22 @@ output$extraPlotB <- renderPlot({
     wExtra$hide()
   })
   if (input$extraButton != 0 && input$extraButton %% 2 != 0) {
-    shape <- terra::rast(paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/predictions/taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_what=shape_cog.tif"))[[1]]
-    mess <- terra::rast(paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/predictions/taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_what=mess_cog.tif"))[[1]]
-    cl <- c("#FDE725", "#B3DC2B", "#6DCC57", "#36B677", "#1F9D87", "#25818E", "#30678D", "#3D4988", "#462777", "#440154")
+    species_files <- db_info$species |>
+      select(-available_models) |>
+      tidyr::unnest(files)
+    shape <- species_files |>
+      filter(type == "shape") |>
+      mutate(file = paste0("/vsicurl/", file)) |>
+      pull(file) |>
+      terra::rast() |>
+      subset(input$extraPlotBSelect)
+    mess <- species_files |>
+      filter(type == "mess") |>
+      mutate(file = paste0("/vsicurl/", file)) |>
+      pull(file) |>
+      terra::rast() |>
+      subset(input$extraPlotBSelect)
+    cl <- rev(c("#FDE725", "#B3DC2B", "#6DCC57", "#36B677", "#1F9D87", "#25818E", "#30678D", "#3D4988", "#462777", "#440154"))
     cl_mess <- c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666")
     par(mfrow = c(2, 1))
     plot(shape, main = "Extrapolation - SHAPE", col = cl)
@@ -57,13 +76,22 @@ output$extraPlotB <- renderPlot({
   } else {
     plot.new()
   }
-})
+}) |>
+  bindEvent(input$extraButton, ignoreInit = TRUE)
 
 output$speciesJsonLog <- shiny::renderUI({
-  if (length(sp_info$spkey) > 0) {
-    listviewer::jsonedit(list(
-                `Model details` = jsonlite::fromJSON(paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/taxonid=", sp_info$spkey, "_model=", sp_info$acro, "_what=log.json")),
-                `What are the properties` = jsonlite::fromJSON("data/log_explanation.json")
-            ), elementId = "json-explorer", width = "100%")
+  if (input$extraButton != 0 && input$extraButton %% 2 != 0) {
+    if (!is.null(db_info$species)) {
+      model_log <- db_info$species |>
+        select(-available_models) |>
+        tidyr::unnest(files) |>
+        filter(type == "log") |>
+        pull()
+      listviewer::jsonedit(list(
+                  `Model details` = jsonlite::fromJSON(model_log),
+                  `What are the properties` = jsonlite::fromJSON("data/log_explanation.json")
+              ), elementId = "json-explorer", width = "100%")
+    }
   }
-})
+}) |>
+  bindEvent(input$extraButton, ignoreInit = TRUE)
