@@ -49,7 +49,7 @@ observe({
 
     # Table 1
     metrics <- species_files |>
-      filter(type == "cvmetrics", method == select_params$species$model) |> #check model_inuse$model
+      filter(type == "cvmetrics", method == select_params$species$model) |> 
       pull() |>
       arrow::read_parquet()
     if (select_params$species$model == "ensemble") {
@@ -81,7 +81,7 @@ observe({
     
     # Table 2
     varimp <- species_files |>
-      filter(type == "varimportance", method == select_params$species$model) |> #check model_inuse$model
+      filter(type == "varimportance", method == select_params$species$model) |>
       pull() |>
       arrow::read_parquet()
 
@@ -116,7 +116,7 @@ observe({
     
     # Graph
     response_curves <- species_files |>
-      filter(type == "respcurves", method == select_params$species$model) |> #check model_inuse$model
+      filter(type == "respcurves", method == select_params$species$model) |> 
       pull() |>
       arrow::read_parquet()
     
@@ -158,7 +158,7 @@ observe({
       tidyr::unnest(files)
 
     thermal_envelope <- thermal_files |>
-      filter(type == "thermmetrics") |> #check model_inuse$model
+      filter(type == "thermmetrics") |>
       pull() |>
       jsonlite::read_json()
     

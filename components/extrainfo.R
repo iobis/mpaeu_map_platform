@@ -27,7 +27,7 @@ output$extraPlotA <- renderPlot({
     tdf <- db_info$species |>
       select(-available_models) |>
       tidyr::unnest(files) |>
-      filter(type == "biasmetrics") |> #check model_inuse$model
+      filter(type == "biasmetrics") |>
       pull()
     tmpf <- tempfile(fileext = ".rds")
     download.file(

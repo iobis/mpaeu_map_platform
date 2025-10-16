@@ -14,33 +14,33 @@ updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options_therm
 updateSelectInput(session, "diversityGroup", choices = av_div_groups, selected = av_div_groups[1])
 
 # Change model options based on available models
-observe({
-  req(input$speciesSelect != "")
-  mdebug("Changing options")
+# observe({
+#   req(!is.null(db_info$species))
+#   mdebug("Changing options")
 
-  index <- match(input$speciesSelect, speciesinfo$species)
-  available_models <- speciesinfo$models[index]
-  available_models <- unlist(strsplit(available_models, ";"))
+#   available_models <- db_info$species |>
+#     pull(available_models) |>
+#     unlist(use.names = F)
   
-  if (any(grepl(substr(input$modelSelect,1,3), available_models))) {
-    model_inuse <- input$modelSelect
-  } else {
-    priority <- c("ensemble", "maxent", "rf_classification_ds", "xgboost", "glm")
-    model_inuse <- priority[priority %in% available_models][1]
-  }
+#   if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
+#     model_inuse <- input$modelSelect
+#   } else {
+#     priority <- c("ensemble", "maxent", "rf", "xgboost", "glm")
+#     model_inuse <- priority[priority %in% available_models][1]
+#   }
   
-  names_options <- dplyr::case_when(
-    available_models == "maxent" ~ "MAXENT",
-    available_models == "rf_classification_ds" ~ "Random Forest",
-    available_models == "glm" ~ "GLM",
-    available_models == "xgboost" ~ "XGboost",
-    available_models == "ensemble" ~ "Ensemble",
-    .default = available_models
-  )
+#   names_options <- dplyr::case_when(
+#     available_models == "maxent" ~ "MAXENT",
+#     available_models == "rf" ~ "Random Forest",
+#     available_models == "glm" ~ "GLM",
+#     available_models == "xgboost" ~ "XGboost",
+#     available_models == "ensemble" ~ "Ensemble",
+#     .default = available_models
+#   )
   
-  names(available_models) <- names_options
-  updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
-}) %>% bindEvent(input$speciesSelect, ignoreInit = T)
+#   names(available_models) <- names_options
+#   updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
+# }) %>% bindEvent(db_info$species, ignoreInit = T)
 
 
 ##### Filter modals #####

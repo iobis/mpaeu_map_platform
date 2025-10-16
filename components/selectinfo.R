@@ -16,6 +16,8 @@ species_db <- arrow::open_dataset("data/species_db.parquet")
 habitat_db <- arrow::open_dataset("data/habitat_db.parquet")
 diversity_db <- arrow::open_dataset("data/diversity_db.parquet")
 
+model_valid <- reactiveVal(NULL)
+
 observe({
   # When the active tab is "species"
   if (active_tab$current == "species") {
@@ -26,6 +28,33 @@ observe({
         filter(scientificName == input$speciesSelect) |>
         collect()
       db_info$species <- sel_obj
+
+      # For species, update list of available models
+      mdebug("Changing options for species")
+      available_models <- sel_obj |>
+        pull(available_models) |>
+        unlist(use.names = F)
+
+      if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
+        model_inuse <- input$modelSelect
+      } else {
+        priority <- c("ensemble", "maxent", "rf", "xgboost", "glm", "esm")
+        model_inuse <- priority[priority %in% available_models][1]
+      }
+
+      names_options <- dplyr::case_when(
+        available_models == "maxent" ~ "MAXENT",
+        available_models == "rf" ~ "Random Forest",
+        available_models == "glm" ~ "GLM",
+        available_models == "xgboost" ~ "XGboost",
+        available_models == "ensemble" ~ "Ensemble",
+        available_models == "esm" ~ "Ensemble of Small Models",
+        .default = available_models
+      )
+
+      names(available_models) <- names_options
+      updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
+      model_valid(model_inuse)
     }
   }
   
@@ -101,13 +130,25 @@ select_params <- reactiveValues(
 )
 
 observe({
+  mdebug("Triggered select_params")
   # Species
   if (!is.null(db_info$species$scientificName)) {
     select_params$species$species <- db_info$species$scientificName
   }
   select_params$species$spkey <- db_info$species$taxonid
   select_params$species$acro <- global_acro
-  select_params$species$model <- input$modelSelect
+  print(input$modelSelect)
+  print(model_valid())
+  if (is.null(input$modelSelect)) {
+    mdebug("Null action")
+    select_params$species$model <- ""
+  } else if (!is.null(model_valid()) && input$modelSelect != model_valid()) {
+    mdebug("Substituting model")
+    select_params$species$model <- model_valid()
+  } else {
+    mdebug("Standard model")
+    select_params$species$model <- input$modelSelect
+  }
   select_params$species$scenario <- tolower(input$scenarioSelect)
   select_params$species$decade <- ifelse(is.null(input$periodSelect), NULL,
     ifelse(input$periodSelect == 2050, "dec50", "dec100")
@@ -150,4 +191,11 @@ observe({
   select_params$diversity$type_d <- input$diversityMode
   select_params$diversity$threshold_d <- input$diversityType
   select_params$diversity$posttreat_d <- input$diversityPostTreat
-})
+}) |>
+  bindEvent(
+    db_info$species,
+    input$modelSelect,
+    input$scenarioSelect,
+    input$periodSelect,
+    ignoreInit = TRUE
+  )

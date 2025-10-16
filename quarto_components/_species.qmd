@@ -5,7 +5,7 @@
 
 # Set model option
 model_options <- c(#"BRT" = "brt", 
-                  "MAXENT" = "maxent", "Random Forest" = "rf_classification_ds", 
+                  "MAXENT" = "maxent", "Random Forest" = "rf", 
                   "XGBoost" = "xgboost", #"GLM" = "glm",
                   #  "Elasticnet" = "elasticnet", 
                   "Ensemble" = "ensemble")
