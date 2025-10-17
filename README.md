@@ -8,6 +8,64 @@ Below, a screenshot showing the most recent status:
 
 ![](readme_files/status_14jun24.png)
 
+## App structure
+
+```mermaid
+flowchart
+	n1["(1) TARGET SELECTION"]
+	n2@{ shape: "stadium", label: "Stadium" }
+	n2@{ shape: "stadium", label: "USER INPUT" } --- n1
+	n3@{ shape: "stadium", label: "Stadium" }
+	n3@{ shape: "stadium", label: "TAB SELECTION" } --- n1
+	style n1 fill:#5CE1E6,stroke:#0097B2
+	n4["CONTEXTUAL INFORMATION"]
+	n5@{ label: "Rectangle" }
+	style n5 fill:#FFDE59
+	n5["DATABASES"]
+	n1["(1) TARGET SELECTION (selectinfo.R)"] --- n5
+	n5 --- n4["(3) CONTEXTUAL INFORMATION (contextualinfo.R)"]
+	style n4 fill:#5CE1E6,stroke:#0097B2
+	n17@{ label: "Rectangle" }
+	n5 ------ n17["TAB CONTEXTUAL INFORMATION (tabcontexts.R)"]
+	n6["(2) MAP MODULE"]
+	style n6 fill:#5CE1E6,stroke:#0097B2
+	n5 --- n6
+	n7["MASK"]
+	n5 --- n7
+	n7["MASK (mapreactive.R)"] --- n6
+	n8["MAP GRAPH"]
+	n9@{ shape: "stadium", label: "USER SELECTION" }
+	n6["(2) MAP MODULE (mapreactive.R)"] --- n9
+	n9 --- n8["MAP GRAPH (extrainfomaps.R)"]
+	n10@{ shape: "stadium", label: "DOWNLOAD ACTION" }
+	n5 --- n10
+	n11["(4) DOWNLOAD MODULE (downloads.R)"]
+	style n11 fill:#5CE1E6,stroke:#0097B2
+	n10 --- n11
+	n12["SELECT PANEL"]
+	n4
+	n12
+	n13["UPDATE OPTIONS"]
+	n13 --- n12
+	n1 --- n13["UPDATE OPTIONS (updateoptions.R)"]
+	n14["TABLES AND PLOTS"]
+	n4
+	n14
+	n15@{ shape: "stadium", label: "SHOW EXTRA INPUT" }
+	n14 --- n15
+	n4 --- n14
+	n16["EXTRA INFORMATION SECTION"]
+	n15 --- n16["EXTRA INFORMATION SECTION (extrainfo.R)"]
+	n5
+	n12
+	n12 --- n4
+	style n2 fill:#D9D9D9,stroke:#737373
+	style n3 fill:#D9D9D9,stroke:#737373
+	style n9 fill:#D9D9D9,stroke:#737373
+	style n10 fill:#D9D9D9,stroke:#737373
+	style n15 fill:#D9D9D9,stroke:#737373
+```
+
 ## Repository structure
 
 The main files are:
