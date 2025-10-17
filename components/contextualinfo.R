@@ -52,7 +52,7 @@ observe({
       filter(type == "cvmetrics", method == select_params$species$model) |> 
       pull() |>
       arrow::read_parquet()
-    if (select_params$species$model == "ensemble") {
+    if (select_params$species$model == "ensemble" | select_params$species$model == "esm") {
       metrics <- metrics |> filter(what == "mean") |> filter(origin == "avg_fit") |> select(-origin, -what)
     }
     metrics_mean <- metrics |>
@@ -134,7 +134,8 @@ observe({
                                        gam = "GAM",
                                        xgb = "XGBoost",
                                        lgb = "LightGBM",
-                                       ens = "Ensemble"))
+                                       ens = "Ensemble",
+                                       esm = "Ensemble of Small Models"))
     
     context_file <- jsonlite::read_json("www/context_info.json")
     continfo$text[[2]] <- switch(strtrim(select_params$species$model, 3),
@@ -147,7 +148,8 @@ observe({
                                  gam = unlist(context_file$models[["gam"]]),
                                  xgb = unlist(context_file$models[["xgboost"]]),
                                  lgb = unlist(context_file$models[["lightgbm"]]),
-                                 ens = unlist(context_file$models[["ensemble"]]))
+                                 ens = unlist(context_file$models[["ensemble"]]),
+                                 esm = unlist(context_file$models[["esm"]]))
     
   } else if (active_tab$current == "thermal") {   # If active tab is thermal
     
@@ -276,9 +278,9 @@ observe({
   
 }) |>
   bindEvent(
-    db_info$species,
-    db_info$thermal,
-    db_info$habitat,
-    db_info$diversity,
+    context_param$species,
+    context_param$thermal,
+    context_param$habitat,
+    context_param$diversity,
     active_tab$current,
     ignoreInit = TRUE)

@@ -16,8 +16,6 @@ species_db <- arrow::open_dataset("data/species_db.parquet")
 habitat_db <- arrow::open_dataset("data/habitat_db.parquet")
 diversity_db <- arrow::open_dataset("data/diversity_db.parquet")
 
-model_valid <- reactiveVal(NULL)
-
 observe({
   # When the active tab is "species"
   if (active_tab$current == "species") {
@@ -28,33 +26,6 @@ observe({
         filter(scientificName == input$speciesSelect) |>
         collect()
       db_info$species <- sel_obj
-
-      # For species, update list of available models
-      mdebug("Changing options for species")
-      available_models <- sel_obj |>
-        pull(available_models) |>
-        unlist(use.names = F)
-
-      if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
-        model_inuse <- input$modelSelect
-      } else {
-        priority <- c("ensemble", "maxent", "rf", "xgboost", "glm", "esm")
-        model_inuse <- priority[priority %in% available_models][1]
-      }
-
-      names_options <- dplyr::case_when(
-        available_models == "maxent" ~ "MAXENT",
-        available_models == "rf" ~ "Random Forest",
-        available_models == "glm" ~ "GLM",
-        available_models == "xgboost" ~ "XGboost",
-        available_models == "ensemble" ~ "Ensemble",
-        available_models == "esm" ~ "Ensemble of Small Models",
-        .default = available_models
-      )
-
-      names(available_models) <- names_options
-      updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
-      model_valid(model_inuse)
     }
   }
   
@@ -137,18 +108,33 @@ observe({
   }
   select_params$species$spkey <- db_info$species$taxonid
   select_params$species$acro <- global_acro
-  print(input$modelSelect)
-  print(model_valid())
-  if (is.null(input$modelSelect)) {
-    mdebug("Null action")
-    select_params$species$model <- ""
-  } else if (!is.null(model_valid()) && input$modelSelect != model_valid()) {
-    mdebug("Substituting model")
-    select_params$species$model <- model_valid()
+
+  mdebug("Changing species options")
+  available_models <- db_info$species |>
+    pull(available_models) |>
+    unlist(use.names = F)
+
+  if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
+    model_inuse <- input$modelSelect
   } else {
-    mdebug("Standard model")
-    select_params$species$model <- input$modelSelect
+    priority <- c("ensemble", "maxent", "rf", "xgboost", "glm", "esm")
+    model_inuse <- priority[priority %in% available_models][1]
   }
+
+  names_options <- dplyr::case_when(
+    available_models == "maxent" ~ "MAXENT",
+    available_models == "rf" ~ "Random Forest",
+    available_models == "glm" ~ "GLM",
+    available_models == "xgboost" ~ "XGboost",
+    available_models == "ensemble" ~ "Ensemble",
+    available_models == "esm" ~ "ESM",
+    .default = available_models
+  )
+
+  names(available_models) <- names_options
+  updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
+
+  select_params$species$model <- model_inuse
   select_params$species$scenario <- tolower(input$scenarioSelect)
   select_params$species$decade <- ifelse(is.null(input$periodSelect), NULL,
     ifelse(input$periodSelect == 2050, "dec50", "dec100")
@@ -193,9 +179,56 @@ observe({
   select_params$diversity$posttreat_d <- input$diversityPostTreat
 }) |>
   bindEvent(
+    # Species
     db_info$species,
     input$modelSelect,
     input$scenarioSelect,
     input$periodSelect,
+    # Thermal
+    db_info$thermal,
+    input$scenarioSelectThermal,
+    input$periodSelectThermal,
+    # Habitat
+    db_info$habitat,
+    input$modelSelectHabitat,
+    input$scenarioSelectHabitat,
+    input$periodSelectHabitat,
+    input$habitatBinaryFull,
+    input$habitatBin,
+    # Diversity
+    db_info$diversity,
+    input$diversityGroup,
+    input$scenarioSelectDiversity,
+    input$periodSelectDiversity,
+    input$diversityMode,
+    input$diversityType,
+    input$diversityPostTreat,
+    # Options
     ignoreInit = TRUE
+  )
+
+# Triggers for contextual information
+context_param <- reactiveValues(
+  species = NULL,
+  thermal = NULL,
+  habitat = NULL,
+  diversity = NULL
+)
+
+observe({
+  if (active_tab$current == "species") {
+    context_param$species <- select_params$species$species
+  } else if (active_tab$current == "thermal") {
+    context_param$thermal <- select_params$thermal$species_t
+  } else if (active_tab$current == "habitat") {
+    context_param$habitat <- select_params$habitat$habitat
+  } else if (active_tab$current == "diversity") {
+    context_param$diversity <- select_params$diversity$metric
+  }
+}) |>
+  bindEvent(
+    select_params$species,
+    select_params$thermal,
+    select_params$habitat,
+    select_params$diversity
   )
