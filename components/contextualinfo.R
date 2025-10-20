@@ -41,6 +41,7 @@ observe({
   
   # If active is species
   if (active_tab$current == "species") {
+  # SPECIES ---------
     req(!is.null(db_info$species))
     
     species_files <- db_info$species |>
@@ -150,7 +151,9 @@ observe({
                                  lgb = unlist(context_file$models[["lightgbm"]]),
                                  ens = unlist(context_file$models[["ensemble"]]),
                                  esm = unlist(context_file$models[["esm"]]))
-    
+
+
+  # THERMAL -------  
   } else if (active_tab$current == "thermal") {   # If active tab is thermal
     
     req(!is.null(db_info$thermal))
@@ -227,18 +230,25 @@ observe({
     # Text
     continfo$text[[1]] <- "How this data is extracted?"
     continfo$text[[2]] <- "Thermal ranges are extracted based on the occurrence data and SST data from Bio-ORACLE v3.0 (https://www.bio-oracle.org/). For each occurrence record we extract the temperature and then calculates a kernel density. This follow the method developed on the 'speedy' package (https://github.com/iobis/speedy)."
+  
+  # HABITAT --------
   } else if (active_tab$current == "habitat") { # If active tab is habitat
   
     req(!is.null(db_info$habitat))
     
-    # Table 1
+    # Table 1 - deprecated
     hab_eez <- data.frame(value = NA)
     
     # Table 2
-    hab_sel_species <- data.frame(value = NA)
+    hab_sel_species <- speciesinfo |>
+      filter(AphiaID %in% habitatpts()$taxonID) |>
+      select(
+        AphiaID, scientificName, kingdom, phylum, class, order, family, genus, authority,
+        `GBIF speciesKey` = gbif_speciesKey, sdmGroup = sdm_group, RedList = redlist_category,
+        `Regions of occurrence` = region_name
+      )
 
-    # Graph
-    
+    # Graph - deprecated
     continfo$tableA <- hab_eez
     continfo$tableB <- hab_sel_species
     continfo$plotA <- plotly::ggplotly(ggplot2::ggplot(data.frame(x = 1, y = 1)) + ggplot2::geom_point(aes(x = x, y = y)))
@@ -246,25 +256,27 @@ observe({
     # Text
     continfo$text[[1]] <- "What is a biogenic habitat?"
     continfo$text[[2]] <- "A biogenic marine habitat is an environment created by living organisms, such as corals, seagrasses, mangroves, or oysters, that form complex structures in marine ecosystems. These habitats provide shelter, feeding grounds, and breeding areas for various marine species, enhancing biodiversity. They are crucial for ecosystem functions, such as nutrient cycling and shoreline protection. Examples include coral reefs, kelp forests, and oyster beds. Biogenic habitats are sensitive to environmental changes and human activities, making their conservation vital for maintaining marine biodiversity."
+  
+
+  # DIVERSITY --------
   } else if (active_tab$current == "diversity") { # If active tab is diversity
     
     req(!is.null(db_info$diversity))
     
+    # Table 1 - deprecated
     table_a <- data.frame(value = NA)
     
     # Table 2
-    if (select_params$habitat$group == "all") {
+    if (select_params$diversity$group == "all") {
       table_b <- div_sp_list |> collect()
     } else {
       table_b <- div_sp_list |>
-        filter(tolower(group) == select_params$habitat$group) |>
+        filter(tolower(group) == select_params$diversity$group) |>
         collect()
     }
-    # if (select_params$habitat$model_d != "raw") {
-    #   table_b <- table_b[table_b[[sp_info$model_d]], ]
-    # }
     table_b <- table_b[, c("taxonID", "scientificName", "group")]
-    
+    colnames(table_b)[1] <- "AphiaID"
+
     continfo$tableA <- table_a
     continfo$tableB <- table_b
     continfo$plotA <- plotly::ggplotly(ggplot2::ggplot(data.frame(x = 1, y = 1)) + ggplot2::geom_point(aes(x = x, y = y)))
@@ -273,7 +285,19 @@ observe({
     continfo$text[[1]] <- paste("What is", ifelse(
       select_params$diversity$metric == "lcbd", "LCBD", stringr::str_to_title(select_params$diversity$metric)
     ))
-    continfo$text[[2]] <- "Species richness refers to the number of different species present in a specific area or ecosystem. It is a measure of biodiversity, indicating how many unique species are found in a given habitat, without considering their abundance. High species richness suggests a diverse ecosystem, while low species richness may indicate a more homogeneous or disturbed environment. It is commonly used in ecological studies to assess the health and complexity of ecosystems."
+    continfo$text[[2]] <- ifelse(select_params$diversity$metric == "richness",
+    "Species richness refers to the number of different species present in a specific area or ecosystem. It is a measure of biodiversity, indicating how many unique species are found in a given habitat, without considering their abundance. High species richness suggests a diverse ecosystem, while low species richness may indicate a more homogeneous or disturbed environment. It is commonly used in ecological studies to assess the health and complexity of ecosystems.",
+    "The Local Contribution to Beta Diversity (LCBD) measures how unique the species composition of a given site is compared to all other sites in a region."
+    )
+  
+  # ATLAS -------
+  } else if (active_tab$current == "atlas") {
+    req(!is.null(NULL)) # TEMPORARY
+    continfo$tableA <- data.frame(test = NA)
+    continfo$tableB <- data.frame(test = NA)
+    continfo$plotA <- plotly::ggplotly(ggplot2::ggplot(data.frame(x = 1, y = 1)) + ggplot2::geom_point(aes(x = x, y = y)))
+    continfo$text[[1]] <- ""
+    continfo$text[[2]] <- ""
   }
   
 }) |>

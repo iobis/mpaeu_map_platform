@@ -15,9 +15,11 @@ leafletProxy("mainMap") |>
 # Palettes
 main_palette <- RColorBrewer::brewer.pal(9, "Blues")
 alt_palette <- rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265"))
+uncertainty_palette <- RColorBrewer::brewer.pal(9, "Oranges")
 hab_palette <- RColorBrewer::brewer.pal("PuRd", n = 9)
-diversity_palette <- ""
+div_palette <- RColorBrewer::brewer.pal("PuRd", n = 9)
 binary_palette <- c("#f7fbff", "#08519c")
+binary_palette_alt <- c("#f7fbff", "#db9f07")
 
 # Create waiters
 wMap <- waiter::Waiter$new(
@@ -58,7 +60,7 @@ source("scripts/mapreactive_functions.R", local = TRUE)
 # Map observer -----
 observe({
   # Debugging information
-  mdebug("Executing map reactive================\n\n")
+  mdebug("Executing map reactive")
   mdebug(active_tab$current)
   wMap$show()
   on.exit({
@@ -75,10 +77,12 @@ observe({
         file_type <- "uncertainty"
         boot$status <- TRUE
         boot$legend <- htmltools::HTML("Uncertainty")
+        unc <- TRUE
       } else {
         file_type <- "prediction"
         boot$status <- FALSE
         boot$legend <- htmltools::HTML("Likelihood </br> of occurrence")
+        unc <- FALSE
       }
 
       min_val <- threshold_table() |>
@@ -100,7 +104,7 @@ observe({
       } else {
         layer_2 <- NULL
       }
-      proxy |> add_layer_sp(layer_1, layer_2, min_val)
+      proxy |> add_layer_sp(layer_1, layer_2, min_val, uncertainty = unc)
       files_inuse$file_a <- layer_1
       files_inuse$file_b <- layer_2
     } else {
@@ -109,6 +113,7 @@ observe({
     # Thermal tab
   } else if (active_tab$current == "thermal") {
     if (select_params$thermal$species_t != "") {
+      maskstate(FALSE)
       file_type <- "thermenvelope"
       boot$status <- FALSE
       boot$legend <- htmltools::HTML("Thermal range")
@@ -178,8 +183,9 @@ observe({
           pe = select_params$diversity$decade_d,
           me = select_params$diversity$metric
         )
-
-      proxy |> add_layer_div(layer_1)
+      legend_val <- ifelse(select_params$diversity$metric == "richness",
+                           "Number\nof species", "LCBD")
+      proxy |> add_layer_div(layer_1, legend = legend_val)
       files_inuse_habdiv$file_diversity <- layer_1
     } else {
       proxy |> clean_proxy()
@@ -339,7 +345,7 @@ observe({
     proxy |> leaflet::addPolygons(
       data = eez, color = "#454545", opacity = 0.3,
       popup = ~EEZ, fillColor = "#0d7edb",
-      fillOpacity = 0.05, weight = 2, layerId = paste0("eezShape", seq_lean(nrow(eez))), options = pathOptions(pane = "extraPane")
+      fillOpacity = 0.05, weight = 2, layerId = paste0("eezShape", seq_len(nrow(eez))), options = pathOptions(pane = "extraPane")
     )
   } else {
     proxy |> leaflet::removeShape(layerId = paste0("eezShape", seq_len(nrow(eez))))

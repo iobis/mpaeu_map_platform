@@ -120,6 +120,25 @@ observe({
         title_state$to_print <- base_list_mod
       }
     }
+
+    # Atlas condition
+    if (active_tab$current == "atlas") {
+      if (FALSE) {
+      #if (input$diversitySelect != "") {
+        title_state$current <- "diversity"
+        title_state$to_print <- list(
+          tableA = "Diversity by areas",
+          graph = "Protected areas",
+          tableB = "Composition",
+          modelTitle = "Metric explanation"
+        )
+      } else {
+        base_list_mod <- base_list
+        base_list_mod$tableB <- "Available soon"#base_list_mod$tableA
+        base_list_mod$tableA <- ""
+        title_state$to_print <- base_list_mod
+      }
+    }
   }
 }) %>%
   bindEvent(c(input_state$status, active_tab$current))

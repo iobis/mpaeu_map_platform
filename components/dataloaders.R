@@ -26,10 +26,16 @@ speciespts <- reactive({
 })
 
 habitatpts <- reactive({
+  # pts <- db_info$habitat |>
+  #   tidyr::unnest("files") |>
+  #   filter(type == "fitocc") |>
+  #   pull(file) |>
+  #   arrow::read_parquet()
   pts <- db_info$habitat |>
     tidyr::unnest("files") |>
-    filter(type == "fitocc") |>
+    slice_head(n = 1) |>
     pull(file) |>
+    (\(x) gsub("_scen=.*", "_what=fitocc.parquet", x))() |>
     arrow::read_parquet()
   colnames(pts)[1:2] <- c("longitude", "latitude")
   pts$species <- as.factor(pts$species)

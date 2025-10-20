@@ -22,10 +22,11 @@ selectInput(
    choices = c("P10" = "p10", "MSS" = "mss")
 )
 
-label_switch_eunis <- bslib::tooltip(span("Show EUNIS biogenic map", bsicons::bs_icon("info-circle", size = "0.7em")),
-       "Show EUNIS biogenic substrate according to EMODnet Seabed Habitats product (https://emodnet.ec.europa.eu/en/seabed-habitats). Not available at this moment.",
-        placement = "bottom")
-span(bslib::input_switch("habitatEUNIS", label_switch_eunis, FALSE), style = "display: flex; margin-top: 25px; margin-bottom: 5px; margin-left: 5px;")
+# Remove EUNIS map for now
+# label_switch_eunis <- bslib::tooltip(span("Show EUNIS biogenic map", bsicons::bs_icon("info-circle", size = "0.7em")),
+#        "Show EUNIS biogenic substrate according to EMODnet Seabed Habitats product (https://emodnet.ec.europa.eu/en/seabed-habitats). Not available at this moment.",
+#         placement = "bottom")
+# span(bslib::input_switch("habitatEUNIS", label_switch_eunis, FALSE), style = "display: flex; margin-top: 25px; margin-bottom: 5px; margin-left: 5px;")
 
 label_switch_bin <- bslib::tooltip(span("Show binary", bsicons::bs_icon("info-circle", size = "0.7em")),
        "Show maps in fully binary (presence/absence) mode. Otherwise, just removes the lower limit according to the metric on the 'Binary mode' selector.",

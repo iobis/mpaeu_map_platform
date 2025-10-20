@@ -77,7 +77,7 @@ conditionalPanel(
 ::: {.grid}
 
 <!-- Table 1 --->
-::: {.g-col-md-6 .g-col-12 data-display-if="!input.jsValue || !(input.jsValue.id == 'habitat' || input.jsValue.id == 'diversity')"}
+::: {.g-col-md-6 .g-col-12 data-display-if="!input.jsValue || !(input.jsValue.id == 'habitat' || input.jsValue.id == 'diversity' || input.jsValue.id == 'atlas')"}
 `r tags$div(id="table1-title", class="body-title", textOutput("tableATitle"))`
 
 ```{r}
@@ -87,7 +87,7 @@ reactable::reactableOutput("tableA")
 :::
 
 <!-- Graphic 1 -->
-::: {.g-col-md-6 .g-col-12 data-display-if="!input.jsValue || !(input.jsValue.id == 'habitat' || input.jsValue.id == 'diversity')"}
+::: {.g-col-md-6 .g-col-12 data-display-if="!input.jsValue || !(input.jsValue.id == 'habitat' || input.jsValue.id == 'diversity' || input.jsValue.id == 'atlas')"}
 `r tags$div(id="graph-title", class="body-title", textOutput("graphTitle"))`
 
 ```{r}

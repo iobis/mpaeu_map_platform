@@ -26,9 +26,34 @@ output$plotA <- renderPlotly({
   bindEvent(continfo$plotA)
 
 output$tableB <- reactable::renderReactable({
-  reactable::reactable(continfo$tableB,
+  if (active_tab$current == "habitat") {
+    reactable::reactable(continfo$tableB,
+                       pagination = TRUE,
+                       defaultPageSize = 5, filterable = TRUE, highlight = TRUE,
+                       resizable = TRUE, wrap = FALSE, columns = list(
+                            AphiaID = reactable::colDef(cell = function(value) {
+                              htmltools::tags$a(href = paste0("https://obis.org/taxon/", value),
+                                                target = "_blank", as.character(value))
+                            }),
+                            scientificName = reactable::colDef(minWidth = 220),
+                            `Regions of occurrence` = reactable::colDef(minWidth = 350)
+                          ))
+  } else if (active_tab$current == "diversity") {
+    reactable::reactable(continfo$tableB,
+                          pagination = TRUE,
+                          defaultPageSize = 5, filterable = TRUE, highlight = TRUE,
+                          resizable = TRUE, columns = list(
+                            AphiaID = reactable::colDef(cell = function(value) {
+                              htmltools::tags$a(href = paste0("https://obis.org/taxon/", value),
+                                                target = "_blank", as.character(value))
+                            }),
+                            scientificName = reactable::colDef(minWidth = 180)
+                          ))
+  } else {
+    reactable::reactable(continfo$tableB,
                        pagination = TRUE,
                        defaultPageSize = 5, filterable = TRUE, highlight = TRUE)
+  }
 }) %>%
   bindEvent(continfo$tableB)
 

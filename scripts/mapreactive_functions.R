@@ -22,7 +22,7 @@ clean_proxy <- function(proxy) {
 # Function to add layers
 add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
                          min_range = 0, band_1 = NULL, band_2 = NULL,
-                         binary = FALSE) {
+                         binary = FALSE, uncertainty = FALSE) {
   session$sendCustomMessage("removeEye", "nothing")
 
   if (!binary) {
@@ -34,6 +34,12 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
     col_opt <- colorOptions(
       palette = binary_palette,
       domain = c(min_range, 1), na.color = NA
+    )
+  }
+
+  if (uncertainty) {
+    col_opt <- colorOptions(
+      palette = uncertainty_palette, na.color = NA
     )
   }
 
@@ -93,7 +99,7 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
       proxy |>
         leaflegend::addLegendNumeric(
           pal = colorNumeric(
-            palette = main_palette,
+            palette = if (uncertainty) uncertainty_palette else main_palette,
             domain = c(0, 100), na.color = NA
           ),
           values = c(0, 100), title = boot$legend, layerId = "legend",
@@ -180,12 +186,12 @@ add_layer_hab <- function(proxy, layer_1) {
     )
 }
 
-add_layer_div <- function(proxy, layer_1) {
+add_layer_div <- function(proxy, layer_1, legend) {
   session$sendCustomMessage("removeEye", "nothing")
   maskstate(FALSE)
 
   col_opt <- colorOptions(
-    palette = hab_palette, na.color = NA
+    palette = div_palette, na.color = NA
   )
 
   # tr <- terra::rast(paste0("/vsicurl/", sel_habitat))
@@ -199,9 +205,9 @@ add_layer_div <- function(proxy, layer_1) {
     leaflegend::addLegendNumeric(
       pal = colorNumeric(
         domain = c(0, 1),
-        palette = hab_palette,
+        palette = div_palette,
         na.color = NA
-      ), title = htmltools::HTML("Likelihood </br> of occurrence"), layerId = "legend", values = c(0, 1),
+      ), title = htmltools::HTML(legend), layerId = "legend", values = c(0, 1),
       orientation = "horizontal", fillOpacity = .7, width = 75,
       height = 15, position = "topright", labels = c("Low", "High")
     ) |>
@@ -262,7 +268,6 @@ extract_div <- function(.data, gr = "all", th = "p10", pt = "std", ty = "continu
   if (!is.null(pe) & sc != "current" & ty != "raw") {
     sld <- sld |> filter(period == pe)
   }
-  message("ok extract")
   return(sld |> pull(file) |> (\(x) paste0("/vsicurl/", x))())
 }
 
