@@ -25,8 +25,8 @@ label_switch_mpa <- bslib::tooltip(span("Show MPAs", bsicons::bs_icon("info-circ
         placement = "bottom")
 
 
-masks_options <- c("native_ecoregions", "fit_region", "convex_hull", "minbounding_circle", "buffer100m")
-names(masks_options) <- c("Native Realms", "Fit area", "Convex Hull", "Min. bounding circle", "Buffer 100m")
+masks_options <- c("fit_region_max_depth", "native_ecoregions", "fit_region", "convex_hull", "minbounding_circle", "buffer100m")
+names(masks_options) <- c("Fit area (max. depth)", "Native Realms", "Fit area", "Convex Hull", "Min. bounding circle", "Buffer 100m")
 
 conditionalPanel(
   condition = "input.speciesSelect !== '' && (input.jsValue?.id ?? 'species') === 'species'",

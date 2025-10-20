@@ -50,14 +50,23 @@ observe({
     citation_mod(select_params$species$spkey, cit_species_ds, cit_general_ds),
     size = "xl", easyClose = T
   ))
-}) %>%
+}) |>
   bindEvent(input$dataSourcesButton)
+
+# Species evaluation modal
+observe({
+  showModal(modalDialog(
+    evaluation_modal("example"),
+    size = "xl", easyClose = T
+  ))
+}) |>
+  bindEvent(input$modelQualityButton)
 
 # Thermal ----
 # Species title
 output$selectedSpeciesThermal <- renderText({
   input$speciesSelectThermal
-}) %>%
+}) |>
   bindEvent(input$speciesSelectThermal, ignoreInit = T)
 
 # Context info
@@ -80,7 +89,7 @@ output$contextSpeciesThermal <- renderText({
 # Species title
 output$selectedHabitat <- renderText({
   gsub("_", " ", stringr::str_to_title(input$habitatSelect))
-}) %>%
+}) |>
   bindEvent(input$habitatSelect, ignoreInit = T)
 
 # Context info
@@ -108,7 +117,7 @@ output$selectedMetric <- renderText({
   } else {
     stringr::str_to_title(input$diversitySelect)
   }
-}) %>%
+}) |>
   bindEvent(input$diversitySelect, ignoreInit = T)
 
 # Context info

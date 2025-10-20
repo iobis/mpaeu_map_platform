@@ -38,7 +38,7 @@ habitatpts <- reactive({
 
 threshold_table <- reactive({
   req(!is.null(db_info$species))
-  thresholds <- db_info$species |>
+  db_info$species |>
     tidyr::unnest("files") |>
     filter(type == "thresholds") |>
     pull(file) |>

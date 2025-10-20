@@ -69,12 +69,12 @@ ul.task-list li input[type="checkbox"] {
 
 
 <!-- Temporary announcement --->
-<div id="quarto-announcement" class="alert alert-primary" data-announcement-id="9616bfb5c47a60811ea96e08f2ae1bd0" style="display: flex; justify-content: space-between; padding-bottom: 0px !important; margin: 0px; padding-top: 5px !important;">
+<div id="quarto-announcement" class="alert alert-success" data-announcement-id="9616bfb5c47a60811ea96e08f2ae1bd0" style="display: flex; justify-content: space-between; padding-bottom: 0px !important; margin: 0px; padding-top: 5px !important;">
 <div style="display: flex;">
 <i class="bi bi-info-circle quarto-announcement-icon" style="padding-right: 15px;"></i>
 <div class="quarto-announcement-content">
 <p>
-<strong>Note</strong> - we are currently validating the model outputs and will soon launch an optimized version. In the meantime, you may explore the maps, but they should be carefully and critically assessed before drawing any conclusions. Public release of version 2 in September 2025.
+<strong>Models were updated to version 2</strong>
 </p>
 </div>
 </div>
@@ -1476,7 +1476,8 @@ Mask type:
 </bslib-tooltip>
 </label>
 <div>
-<select id="ecspMask" class="shiny-input-select"><option value="native_ecoregions" selected="">Native Realms</option>
+<select id="ecspMask" class="shiny-input-select"><option value="fit_region_max_depth" selected="">Fit area (max. depth)</option>
+<option value="native_ecoregions">Native Realms</option>
 <option value="fit_region">Fit area</option>
 <option value="convex_hull">Convex Hull</option>
 <option value="minbounding_circle">Min. bounding circle</option>
@@ -1589,7 +1590,8 @@ Mask type:
 </bslib-tooltip>
 </label>
 <div>
-<select id="ecspMask" class="shiny-input-select"><option value="native_ecoregions" selected="">Native Realms</option>
+<select id="ecspMask" class="shiny-input-select"><option value="fit_region_max_depth" selected="">Fit area (max. depth)</option>
+<option value="native_ecoregions">Native Realms</option>
 <option value="fit_region">Fit area</option>
 <option value="convex_hull">Convex Hull</option>
 <option value="minbounding_circle">Min. bounding circle</option>

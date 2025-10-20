@@ -256,6 +256,17 @@ gen_context_boxes <- function(model_quality = "Not assessed",
 </div>
       '
     )
+    modal_link <- shiny::actionLink("modelQualityButton", htmltools::HTML(
+      ifelse(
+        model_quality != "Not assessed",
+        '<i class="bi bi-clipboard-data"></i> Model evaluation details',
+        '<i class="bi bi-clipboard-data"></i> Help to evaluate this model'
+      )
+    ), style = "color: #07A5F0 !important;")
+    #modal_link <- gsub("><i class", ' style="color: #07A5F0 !important;"><i class', modal_link)
+    html_content <- glue::glue(
+      '<div style="display: flex; flex-direction: column;">{html_content}{modal_link}</div>'
+    )
   } else if (type == "habitat") {
     html_content <- ""
   } else {
@@ -293,4 +304,15 @@ citation_mod <- function(spkey, cit_species_ds, cit_general_ds) {
 
   reactable::reactable(sp_data, searchable = T)
   
+}
+
+evaluation_modal <- function(eval_file) {
+  if (is.null(eval_file)) {
+    "We are preparing a tool to enable peer-review of models by users. Meanwhile, if you spotted something that needs immediate action, contact helpdesk@obis.org"
+  } else {
+    htmltools::tags$div(
+      reactable::reactable(data.frame(evaluations = "good", evaluator = "John"), searchable = T),
+      htmltools::tags$span(htmltools::tags$br(), "We are extremely thankful to the evaluator(s) who voluntarily provided time to improve this tool.")
+    )
+  }
 }

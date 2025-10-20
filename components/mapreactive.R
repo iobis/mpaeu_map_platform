@@ -58,7 +58,7 @@ source("scripts/mapreactive_functions.R", local = TRUE)
 # Map observer -----
 observe({
   # Debugging information
-  mdebug("Executing map reactive")
+  mdebug("Executing map reactive================\n\n")
   mdebug(active_tab$current)
   wMap$show()
   on.exit({
@@ -89,7 +89,7 @@ observe({
           sc = select_params$species$scenario, pe = select_params$species$decade,
           me = select_params$species$model, ty = file_type
         )
-      if (input$sideSelect) {
+      if (select_params$species$side_select) {
         layer_1 <- db_info$species |>
           extract_sp(me = select_params$species$model, ty = file_type)
         layer_2 <- db_info$species |>
@@ -120,12 +120,7 @@ observe({
           sep = "_"
         )
       )
-      # bands_list <- terra::describe(
-      #   paste0("/vsicurl/", layer_1)
-      # )
-      # bands_list <- bands_list[grepl("Description = ", bands_list)]
-      # bands_list <- gsub(" ", "", gsub("Description =", "", bands_list))
-      if (input$sideSelect) {
+      if (select_params$thermal$side_select_t) {
         sel_band_1 <- which(bands_list == "current")
         sel_band_2 <- which(bands_list == paste(
           select_params$thermal$scenario_t,
@@ -200,7 +195,7 @@ observe({
     select_params$diversity,
     active_tab$current,
     input$ecspBoot,
-    input$sideSelect,
+    input$ecspBin,
     ignoreInit = TRUE
   )
 

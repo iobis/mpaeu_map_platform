@@ -70,14 +70,16 @@ select_params <- reactiveValues(
     scenario = "",
     decade = "",
     spkey = "",
-    acro = ""
+    acro = "",
+    side_select = ""
   ),
   thermal = list(
     species_t = "",
     spkey_t = "",
     scenario_t = "",
     decade_t = "",
-    acro_t = ""
+    acro_t = "",
+    side_select_t = ""
   ),
   habitat = list(
     habitat = "",
@@ -105,40 +107,45 @@ observe({
   # Species
   if (!is.null(db_info$species$scientificName)) {
     select_params$species$species <- db_info$species$scientificName
+    mdebug("Changing species options")
+    available_models <- db_info$species |>
+      pull(available_models) |>
+      unlist(use.names = F)
+
+    if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
+      model_inuse <- input$modelSelect
+    } else {
+      priority <- c("ensemble", "maxent", "rf", "xgboost", "glm", "esm")
+      model_inuse <- priority[priority %in% available_models][1]
+    }
+
+    names_options <- dplyr::case_when(
+      available_models == "maxent" ~ "MAXENT",
+      available_models == "rf" ~ "Random Forest",
+      available_models == "glm" ~ "GLM",
+      available_models == "xgboost" ~ "XGboost",
+      available_models == "ensemble" ~ "Ensemble",
+      available_models == "esm" ~ "ESM",
+      .default = available_models
+    )
+
+    names(available_models) <- names_options
+    updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
+
+    select_params$species$model <- model_inuse
   }
   select_params$species$spkey <- db_info$species$taxonid
   select_params$species$acro <- global_acro
-
-  mdebug("Changing species options")
-  available_models <- db_info$species |>
-    pull(available_models) |>
-    unlist(use.names = F)
-
-  if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
-    model_inuse <- input$modelSelect
-  } else {
-    priority <- c("ensemble", "maxent", "rf", "xgboost", "glm", "esm")
-    model_inuse <- priority[priority %in% available_models][1]
-  }
-
-  names_options <- dplyr::case_when(
-    available_models == "maxent" ~ "MAXENT",
-    available_models == "rf" ~ "Random Forest",
-    available_models == "glm" ~ "GLM",
-    available_models == "xgboost" ~ "XGboost",
-    available_models == "ensemble" ~ "Ensemble",
-    available_models == "esm" ~ "ESM",
-    .default = available_models
-  )
-
-  names(available_models) <- names_options
-  updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
-
-  select_params$species$model <- model_inuse
   select_params$species$scenario <- tolower(input$scenarioSelect)
   select_params$species$decade <- ifelse(is.null(input$periodSelect), NULL,
     ifelse(input$periodSelect == 2050, "dec50", "dec100")
   )
+  if (input$scenarioSelect == "Current") {
+    select_params$species$side_select <- FALSE
+    updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
+  } else {
+    select_params$species$side_select <- input$sideSelect
+  }
 
   # Thermal
   if (!is.null(db_info$thermal$scientificName)) {
@@ -150,6 +157,12 @@ observe({
   select_params$thermal$decade_t <- ifelse(is.null(input$periodSelectThermal), NULL,
     ifelse(input$periodSelectThermal == 2050, "dec50", "dec100")
   )
+  if (input$scenarioSelectThermal == "Current") {
+    select_params$thermal$side_select_t <- FALSE
+    updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
+  } else {
+    select_params$thermal$side_select_t <- input$sideSelect
+  }
 
   # Habitat
   if (!is.null(db_info$habitat$habitat)) {
@@ -203,6 +216,8 @@ observe({
     input$diversityMode,
     input$diversityType,
     input$diversityPostTreat,
+    # General
+    input$sideSelect,
     # Options
     ignoreInit = TRUE
   )
@@ -230,5 +245,6 @@ observe({
     select_params$species,
     select_params$thermal,
     select_params$habitat,
-    select_params$diversity
+    select_params$diversity,
+    ignoreInit = TRUE
   )

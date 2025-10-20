@@ -1,6 +1,7 @@
 # Functions for mapreactive.R -------
 # Init proxy object
 init_proxy <- function(map_name = "mainMap") {
+  mdebug("Cleaning proxy")
   leafletProxy(map_name) |>
     clearMarkers() |>
     clearShapes() |>
