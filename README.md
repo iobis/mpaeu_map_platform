@@ -6,7 +6,7 @@ The platform uses [Quarto](https://quarto.org/) and [Shiny](https://shiny.posit.
 
 Below, a screenshot showing the most recent status:
 
-![](readme_files/status_14jun24.png)
+![](readme_files/status_22oct25.png)
 
 ## App structure
 
@@ -29,7 +29,8 @@ flowchart
 	n5 ------ n17["TAB CONTEXTUAL INFORMATION (tabcontexts.R)"]
 	n6["(2) MAP MODULE"]
 	style n6 fill:#5CE1E6,stroke:#0097B2
-	n5 --- n6
+	n5
+	n6
 	n7["MASK"]
 	n5 --- n7
 	n7["MASK (mapreactive.R)"] --- n6
@@ -53,17 +54,21 @@ flowchart
 	n14
 	n15@{ shape: "stadium", label: "SHOW EXTRA INPUT" }
 	n14 --- n15
-	n4 --- n14
+	n4 --- n14["TABLES AND PLOTS (renders.R)"]
 	n16["EXTRA INFORMATION SECTION"]
 	n15 --- n16["EXTRA INFORMATION SECTION (extrainfo.R)"]
 	n5
 	n12
-	n12 --- n4
+	n12["SELECT PANEL (tabactions.R)"] --- n4
 	style n2 fill:#D9D9D9,stroke:#737373
 	style n3 fill:#D9D9D9,stroke:#737373
 	style n9 fill:#D9D9D9,stroke:#737373
 	style n10 fill:#D9D9D9,stroke:#737373
 	style n15 fill:#D9D9D9,stroke:#737373
+	n18["ADDITIONAL DATA (dataloaders.R)"]
+	n5 --- n18
+	n18 --- n6
+	n5 --- n6["(2) MAP MODULE (mapreactive.R / maprenders.R)"]
 ```
 
 ## Repository structure

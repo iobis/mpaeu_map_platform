@@ -140,5 +140,5 @@ observe({
       }
     }
   }
-}) %>%
+}) |>
   bindEvent(c(input_state$status, active_tab$current))

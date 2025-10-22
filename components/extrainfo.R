@@ -8,7 +8,17 @@
 
 # Extra info (page) - SPECIES ----
 wExtra <- waiter::Waiter$new(
-  id = c("extraPlotA", "extraPlotB"),
+  id = c("extraPlotA"),
+  color = "white",
+  html = htmltools::div(
+    "Loading data...",
+    htmltools::br(), htmltools::br(),
+    waiter::spin_1(), style = "color: #8e929a; font-size: 18px; font-weight: 700"
+  )
+)
+
+wExtraB <- waiter::Waiter$new(
+  id = c("extraPlotB"),
   color = "white",
   html = htmltools::div(
     "Loading data...",
@@ -48,9 +58,9 @@ output$extraPlotA <- renderPlot({
   bindEvent(input$extraButton, ignoreInit = TRUE)
 
 output$extraPlotB <- renderPlot({
-  wExtra$show()
+  wExtraB$show()
   on.exit({
-    wExtra$hide()
+    wExtraB$hide()
   })
   if (input$extraButton != 0 && input$extraButton %% 2 != 0) {
     species_files <- db_info$species |>
@@ -77,7 +87,7 @@ output$extraPlotB <- renderPlot({
     plot.new()
   }
 }) |>
-  bindEvent(input$extraButton, ignoreInit = TRUE)
+  bindEvent(input$extraButton, input$extraPlotBSelect, ignoreInit = TRUE)
 
 output$speciesJsonLog <- shiny::renderUI({
   if (input$extraButton != 0 && input$extraButton %% 2 != 0) {

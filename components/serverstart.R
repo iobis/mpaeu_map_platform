@@ -32,6 +32,9 @@ mdebug <- function(text, toprint = debug) {
   return(invisible(NULL))
 }
 
+# Global settings ------
+global_acro <- "mpaeu"
+
 # Create leaflet object ----
 m <- leaflet() %>% 
   addTiles(urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", layerId = "baseid") %>%
@@ -63,24 +66,20 @@ m <- m %>%
                             }
                             ')
 
-# New data loading and options setting
-s3_list <- arrow::open_dataset("data/s3_list.parquet")
-s3_species <- arrow::read_parquet("data/s3_species_data.parquet")
-s3_divhab <- jsonlite::read_json("data/s3_divhab_data.json")
+# Load data ------
+# DB objects -----
+species_db <- arrow::open_dataset("data/species_db.parquet")
+habitat_db <- arrow::open_dataset("data/habitat_db.parquet")
+diversity_db <- arrow::open_dataset("data/diversity_db.parquet")
 
+# Species info -----
 speciesinfo <- readRDS("data/app_splist.rds")
 speciesinfo$key <- speciesinfo$taxonID
 speciesinfo$species <- speciesinfo$scientificName
 speciesinfo <- speciesinfo[order(speciesinfo$scientificName),]
 
-# Create a "copy" for other uses
-# TO BE REMOVED IN NEXT VERSION
-speciesinfo_full <- speciesinfo
-
-speciesinfo <- left_join(speciesinfo, s3_species[,1:3], by = "taxonID")
-
-available_groups <- c("all", unique(speciesinfo$sdm_group))
-names(available_groups) <- stringr::str_to_title(available_groups)
+#available_groups <- c("all", unique(speciesinfo$sdm_group))
+#names(available_groups) <- stringr::str_to_title(available_groups)
 
 common_names <- stringr::str_split(speciesinfo$common_names, pattern = "; ")
 common_names <- unique(unlist(common_names, use.names = F))
@@ -97,13 +96,14 @@ classes <- c("All" = "all", unique(speciesinfo$class))
 orders <- c("All" = "all", unique(speciesinfo$order))
 families <- c("All" = "all", unique(speciesinfo$family))
 
-available_ids <- unique(s3_species$taxonID)
+available_ids <- species_db |>
+  select(taxonid) |>
+  distinct() |>
+  collect() |>
+  pull(taxonid)
 speciesinfo <- speciesinfo[speciesinfo$taxonID %in% as.numeric(available_ids), ]
 sp_options <- c("", speciesinfo$scientificName)
-
-thermal_ok <- s3_species$taxonID[s3_species$with_thermal]
-sp_options_thermal <- c("", speciesinfo$scientificName[speciesinfo$taxonID %in% thermal_ok])
-rm(thermal_ok)
+sp_options_thermal <- sp_options
 
 # Load study area
 starea <- sf::read_sf("data/studyarea.fgb")
@@ -113,7 +113,12 @@ eez <- sfarrow::st_read_parquet("data/EEZ_IHO_simp_edited.parquet")
 realms <- sf::st_read("data/MarineRealms_BO.shp")
 
 # See available diversity groups
-av_div_groups <- unlist(s3_divhab$diversity$groups)
+av_div_groups <- diversity_db |>
+  filter(metric == "richness") |>
+  collect() |>
+  tidyr::unnest(files) |>
+  distinct(group) |>
+  pull(group)
 names(av_div_groups) <- stringr::str_to_title(av_div_groups)
 
 # Load citation info
@@ -122,5 +127,3 @@ cit_general_ds <- arrow::open_dataset("data/reg_datasets_context.parquet")
 
 # Load diversity species list
 div_sp_list <- arrow::open_dataset("data/metric=richness_model=mpaeu_what=splist.parquet")
-
-global_acro <- "mpaeu"

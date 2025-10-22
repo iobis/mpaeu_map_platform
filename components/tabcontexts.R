@@ -14,9 +14,21 @@ output$selectedSpecies <- renderText({
 
 # Context info
 output$contextSpecies <- renderText({
+  req(!is.null(db_info$species))
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelect,]
   if (input$speciesSelect != "") {
-    spmodinfo <- jsonlite::read_json(glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid={selinf$key}/model={selinf$acro}/taxonid={selinf$key}_model={selinf$acro}_what=log.json"))
+    spmodinfo <- db_info$species |>
+      select(-available_models) |>
+      tidyr::unnest(files) |>
+      filter(type == "log") |>
+      pull(file) |>
+      jsonlite::read_json()
+    evalinfo <- db_info$species |>
+      select(-available_models) |>
+      tidyr::unnest(files) |>
+      filter(type == "experteval") |>
+      pull(file) |>
+      jsonlite::read_json(simplifyVector = TRUE)
   } else {
     spmodinfo <- NULL
   }
@@ -28,8 +40,16 @@ output$contextSpecies <- renderText({
   tenvstat <- modinfo$tenvstat
   tenvval <- modinfo$tenvval
   context_tags <- gen_context_boxes(
-    model_quality = selinf$sdm_quality,
-    reviewed = selinf$sdm_reviewed,
+    model_quality = if (evalinfo$status == "not_evaluated") {
+      "Not assessed"
+    } else {
+      dplyr::case_when(
+        evalinfo$summary$average_score <= 2 ~ "Good",
+        evalinfo$summary$average_score > 2 & evalinfo$summary$average_score <= 4 ~ "Average",
+        evalinfo$summary$average_score > 4 ~ "Poor"
+      )
+    },
+    reviewed = evalinfo$status,
     conservation_status = selinf$redlist_category
   )
   data_sources <- shiny::actionLink("dataSourcesButton", "see data sources.")
@@ -56,7 +76,13 @@ observe({
 # Species evaluation modal
 observe({
   showModal(modalDialog(
-    evaluation_modal("example"),
+    db_info$species |>
+      select(-available_models) |>
+      tidyr::unnest(files) |>
+      filter(type == "experteval") |>
+      pull(file) |>
+      jsonlite::read_json(simplifyVector = TRUE) |>
+      evaluation_modal(),
     size = "xl", easyClose = T
   ))
 }) |>
@@ -71,9 +97,15 @@ output$selectedSpeciesThermal <- renderText({
 
 # Context info
 output$contextSpeciesThermal <- renderText({
+  req(!is.null(db_info$thermal))
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelectThermal,]
   if (input$speciesSelectThermal != "") {
-    spmodinfo <- jsonlite::read_json(glue::glue("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid={selinf$key}/model={selinf$acro}/taxonid={selinf$key}_model={selinf$acro}_what=log.json"))
+    spmodinfo <- db_info$species |>
+      select(-available_models) |>
+      tidyr::unnest(files) |>
+      filter(type == "log") |>
+      pull(file) |>
+      jsonlite::read_json()
   } else {
     spmodinfo <- NULL
   }

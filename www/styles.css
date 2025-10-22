@@ -649,3 +649,14 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
 .nav-tabs .nav-link.active:hover {
   max-width: var(--tab-expanded);
 }
+
+@media screen and (max-width: 600px) {
+  #quality-box {
+    font-size: smaller;
+    margin-top: 5px !important;
+  }
+
+  #modelQualityButton {
+    font-size: smaller;
+  }
+}

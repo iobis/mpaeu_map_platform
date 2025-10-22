@@ -12,9 +12,7 @@ db_info <- reactiveValues(
   diversity = NULL
 )
 
-species_db <- arrow::open_dataset("data/species_db.parquet")
-habitat_db <- arrow::open_dataset("data/habitat_db.parquet")
-diversity_db <- arrow::open_dataset("data/diversity_db.parquet")
+# Objects *_db are loaded on serverstart.R
 
 observe({
   # When the active tab is "species"
@@ -102,6 +100,13 @@ select_params <- reactiveValues(
   )
 )
 
+# Update side select to FALSE if tab changes
+observe({
+  updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
+}) |>
+  bindEvent(active_tab$current)
+
+# Select parameters
 observe({
   mdebug("Triggered select_params")
   # Species
@@ -140,12 +145,6 @@ observe({
   select_params$species$decade <- ifelse(is.null(input$periodSelect), NULL,
     ifelse(input$periodSelect == 2050, "dec50", "dec100")
   )
-  if (input$scenarioSelect == "Current") {
-    select_params$species$side_select <- FALSE
-    updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
-  } else {
-    select_params$species$side_select <- input$sideSelect
-  }
 
   # Thermal
   if (!is.null(db_info$thermal$scientificName)) {
@@ -157,11 +156,26 @@ observe({
   select_params$thermal$decade_t <- ifelse(is.null(input$periodSelectThermal), NULL,
     ifelse(input$periodSelectThermal == 2050, "dec50", "dec100")
   )
-  if (input$scenarioSelectThermal == "Current") {
+
+  # Side select species AND thermal
+  if (active_tab$current == "species") {
+    if (input$scenarioSelect == "Current") {
+      select_params$species$side_select <- FALSE
+      updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
+    } else {
+      select_params$species$side_select <- input$sideSelect
+    }
+  } else if (active_tab$current == "thermal") {
+    if (input$scenarioSelectThermal == "Current") {
+      select_params$thermal$side_select_t <- FALSE
+      updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
+    } else {
+      select_params$thermal$side_select_t <- input$sideSelect
+    }
+  } else {
+    select_params$species$side_select <- FALSE
     select_params$thermal$side_select_t <- FALSE
     updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
-  } else {
-    select_params$thermal$side_select_t <- input$sideSelect
   }
 
   # Habitat

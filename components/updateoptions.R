@@ -13,35 +13,6 @@ updateSelectizeInput(session, "speciesSelectThermal", choices = sp_options_therm
 # Create diversity select
 updateSelectInput(session, "diversityGroup", choices = av_div_groups, selected = av_div_groups[1])
 
-# Change model options based on available models
-# observe({
-#   req(!is.null(db_info$species))
-#   mdebug("Changing options")
-
-#   available_models <- db_info$species |>
-#     pull(available_models) |>
-#     unlist(use.names = F)
-  
-#   if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
-#     model_inuse <- input$modelSelect
-#   } else {
-#     priority <- c("ensemble", "maxent", "rf", "xgboost", "glm")
-#     model_inuse <- priority[priority %in% available_models][1]
-#   }
-  
-#   names_options <- dplyr::case_when(
-#     available_models == "maxent" ~ "MAXENT",
-#     available_models == "rf" ~ "Random Forest",
-#     available_models == "glm" ~ "GLM",
-#     available_models == "xgboost" ~ "XGboost",
-#     available_models == "ensemble" ~ "Ensemble",
-#     .default = available_models
-#   )
-  
-#   names(available_models) <- names_options
-#   updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
-# }) %>% bindEvent(db_info$species, ignoreInit = T)
-
 
 ##### Filter modals #####
 source("scripts/filter_functions.R", local = TRUE)
@@ -59,6 +30,7 @@ observeEvent(input$filterSpecies, {
 })
 
 observeEvent(input$speciesActionOK, {
+  output$filterActive <- shiny::renderUI(htmltools::HTML('<span style="color: #27F59F; font-size: small;"><i class="bi bi-circle-fill"></i> Filter active</span>'))
   removeModal()
 })
 
@@ -73,7 +45,7 @@ observe({
 
   filtered_data$species$species <- filt_list$species
   filtered_data$species$n <- nrow(filt_list)
-}) %>%
+}) |>
   bindEvent(input$groupSelect, input$commonSelect, input$seaSelect, input$includeProjects,
     input$phylumSelect, input$classSelect, input$orderSelect, input$familySelect)
 
@@ -98,7 +70,7 @@ observe({
       selected = NULL,#filtered_data$species$species[1],
       server = TRUE)
  }
-}) %>% bindEvent(input$speciesActionOK)
+}) |> bindEvent(input$speciesActionOK)
 
 
 # Thermal modal -----
@@ -114,6 +86,7 @@ observeEvent(input$filterThermalSpecies, {
 })
 
 observeEvent(input$speciesThermalActionOK, {
+  output$filterActiveThermal <- shiny::renderUI(htmltools::HTML('<span style="color: #27F59F; font-size: small;"><i class="bi bi-circle-fill"></i> Filter active</span>'))
   removeModal()
 })
 
@@ -127,7 +100,7 @@ observe({
   filtered_data$thermal$species <- filt_list$species
   filtered_data$thermal$n <- nrow(filt_list)
 
-}) %>%
+}) |>
   bindEvent(input$groupThermalSelect, input$commonThermalSelect,
     input$seaThermalSelect, input$includeThermalProjects,
     input$phylumThermalSelect, input$classThermalSelect, input$orderThermalSelect, input$familyThermalSelect)
@@ -153,4 +126,4 @@ observe({
                            selected = NULL,#filtered_data$species$species[1],
                            server = TRUE)
   }
-}) %>% bindEvent(input$speciesThermalActionOK)
+}) |> bindEvent(input$speciesThermalActionOK)

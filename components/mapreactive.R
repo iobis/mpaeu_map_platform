@@ -184,7 +184,7 @@ observe({
           me = select_params$diversity$metric
         )
       legend_val <- ifelse(select_params$diversity$metric == "richness",
-                           "Number\nof species", "LCBD")
+                           "Number <br> of species", "LCBD")
       proxy |> add_layer_div(layer_1, legend = legend_val)
       files_inuse_habdiv$file_diversity <- layer_1
     } else {

@@ -1,129 +1,3 @@
-get_s3_list <- function(bucket = "mpaeu-dist", folder = "results") {
-    
-    cat("Retrieving S3 list, this may take a while...\n")
-
-    require(dplyr)
-
-    bucket_list <- aws.s3::get_bucket_df(
-        bucket = bucket,
-        prefix = folder,
-        use_https = TRUE,
-        max = Inf
-    )
-
-    cat("Processing...\n")
-
-    bucket_list <- bucket_list[grepl("results", bucket_list$Key),]
-
-    category <- sub("results/*/", "\\1", bucket_list$Key)
-    category <- sub("*/.*", "\\1", category)
-
-    bucket_list$category <- category
-
-    taxonid <- unlist(
-        lapply(1:nrow(bucket_list), function(x) {
-            m <- regmatches(bucket_list$Key[x], regexpr("(?<=taxonid=)\\d+", bucket_list$Key[x], perl = TRUE))
-            if (length(m) > 0) {
-                m
-            } else {
-                NA
-            }
-        })
-    )
-
-    bucket_list$taxonID <- as.integer(taxonid)
-
-    model_acro <- regmatches(bucket_list$Key, regexpr("model=[^/]+", bucket_list$Key))
-    model_acro <- sub("^(model=[^_]+(?:_[^_=]+)*)_.*", "\\1", model_acro)
-    model_acro <- gsub("model=", "", model_acro)
-    bucket_list$model_acro <- model_acro
-
-    method <- unlist(lapply(1:nrow(bucket_list), function(x) {
-        m <- regmatches(bucket_list$Key[x], regexpr("method=[^/]+", bucket_list$Key[x]))
-        if (length(m) > 0) {
-            m
-        } else {
-            NA
-        }
-    }))
-    method <- sub("^(method=[^_]+(?:_[^_=]+)*)_.*", "\\1", method)
-    method <- gsub("method=", "", method)
-    
-    bucket_list$models <- method
-
-    bucket_list <- bucket_list %>%
-        group_by(taxonID, models) %>%
-        mutate(is_boot = ifelse(grepl("bootcv", Key), TRUE, FALSE))
-
-    arrow::write_parquet(bucket_list, "data/s3_list.parquet")
-
-    species_data <- bucket_list %>%
-        filter(category == "species") %>%
-        group_by(taxonID) %>%
-        summarise(models = paste0(unique(na.omit(models)), collapse = ";"),
-                  acro = model_acro[1])
-
-    species_thermal <- bucket_list %>%
-        filter(category == "species") %>%
-        group_by(taxonID) %>%
-        summarise(with_thermal = ifelse(
-            any(grepl("thermenvelope", Key)), TRUE, FALSE
-        ))
-
-    species_data <- left_join(species_data, species_thermal)
-
-    arrow::write_parquet(species_data, "data/s3_species_data.parquet")
-
-    div_hab_json <- list(
-        diversity = NA,
-        habitat = NA,
-        diversity_sp_list = NA
-    )
-
-    diversity_groups <- bucket_list %>%
-        filter(category == "diversity")
-
-    div_hab_json$diversity_sp_list <- diversity_groups$Key[grepl("what=splist", diversity_groups$Key)]
-
-    diversity_groups <- diversity_groups[!grepl("what=splist", diversity_groups$Key), ]
-
-    diversity_groups$group <- gsub("group=", "", regmatches(diversity_groups$Key, regexpr("group=[^_]+", diversity_groups$Key)))
-
-    methods_group <- diversity_groups %>%
-        group_by(group) %>%
-        distinct(models)
-
-    div_hab_json$diversity <- list(
-        groups = unique(diversity_groups$group),
-        methods = methods_group
-    )
-
-    habitat_groups <- bucket_list %>%
-        filter(category == "habitat")
-
-    habitat_groups$habitat <- gsub("_model=$", "",
-            gsub("habitat=", "", sub(".*(habitat=[^_]+(?:_[^_]+)*_model=).*", "\\1", habitat_groups$Key)))
-
-    methods_habitat <- habitat_groups %>%
-        group_by(habitat) %>%
-        distinct(models) %>%
-        filter(!is.na(models))
-
-    div_hab_json$habitat <- list(
-        habitats = unique(habitat_groups$habitat),
-        methods = methods_habitat
-    )
-
-    jsonlite::write_json(div_hab_json, path = "data/s3_divhab_data.json", pretty = T)
-
-    cat("Saved!")
-
-    return(invisible(NULL))
-
-}
-
-get_s3_list()
-
 download_local_files <- function() {
     cat("Downloading diversity lists\n")
     download.file(
@@ -143,7 +17,6 @@ download_local_files <- function() {
 }
 
 download_local_files()
-
 
 build_catalogue <- function(cleanup = TRUE) {
 
@@ -187,13 +60,12 @@ build_catalogue <- function(cleanup = TRUE) {
                            method = obj[["method"]], file = href)
             } else {
                 type <- gsub("^.*what=", "", nam)
-                # TEMPORARY WHILE FIXING STAC
                 if (grepl("method", nam)) {
                     me <- gsub("method=", "", gsub("_what=.*", "", nam))
+                    # me <- obj[["method"]] # When added to STAC in next version
                 } else {
                     me <- NA
                 }
-                # obj[["method"]]
                 data.frame(type = type, scenario = NA, period = NA,
                            method = me, file = href)
             }
@@ -203,7 +75,7 @@ build_catalogue <- function(cleanup = TRUE) {
         species_table$scientificName[ts] <- spj[["properties"]][["scientificName"]]
         species_table$fit_n[ts] <- spj[["properties"]][["fit_n_points"]]
         av_methods <- spj[["properties"]][["methods"]]
-        if (is.numeric(av_methods)) {
+        if (is.numeric(av_methods)) { # Kept only for back compatibility, solved
             av_methods <- tibble::tibble(method = c("esm"))
         } else {
             av_methods <- tibble::tibble(method = unlist(av_methods, use.names = FALSE))
@@ -244,6 +116,9 @@ build_catalogue <- function(cleanup = TRUE) {
                 scenario <- strsplit(scenario, "_")[[1]][1]
             }
             href <- gsub("s3://obis-maps", "https://obis-maps.s3.us-east-1.amazonaws.com", obj[["href"]])
+            if (obj[["what"]] == "fitocc") {
+                scenario <- obj[["post_treatment"]] <- obj[["threshold"]] <- NA
+            }
             data.frame(threshold = obj[["threshold"]], post_treatment = obj[["post_treatment"]],
                        type = obj[["what"]],
                        scenario = scenario, period = period, file = href)
@@ -300,7 +175,7 @@ build_catalogue <- function(cleanup = TRUE) {
         )
     }
 
-    # Save divitat_db
+    # Save diversity_db
     arrow::write_parquet(div_table, "data/diversity_db.parquet")
 
     if (cleanup) {
@@ -312,4 +187,20 @@ build_catalogue <- function(cleanup = TRUE) {
     return(invisible())
 }
 
-species_table |> filter(taxonid == 100801) |> pull(available_models) |> unlist(use.names = F)
+build_catalogue()
+
+# Get world shape for plots
+get_world <- function() {
+    message("Getting world shapefile")
+    suppressPackageStartupMessages(require(terra))
+    base_rast <- rast("data/thetao_baseline_depthsurf_mean_cog.tif")
+    base_rast[is.na(base_rast)] <- -999999
+    base_rast[base_rast != -999999] <- NA
+    base_rast <- as.polygons(base_rast)
+    base_rast <- base_rast[,-1]
+    writeVector(base_rast, "data/world_shape.gpkg", overwrite = TRUE)
+    message("Concluded")
+    return(invisible())
+}
+
+get_world()

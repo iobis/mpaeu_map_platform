@@ -49,42 +49,25 @@ gen_plotly_resp <- function(respcurves) {
 }
 
 # Generate quarto report
-gen_quarto_report <- function(folder, basepath, species_aphia, model, sp_name, acronym) {
+gen_quarto_report <- function(folder, basepath, species_aphia, model, sp_name, acronym, db_files) {
   
   tg_species <- species_aphia
+
+  outfolder <- folder
   
   base_f <- readLines("scripts/map_output_model.qmd", warn = F)
   
-  outfolder <- folder
-  
   pred_base <- '
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-which_scenario <- SCENARIO
-r <- terra::rast(retrieve_s3(sp, paste0("method=", which_model, "_scen=", which_scenario), s3_list))
-# r <- retrieve(sp, paste0("method=", which_model, "_scen=", which_scenario), acro = model_acro, results_folder = outfolder)
-r <- r[[1]]
-
-r <- terra::mask(r, masks[[1]])
-r <- terra::crop(r, ecoreg_sel)
-r <- r/100
-r <- terra::aggregate(r, fact = 10)
-r <- as.data.frame(r, xy=T)
-colnames(r)[3] <- "vals"
-
-ext_dat <- terra::ext(ecoreg_sel)
-
-ggplot() +
-  geom_sf(data = wrld, color = "grey70", fill = "grey80") +
-  geom_raster(data = r, aes(x = x, y = y, fill = vals)) +
-  sca(c(0, 1), "ROC") +
-  ggtitle("TITLE") +
-  ylab(NULL) + xlab(NULL) +
-  coord_sf(crs = "EPSG:4326", xlim = c(ext_dat[1:2]), ylim = c(ext_dat[3:4])) +
-  theme(panel.background = element_blank(),
-        panel.grid.major = element_line(color = "grey90"),
-        legend.position = "bottom",
-        legend.title = element_text(hjust = 0.5))
+```{r}
+#| echo: false
+#| fig-width: 8
+#| fig-height: 6
+rastobj <- paste0("/vsicurl/", "SCEN_FILE") |>
+    rast(lyrs = 1) |>
+    mask(masks) |>
+    crop(e)
+plot_map(rastobj, wrld_pol = wrld, title = "TITLE")
 ```
 
 '
@@ -94,12 +77,21 @@ ggplot() +
                                                                         "3 (7.0)", "4 (6.0)", 
                                                                         "5 (8.5)")), each = 2)),
                           period = c(NA, rep(c("dec50", "dec100"), 5)))
-  
+  pred_list$name_code <- paste0(pred_list$scenario, ifelse(is.na(pred_list$period), "", paste0("_", pred_list$period)))
+  db_files$name_code <- paste0(db_files$scenario, ifelse(is.na(db_files$period), "", paste0("_", db_files$period)))
+
+  pred_files <- db_files |>
+    filter(type == "prediction") |>
+    filter(method == model) |>
+    mutate(name_code = paste0(scenario, ifelse(is.na(period), "", paste0("_", period)))) |>
+    select(name_code, file)
+  pred_list <- dplyr::left_join(pred_list, pred_files, by = "name_code")
+
   sp_code <- as.numeric(tg_species)
 
   # Construct predictions
   pred_code <- c()
-  for (z in 1:nrow(pred_list)) {
+  for (z in seq_len(nrow(pred_list))) {
     scen <- paste(pred_list[z,c(1,3)], collapse = "_")
     scen_title <- paste(pred_list[z,c(2,3)], collapse = "_")
     if (grepl("NA", scen)) {
@@ -112,7 +104,7 @@ ggplot() +
       scen_title <- gsub("DEC100", "2100", scen_title)
     }
     pred_base_t <- gsub("TITLE", scen_title, pred_base)
-    pred_base_t <- gsub("SCENARIO", paste0("'", scen, "'"), pred_base_t)
+    pred_base_t <- gsub("SCEN_FILE", pred_list$file[z], pred_base_t)
     pred_code <- c(pred_code, pred_base_t)
   }
   
@@ -121,6 +113,32 @@ ggplot() +
   base_f_new <- gsub("\\{SPECIES_CODE}", sp_code, base_f_new)
   base_f_new <- gsub("\\{MODEL_CODE}", model, base_f_new)
   base_f_new <- gsub("\\{WD_PATH}", basepath, base_f_new)
+
+  # Files
+  base_f_new <- db_files |>
+    filter(type == "mask") |>
+    pull(file) |>
+    (\(x)  gsub("\\{MASK_FILE}", gsub("what=what=", "what=", x), base_f_new))()
+  base_f_new <- db_files |>
+    filter(type == "log") |>
+    pull(file) |>
+    (\(x)  gsub("\\{LOG_FILE}", x, base_f_new))()
+  base_f_new <- db_files |>
+    filter(type == "fitocc") |>
+    pull(file) |>
+    (\(x)  gsub("\\{PTS_FILE}", x, base_f_new))()
+  base_f_new <- db_files |>
+    filter(type == "cvmetrics", method == model) |>
+    pull(file) |>
+    (\(x)  gsub("\\{CV_FILE}", x, base_f_new))()
+  base_f_new <- db_files |>
+    filter(type == "varimportance", method == model) |>
+    pull(file) |>
+    (\(x)  gsub("\\{VARIMP_FILE}", x, base_f_new))()
+  base_f_new <- db_files |>
+    filter(type == "respcurves", method == model) |>
+    pull(file) |>
+    (\(x)  gsub("\\{RC_FILE}", x, base_f_new))()
   
   pred_l <- which(grepl("\\{PREDICTIONS}", base_f_new))
   
@@ -204,10 +222,12 @@ gen_context_boxes <- function(model_quality = "Not assessed",
     mqc <- "#B4B4B4"
   }
 
-  if (reviewed == "No") {
+  if (reviewed == "not_evaluated") {
     rec <- "#a51c3c"
+    reviewed <- "No"
   } else {
     rec <- "#199651"
+    reviewed <- "Yes"
   }
 
   if (conservation_status == "Not available") {
@@ -243,15 +263,25 @@ gen_context_boxes <- function(model_quality = "Not assessed",
   if (type == "species") {
     html_content <- glue::glue(
       '
-<div style="display: flex; margin-top: 18px; margin-bottom: 18px;">
-  <div style="display: flex; flex-direction: column; padding-right: 10px;">
-    <span style="text-align: center;">{tooltip_1}</span> <span style="background-color: {mqc}; border-radius: 5px; padding: 3px; color: white; text-align: center;">{model_quality}</span>
+<div id="quality-box" style="display: flex; margin-top: 14px; margin-bottom: 6px; gap: 20px;">
+  <div>
+    <span style="font-weight: bold;">Expert review</span>
+    <div id="review-box" style=" display: flex; border: solid 0.1em; border-radius: 5px; padding: 3px; border-color: #cccccc;">
+      <div style="display: flex; flex-direction: column; padding-left: 5px; padding-right: 10px;">
+        <span style="text-align: center; font-size: smaller;">{tooltip_2}</span> <span style="background-color: {rec}; border-radius: 5px; padding: 3px; color: white; text-align: center;">{reviewed}</span>
+      </div>
+      <div style="display: flex; flex-direction: column; padding-right: 5px;">
+        <span style="text-align: center; font-size: smaller;">{tooltip_1}</span> <span style="background-color: {mqc}; border-radius: 5px; padding: 3px; color: white; text-align: center;">{model_quality}</span>
+      </div>
+    </div>
   </div>
-  <div style="display: flex; flex-direction: column; padding-right: 10px;">
-    <span style="text-align: center;">{tooltip_2}</span> <span style="background-color: {rec}; border-radius: 5px; padding: 3px; color: white; text-align: center;">{reviewed}</span>
-  </div>
-  <div style="display: flex; flex-direction: column; padding-right: 10px;">
-    <span style="text-align: center;">{tooltip_3}</span> <span style="background-color: {csc}; border-radius: 5px; padding: 3px; color: white; text-align: center;">{conservation_status}</span>
+  <div>
+    <span>&nbsp;</span>
+    <div id="redlist-box" style=" display: flex; border: solid 0.1em; border-radius: 5px; padding: 3px; border-color: #cccccc00;">
+      <div style="display: flex; flex-direction: column; padding-right: 10px;">
+        <span style="text-align: center; font-size: smaller;">{tooltip_3}</span> <span style="background-color: {csc}; border-radius: 5px; padding: 3px; color: white; text-align: center;">{conservation_status}</span>
+      </div>
+    </div>
   </div>
 </div>
       '
@@ -306,13 +336,22 @@ citation_mod <- function(spkey, cit_species_ds, cit_general_ds) {
   
 }
 
-evaluation_modal <- function(eval_file) {
-  if (is.null(eval_file)) {
+evaluation_modal <- function(evalcontent) {
+  if (is.null(evalcontent) || evalcontent$status == "not_evaluated") {
     "We are preparing a tool to enable peer-review of models by users. Meanwhile, if you spotted something that needs immediate action, contact helpdesk@obis.org"
   } else {
     htmltools::tags$div(
-      reactable::reactable(data.frame(evaluations = "good", evaluator = "John"), searchable = T),
-      htmltools::tags$span(htmltools::tags$br(), "We are extremely thankful to the evaluator(s) who voluntarily provided time to improve this tool.")
+      reactable::reactable(evalcontent$evaluations, searchable = T),
+      htmltools::tags$span(htmltools::tags$br(), "We are extremely thankful to the evaluator(s) who voluntarily provided time to improve this tool.", htmltools::tags$br(), htmltools::tags$hr()),
+      htmltools::tags$div(htmltools::HTML(
+        "<p><strong>Evaluation summary</strong></p>",
+        paste("<p>Average score:", evalcontent$summary$average_score, " (from 1-5, being 1 the best)</p>"),
+        paste("<p>Best evaluator score:", evalcontent$summary$best_score_n, " (equivalent to question 3)</p>"),
+        paste("<p>Best model CBI score:", evalcontent$summary$cbi_score, " (this CBI score is converted to 1-5 scale, being 1 the best, as follows: >=0.7 - 1 = 1, >=0.6 - 0.7 = 2, >=0.5 - 0.6 = 3, >=0.4 - 0.5 = 4, >=0.3 - 0.4 = 5)</p>"),
+        paste("<p>Average model CBI score ± SD:", evalcontent$summary$average_cbi, "±", evalcontent$summary$sd_cbi, "</p>"),
+        paste("<p>Best model:", toupper(evalcontent$summary$best_cbi), "</p>")
+      )),
+      style = "font-size: smaller;"
     )
   }
 }

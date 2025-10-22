@@ -17,12 +17,12 @@ output$tableA <- reactable::renderReactable({
   reactable::reactable(continfo$tableA,
                        pagination = TRUE,
                        defaultPageSize = 5, filterable = TRUE, highlight = TRUE)
-}) %>%
+}) |>
   bindEvent(continfo$tableA)
 
 output$plotA <- renderPlotly({
   continfo$plotA
-}) %>%
+}) |>
   bindEvent(continfo$plotA)
 
 output$tableB <- reactable::renderReactable({
@@ -54,15 +54,15 @@ output$tableB <- reactable::renderReactable({
                        pagination = TRUE,
                        defaultPageSize = 5, filterable = TRUE, highlight = TRUE)
   }
-}) %>%
+}) |>
   bindEvent(continfo$tableB)
 
 output$textTitle <- renderText({
   continfo$text[[1]]
-}) %>%
+}) |>
   bindEvent(continfo$text)
 
 output$textModel <- renderText({
   continfo$text[[2]]
-}) %>%
+}) |>
   bindEvent(continfo$text)

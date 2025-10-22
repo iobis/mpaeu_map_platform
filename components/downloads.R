@@ -46,9 +46,9 @@ report_download_modal <- function(species, key, model) {
 
 observe({
    showModal(
-    report_download_modal(sp_info$species, sp_info$spkey, sp_info$model)
+    report_download_modal(select_params$species$species, select_params$species$spkey, select_params$species$model)
    )
-}) %>%
+}) |>
   bindEvent(input$speciesReportAction)
 
 download_result <- reactiveValues(original = NULL, copy = NULL)
@@ -68,19 +68,23 @@ observe({
     )
   )
 
-  file <- paste0("taxonid=", sp_info$spkey, "_date=", format(Sys.time(), "%Y-%m-%d_%H-%M%Z"), "_report.html")
+  file <- paste0("taxonid=", select_params$species$spkey, "_date=", format(Sys.time(), "%Y-%m-%d_%H-%M%Z"), "_report.html")
 
   mdebug("Starting report download")
 
   tdir <- tempdir()
-  outfolder <- fs::dir_create(paste0(tdir, "/temp_aphiaid_", sp_info$spkey, "_", sample(1:10000, 1)))
+  outfolder <- fs::dir_create(paste0(tdir, "/temp_aphiaid_", select_params$species$spkey, "_", sample(1:10000, 1)))
 
   basepath <- getwd()
 
   mdebug("Trying report generation")
+  species_files <- db_info$species |>
+    select(-available_models) |>
+    tidyr::unnest(files)
   rep_result <- try(gen_quarto_report(
     outfolder, basepath,
-    sp_info$spkey, sp_info$model, sp_info$species, sp_info$acro
+    select_params$species$spkey, select_params$species$model, select_params$species$species, select_params$species$acro,
+    species_files
   ))
 
   if (inherits(rep_result, "try-error")) {
@@ -102,7 +106,7 @@ observe({
       footer = downloadButton("downloadSpeciesReport")
     )
   )
-}) %>%
+}) |>
   bindEvent(input$startSpeciesReport)
 
 output$downloadSpeciesReport <- downloadHandler(
@@ -130,15 +134,15 @@ source("scripts/create_local_fit_file.R", local = TRUE)
 observe({
   showModal(
     species_download_modal(
-      species = sp_info$species,
-      key = sp_info$spkey,
-      model = sp_info$model,
-      scenario = sp_info$scenario,
-      decade = sp_info$decade,
-      acro = sp_info$acro
+      species = select_params$species$species,
+      key = select_params$species$spkey,
+      model = select_params$species$model,
+      scenario = select_params$species$scenario,
+      decade = select_params$species$decade,
+      acro = select_params$species$acro
   )
   )
-}) %>%
+}) |>
   bindEvent(input$downloadDataSpecies)
 
 downloadFiles <- reactiveValues(files = NULL)
@@ -158,16 +162,16 @@ observe({
   )
 
   # Prepare download files
-  all_files <- s3_list %>%
-      filter(taxonID == sp_info$spkey) %>%
-      collect()
+  all_files <- db_info$species |>
+      select(-available_models) |>
+      tidyr::unnest(files)
   tfold <- tempdir(check = TRUE)
-  all_files <- all_files$Key
+  all_files <- all_files$file
   if (input$speciesDownloadType == "selected") {
-    model_f <- all_files[grepl(sp_info$model, all_files)]
-    model_scen_f <- model_f[grepl(sp_info$scenario, model_f)]
-    if (sp_info$scenario != "current") {
-      model_scen_f <- model_scen_f[grepl(sp_info$decade, model_scen_f)]
+    model_f <- all_files[grepl(paste0("method=", select_params$species$model), all_files)]
+    model_scen_f <- model_f[grepl(select_params$species$scenario, model_f)]
+    if (select_params$species$scenario != "current") {
+      model_scen_f <- model_scen_f[grepl(select_params$species$decade, model_scen_f)]
     }
     model_f <- model_f[grepl("cvmetrics|respcurves|fullmetrics|varimp", model_f)]
     other_f <- all_files[grepl("shape_|mess_|mask_|thresholds|log.j|fitocc", all_files)]
@@ -175,17 +179,18 @@ observe({
   } else {
     sel_files <- all_files
   }
-  addr <- "https://mpaeu-dist.s3.amazonaws.com/"
-  directories <- dirname(sel_files)
-  directories <- unique(gsub("results/species/", "", directories))
+  addr <- "https://obis-maps.s3.us-east-1.amazonaws.com/"
+  sel_files_ed <- gsub(addr, "", sel_files)
+  directories <- dirname(sel_files_ed)
+  directories <- unique(gsub("sdm/species/", "", directories))
   fs::dir_create(file.path(tfold, directories))
   for (k in seq_along(sel_files)) {
-    download.file(paste0(addr, sel_files[k]), file.path(tfold, gsub("results/species/", "", sel_files[k])))
+    download.file(sel_files[k], file.path(tfold, gsub("sdm/species/", "", sel_files_ed[k])))
   }
   #download.file(paste0(addr, sel_files), file.path(tfold, sel_files), method = "libcurl")
   sel_files <- list.files(tfold, full.names = T)
   sel_files <- sel_files[!grepl("vscode-R", sel_files)]
-  sel_files <- sel_files[grepl(paste0("taxonid=", sp_info$spkey), sel_files)]
+  sel_files <- sel_files[grepl(paste0("taxonid=", select_params$species$spkey), sel_files)]
 
   # Assign to list
   downloadFiles$files <- sel_files
@@ -198,15 +203,15 @@ observe({
     ),
     footer = downloadButton("downloadSpeciesAction", label = "Download")
   ))
-}) %>%
+}) |>
   bindEvent(input$downloadSpeciesInterm)
 
 output$downloadSpeciesAction <- downloadHandler(
   filename = function() {
-    pf <- paste0("taxonid=", sp_info$spkey)
+    pf <- paste0("taxonid=", select_params$species$spkey)
     if (input$speciesDownloadType == "selected") {
-      pf <- paste0(pf, "_model=", sp_info$acro, "_method=", sp_info$model, "_scenario=", sp_info$scenario,
-      "_decade=", sp_info$decade, ".zip")
+      pf <- paste0(pf, "_model=", select_params$species$acro, "_method=", select_params$species$model, "_scenario=", select_params$species$scenario,
+      "_decade=", select_params$species$decade, ".zip")
     } else {
       pf <- paste0(pf, ".zip")
     }
@@ -225,26 +230,26 @@ output$downloadSpeciesAction <- downloadHandler(
 observe({
   showModal(
     species_code_download(
-      species = sp_info$species,
-      key = sp_info$spkey,
-      model = sp_info$model
+      species = select_params$species$species,
+      key = select_params$species$spkey,
+      model = select_params$species$model
   )
   )
-}) %>%
+}) |>
   bindEvent(input$runModelSpecies)
 
 output$downloadCodeSpeciesAction <- downloadHandler(
   filename = function() {
-    pf <- paste0("taxonid=", sp_info$spkey, "_modelcode")
+    pf <- paste0("taxonid=", select_params$species$spkey, "_modelcode")
     pf <- paste0(pf,
                  ifelse(input$speciesCodeDownloadType == "ipynb", ".ipynb", ".qmd"))
     pf
   },
   content = function(file) {
     if (input$speciesCodeDownloadType == "ipynb") {
-      model_code_f <- get_local_file(sp_info$species, sp_info$spkey, sp_info$model)
+      model_code_f <- get_local_file(select_params$species$species, select_params$species$spkey, select_params$species$model)
     } else {
-      model_code_f <- get_local_file(sp_info$species, sp_info$spkey, sp_info$model, type = "qmd")
+      model_code_f <- get_local_file(select_params$species$species, select_params$species$spkey, select_params$species$model, type = "qmd")
     }
     on.exit(removeModal())
     writeLines(model_code_f, file)
@@ -255,7 +260,7 @@ output$downloadCodeSpeciesAction <- downloadHandler(
 # Thermal data download ------
 output$downloadDataThermal <- downloadHandler(
   filename = function() {
-    paste0("taxonid=", sp_info$spkey_t, "_model=", sp_info$acro_t, "_what=thermenvelope.parquet")
+    paste0("taxonid=", select_params$species$spkey_t, "_model=", select_params$species$acro_t, "_what=thermenvelope.parquet")
   },
   content = function(file) {
     shinyalert(
@@ -269,8 +274,8 @@ output$downloadDataThermal <- downloadHandler(
 
     if (input$speciesSelectThermal != "" & active_tab$current == "thermal") {
       thermal_envelope <- paste0(
-          "https://mpaeu-dist.s3.amazonaws.com/", "results/species/taxonid=", sp_info$spkey_t, "/model=", sp_info$acro_t, "/predictions/taxonid=",
-          sp_info$spkey_t, "_model=", sp_info$acro_t, "_what=thermenvelope.parquet"
+          "https://mpaeu-dist.s3.amazonaws.com/", "results/species/taxonid=", select_params$species$spkey_t, "/model=", select_params$species$acro_t, "/predictions/taxonid=",
+          select_params$species$spkey_t, "_model=", select_params$species$acro_t, "_what=thermenvelope.parquet"
         )
       p <- sfarrow::st_read_parquet(thermal_envelope)
       sfarrow::st_write_parquet(p, file)
