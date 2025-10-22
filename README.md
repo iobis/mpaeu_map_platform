@@ -97,10 +97,9 @@ Components explanation:
 - *dataloaders.R*: Load accessory data  
 - *renders.R*: Contextual information renders  
 - *maprenders.R*: Map render and placeholder  
-- *mapreactive.R*: Main reactive for map change  
-- *mapmask.R*: Control mask over map  
-- *thermaldata.R*: Update map with thermal data  
-- *diversitydata.R*: Update map with diversity data  
+- *mapreactive.R*: Main reactive for map change   
 - *extrainfo.R*: Extra information section  
 - *extrainfomaps.R*: Extra information popup - maps  
 - *downloads.R*: Manage download requests  
+
+The zip folder `app_bundle.zip` contains files produced by `pre-render.R` and is provided for a faster deployment on server. The script `build.R`, which should be called on the server when the app is deployed, will unzip this file on the data folder.

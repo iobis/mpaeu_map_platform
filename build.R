@@ -204,3 +204,9 @@ get_world <- function() {
 }
 
 get_world()
+
+# Unzip bundle
+zip::unzip(
+    "app_bundle.zip",
+    exdir = "data/"
+)

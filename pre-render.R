@@ -228,7 +228,7 @@ if (!file.exists("data/app_splist.rds") || force) {
     joint_list_sea$redlist_category[is.na(joint_list_sea$redlist_category)] <- "Not available"
     joint_list_sea$redlist_category[grepl("LR", joint_list_sea$redlist_category)] <- "LR"
 
-    if (file.exists("data/sdm_review.csv")) {
+    if (file.exists("data/sdm_review.csv")) { # Deprecated, to remove in next version
         sdm_status <- read.csv("data/sdm_review.csv")
         joint_list_sea <- left_join(joint_list_sea, sdm_status)
     } else {
@@ -237,6 +237,15 @@ if (!file.exists("data/app_splist.rds") || force) {
     }
 
     saveRDS(joint_list_sea, "data/app_splist.rds")
+
+    # Prepare bundle for serverstart.R
+    zip::zip(
+        "app_bundle.zip",
+        c("data/app_splist.rds",
+          "data/studyarea.fgb",
+          "data/EEZ_IHO_simp_edited.parquet"),
+        mode = "cherry-pick"
+    )
 
 } else {
     cat("List already prepared. To force preparing set `force=TRUE` on `pre-render.R`")
