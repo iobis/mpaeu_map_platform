@@ -130,7 +130,7 @@ observe({
                                        las = "LASSO",
                                        ela = "elasticnet",
                                        max = "MAXENT",
-                                       rf_ = "Random Forest",
+                                       rf = "Random Forest",
                                        glm = "GLM",
                                        gam = "GAM",
                                        xgb = "XGBoost",
@@ -144,7 +144,7 @@ observe({
                                  las = unlist(context_file$models[["lasso"]]),
                                  ela = unlist(context_file$models[["elasticnet"]]),
                                  max = unlist(context_file$models[["maxent"]]),
-                                 rf_ = unlist(context_file$models[["rf"]]),
+                                 rf = unlist(context_file$models[["rf"]]),
                                  glm = unlist(context_file$models[["glm"]]),
                                  gam = unlist(context_file$models[["gam"]]),
                                  xgb = unlist(context_file$models[["xgboost"]]),
@@ -302,9 +302,10 @@ observe({
   
 }) |>
   bindEvent(
-    context_param$species,
+    select_params$species,
     context_param$thermal,
     context_param$habitat,
     context_param$diversity,
+    context_param$diversity_group,
     active_tab$current,
     ignoreInit = TRUE)

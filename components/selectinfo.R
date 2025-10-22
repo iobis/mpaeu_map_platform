@@ -241,7 +241,8 @@ context_param <- reactiveValues(
   species = NULL,
   thermal = NULL,
   habitat = NULL,
-  diversity = NULL
+  diversity = NULL,
+  diversity_group = NULL
 )
 
 observe({
@@ -253,6 +254,7 @@ observe({
     context_param$habitat <- select_params$habitat$habitat
   } else if (active_tab$current == "diversity") {
     context_param$diversity <- select_params$diversity$metric
+    context_param$diversity_group <- select_params$diversity$group
   }
 }) |>
   bindEvent(

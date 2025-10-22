@@ -56,12 +56,14 @@ build_catalogue <- function(cleanup = TRUE) {
             }
             href <- gsub("s3://obis-maps", "https://obis-maps.s3.us-east-1.amazonaws.com", obj[["href"]])
             if (grepl("prediction|uncertainty", nam)) {
+                me <- ifelse(obj[["method"]] == "rf_classification_ds", "rf", obj[["method"]])
                 data.frame(type = obj[["class"]], scenario = scenario, period = period,
-                           method = obj[["method"]], file = href)
+                           method = me, file = href)
             } else {
                 type <- gsub("^.*what=", "", nam)
                 if (grepl("method", nam)) {
                     me <- gsub("method=", "", gsub("_what=.*", "", nam))
+                    me <- ifelse(me == "rf_classification_ds", "rf", me)
                     # me <- obj[["method"]] # When added to STAC in next version
                 } else {
                     me <- NA
@@ -206,6 +208,7 @@ get_world <- function() {
 get_world()
 
 # Unzip bundle
+message("Unzipping app bundle")
 zip::unzip(
     "app_bundle.zip",
     exdir = "data/"

@@ -31,7 +31,7 @@ observe({
   if (active_tab$current == "species") {
     mdebug(paste("Active tab for data extraction:", active_tab$current))
     
-    vsi_file <- paste0("/vsis3/", gsub("\\.s3.us-east-1.amazonaws.com", "", gsub("https://", "", files_inuse$file_a)))
+    vsi_file <- paste0("/vsis3/", gsub("\\.s3.us-east-1.amazonaws.com", "", gsub("/vsicurl/https://", "", files_inuse$file_a)))
     vals <- terra::extract(terra::rast(vsi_file), vect_obj)
     vals <- vals[,2]
     vals <- vals[!is.na(vals)]
