@@ -3,9 +3,9 @@ title: "Fit model locally"
 format: html
 ---
 
-<img src=https://obis.org/images/logo.png width="300">  <img src=https://obis.org/images/ioc_logo.png width="80">
+<img src=https://obis.org/images/logo.png width="300"> 
 
-<div style="width: 100%; background-color: #0277d4;">&nbsp;</div>
+<div style="width: 100%; background-color: #0277d4; margin-top: 10px;">&nbsp;</div>
 
 # Model the distribution of species _SPECIES_NAME_
 

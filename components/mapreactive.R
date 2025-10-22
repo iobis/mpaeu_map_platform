@@ -6,6 +6,21 @@
 #
 ######################### Main reactive for map change #########################
 
+# Start server code ------
+# Update map with study area to begin
+leafletProxy("mainMap") |>
+  leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
+
+# Objects ------
+# Palettes
+main_palette <- RColorBrewer::brewer.pal(9, "Blues")
+alt_palette <- rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265"))
+uncertainty_palette <- RColorBrewer::brewer.pal(9, "Oranges")
+hab_palette <- RColorBrewer::brewer.pal("PuRd", n = 9)
+div_palette <- RColorBrewer::brewer.pal("PuRd", n = 9)
+binary_palette <- c("#f7fbff", "#08519c")
+binary_palette_alt <- c("#f7fbff", "#db9f07")
+
 # Create waiters
 wMap <- waiter::Waiter$new(
   id = "mainMap",
@@ -16,287 +31,324 @@ wMap <- waiter::Waiter$new(
   )
 )
 
-# Temporary solution for bootstrap (while not all available)
-check_boot <- function() {
-  nounc_mod <- shiny::modalDialog("Uncertainty not available for this species/model",
-          title = NULL, footer = modalButton("Dismiss"), size = "s", easyClose = TRUE, fade = TRUE)
-  if (input$ecspBoot) {
-        bslib::update_switch("ecspBoot", value = FALSE)
-        shiny::showModal(nounc_mod)
-  }
-  return(invisible(NULL))
-}
+wMask <- waiter::Waiter$new(
+  id = "mainMap",
+  color = "#ffffff00",
+  html = htmltools::div(
+    htmltools::tags$span("Loading mask", bsicons::bs_icon("eye-fill")),
+    style = "color: #8e929a; font-size: 24px; font-weight: 700; white-space: nowrap; display: inline-block; background-color: rgba(255, 255, 255, 0.95); border-radius: 10px; padding: 20px;"
+  )
+)
 
+wShapes <- waiter::Waiter$new(
+  id = "mainMap",
+  color = "#ffffff00",
+  html = htmltools::div(
+    htmltools::tags$span("Loading shape", bsicons::bs_icon("back")),
+    style = "color: #8e929a; font-size: 24px; font-weight: 700; white-space: nowrap; display: inline-block; background-color: rgba(255, 255, 255, 0.95); border-radius: 10px; padding: 20px;"
+  )
+)
+
+# Create objects to hold info
 boot <- reactiveValues(status = FALSE, legend = htmltools::HTML("Likelihood </br> of occurrence"))
-
-observe({
-  basepath <- ""#paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/predictions/")
-  if (active_tab$current == "species" && input$ecspBoot) {
-    avf <- s3_list %>%
-      filter(taxonID == sp_info$spkey) %>%
-      collect()
-    if (sp_info$scenario == "current") {
-      uncert_file <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_what=bootcv_cog.tif")
-      if (input$ecspBoot && any(grepl(uncert_file, avf$Key))) {
-        boot$status <- TRUE
-        boot$legend <- "Uncertainty"
-      } else {
-        boot$status <- FALSE
-        boot$legend <- htmltools::HTML("Likelihood </br> of occurrence")
-        check_boot()
-      }
-    } else {
-      uncert_file <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_what=bootcv_cog.tif")
-      uncert_file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_what=bootcv_cog.tif")
-      uncert_file_b <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_what=bootcv_cog.tif")
-      if (input$sideSelect && input$ecspBoot && any(grepl(uncert_file_a, avf$Key)) && any(grepl(uncert_file_b, avf$Key))) {
-        boot$status <- TRUE
-        boot$legend <- "Uncertainty"
-      } else if (input$ecspBoot && any(grepl(uncert_file, avf$Key))) {
-        boot$status <- TRUE
-        boot$legend <- "Uncertainty"
-      } else {
-        boot$status <- FALSE
-        boot$legend <- htmltools::HTML("Likelihood </br> of occurrence")
-        check_boot()
-      }
-    }
-  } else {
-    boot$status <- FALSE
-    boot$legend <- htmltools::HTML("Likelihood </br> of occurrence")
-  }
-}) %>%
-  bindEvent(input$ecspBoot)
-
-
-# Create a reactive to hold the files in use
 files_inuse <- reactiveValues(file_a = NULL, file_b = NULL)
 files_inuse_habdiv <- reactiveValues(file_habitat = NULL, file_diversity = NULL)
 
-# Observe changes and update the map accordingly
+# Functions ------
+source("scripts/mapreactive_functions.R", local = TRUE)
+
+# Map observer -----
 observe({
-  
   # Debugging information
   mdebug("Executing map reactive")
   mdebug(active_tab$current)
   wMap$show()
   on.exit({
-    wMap$hide() # Try without removing...
+    wMap$hide()
     session$sendCustomMessage("additionalInfoTrigger", "")
   })
-  
-  # Initialize a proxy for the leaflet map and clear existing layers
-  proxy <- leafletProxy("mainMap") %>%
-    clearMarkers() %>%
-    clearShapes() %>%
-    clearImages() %>%
-    removeControl("legend") %>%
-    removeImage(layerId = "mapLayer1") %>%
-    removeImage(layerId = "mapLayer2") %>%
-    leafpm::removePmToolbar() %>%
-    leaflet.extras2::removeSidebyside("sidecontrols")
-  
-  # Send a custom message to remove an eye icon control
-  session$sendCustomMessage("removeEye", "nothing")
-  
-  # Construct the base path for the map data files
-  basepath <- paste0("https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/predictions/")
-  
-  # If the active tab is "species"
+
+  proxy <- init_proxy()
+
+  # Species tab
   if (active_tab$current == "species") {
-    mdebug("Executing species map")
-    mdebug(paste("In use species", sp_info$species, sp_info$model, sp_info$scenario, collapse = ","))
-    mdebug(paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif"))
-    
-     # Get threshold
-    if (length(sp_info$spkey) > 0 && sp_info$spkey != "") {
-      thresholds <- arrow::read_parquet(paste0(
-        "https://mpaeu-dist.s3.amazonaws.com/results/species/taxonid=", sp_info$spkey, "/model=", sp_info$acro, "/metrics/taxonid=", 
-        sp_info$spkey, "_model=", sp_info$acro, "_what=thresholds.parquet"
-     ))
-      thresholds <- thresholds[grepl(substr(sp_info$model, 1, 2), thresholds$model),]
-      min_range <- switch(input$ecspBin,
-        none = 0,
-        p10 = round(as.numeric(thresholds$p10) * 100),
-        maxsss = round(as.numeric(thresholds$max_spec_sens) * 100),
-        mtp = round(as.numeric(thresholds$mtp) * 100)
-      )
-    }
+    if (select_params$species$species != "") {
+      if (input$ecspBoot) {
+        file_type <- "uncertainty"
+        boot$status <- TRUE
+        boot$legend <- htmltools::HTML("Uncertainty")
+        unc <- TRUE
+      } else {
+        file_type <- "prediction"
+        boot$status <- FALSE
+        boot$legend <- htmltools::HTML("Likelihood </br> of occurrence")
+        unc <- FALSE
+      }
 
-    # Determine which files to use based on the scenario and side selection
-    side_select <- input$sideSelect
-    if (sp_info$scenario == "current") {
-      uncert_file <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_what=bootcv_cog.tif")
-      if (boot$status) {
-        file_a <- uncert_file
-      } else {
-        file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_cog.tif")
-      }
-      file_b <- NULL
-    } else {
-      if (side_select) {
-        uncert_file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_what=bootcv_cog.tif")
-        uncert_file_b <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_what=bootcv_cog.tif")
-        if (boot$status) {
-          file_a <- uncert_file_a
-          file_b <- uncert_file_b
-        } else {
-          file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=current_cog.tif")
-          file_b <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
-        }
-      } else {
-        uncert_file <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_what=bootcv_cog.tif")
-        if (boot$status) {
-          file_a <- uncert_file
-        } else {
-          file_a <- paste0(basepath, "taxonid=", sp_info$spkey, "_model=", sp_info$acro, "", "_method=", sp_info$model, "_scen=", sp_info$scenario, "_", sp_info$decade, "_cog.tif")
-        }
-        file_b <- NULL
-      }
-    }
-    
-    # Store the file paths in the reactive values
-    files_inuse$file_a <- file_a
-    files_inuse$file_b <- file_b
-    
-    # If no species is selected, add a feature to the map
-    if (sp_info$species == "") {
-      proxy %>%
-        leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
-    } else {
-      # Add circle markers and a button to the map
-      proxy <- proxy %>%
-        addCircleMarkers(data = speciespts(),
-                         clusterOptions = NULL, # markerClusterOptions(),
-                         group = "Points",
-                         weight = 2,
-                         radius = 2,
-                         opacity = 1,
-                         fillOpacity = 0.1,
-                         color = "black") %>% 
-        hideGroup("Points") %>%
-        addEasyButton(easyButton(
-          icon = "fa-eye", title = "Activate/deactivate native mask",
-          onClick = JS('
-          function(btn, map) {
-            var new_state = {id: "newstate", nonce: Math.random()};
-            Shiny.onInputChange("jsMask", new_state);
-          }
-        '))
+      min_val <- threshold_table() |>
+        pull_thresh(select_params$species$model, input$ecspBin)
+
+      layer_1 <- db_info$species |>
+        extract_sp(
+          sc = select_params$species$scenario, pe = select_params$species$decade,
+          me = select_params$species$model, ty = file_type
         )
-      
-      # Add side-by-side comparison if the scenario is not current and side selection is enabled
-      if (sp_info$scenario != "current" & side_select) {
-        proxy %>%
-          removeTiles("baseid") %>%
-          removeLayersControl() %>%
-          addTiles(urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
-            group = "Open Street", layerId = "leftbaseid", options = pathOptions(pane = "left")) %>%
-          addGeotiff(file = file_a, layerId = "mapLayer1", opacity = 1,
-                     colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                                                 domain = c(min_range, 100), na.color = NA),
-                     options = pathOptions(pane = "left"), autozoom = F) %>%
-          addTiles(urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
-            group = "Open Street B", layerId = "rightbaseid", options = pathOptions(pane = "right")) %>%
-          addGeotiff(file = file_b, opacity = 1, layerId = "mapLayer2",
-                     colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                                                 domain = c(min_range, 100), na.color = NA),
-                     options = pathOptions(pane = "right"), autozoom = F) %>%
-          addSidebyside(layerId = "sidecontrols", rightId = "rightbaseid", leftId = "leftbaseid")
+      if (select_params$species$side_select) {
+        layer_1 <- db_info$species |>
+          extract_sp(me = select_params$species$model, ty = file_type)
+        layer_2 <- db_info$species |>
+          extract_sp(
+            sc = select_params$species$scenario, pe = select_params$species$decade,
+            me = select_params$species$model, ty = file_type
+          )
       } else {
-        # Add a single GeoTIFF layer to the map and enable the toolbar for drawing and editing
-        proxy %>%
-          addGeotiff(file = file_a, opacity = 1, layerId = "mapLayer1",
-                     colorOptions = colorOptions(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                                                 domain = c(min_range, 100), na.color = NA), autozoom = F) %>%
-          leaflegend::addLegendNumeric(pal = colorNumeric(palette = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-                                                 domain = c(0, 100), na.color = NA),
-                  values = c(0, 100), title = boot$legend, layerId = "legend",
-                   orientation = 'horizontal', fillOpacity = .7, width = 75,
-                   height = 15, position = 'topright', labels = c("Low", "High")) %>%
-          addPmToolbar(toolbarOptions = pmToolbarOptions(drawMarker = FALSE,
-                                                         drawPolyline = FALSE,
-                                                         drawCircle = FALSE,
-                                                         cutPolygon = FALSE,
-                                                         position = "topleft"),
-                       drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
-                       editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE))
+        layer_2 <- NULL
+      }
+      proxy |> add_layer_sp(layer_1, layer_2, min_val, uncertainty = unc)
+      files_inuse$file_a <- layer_1
+      files_inuse$file_b <- layer_2
+    } else {
+      proxy |> clean_proxy()
+    }
+    # Thermal tab
+  } else if (active_tab$current == "thermal") {
+    if (select_params$thermal$species_t != "") {
+      maskstate(FALSE)
+      file_type <- "thermenvelope"
+      boot$status <- FALSE
+      boot$legend <- htmltools::HTML("Thermal range")
+      layer_2 <- layer_1 <- db_info$thermal |>
+        extract_sp(ty = file_type)
+      bands_list <- c(
+        "current", paste(
+          rep(paste0("ssp", c(126, 245, 370, 460, 585)), each = 2), c("dec50", "dec100"),
+          sep = "_"
+        )
+      )
+      if (select_params$thermal$side_select_t) {
+        sel_band_1 <- which(bands_list == "current")
+        sel_band_2 <- which(bands_list == paste(
+          select_params$thermal$scenario_t,
+          select_params$thermal$decade_t,
+          sep = "_"
+        ))
+      } else {
+        if (select_params$thermal$scenario_t == "current") {
+          sel_band_1 <- which(bands_list == "current")
+        } else {
+          sel_band_1 <- which(bands_list == paste(
+            select_params$thermal$scenario_t,
+            select_params$thermal$decade_t,
+            sep = "_"
+          ))
+        }
+        sel_band_2 <- NULL
+        layer_2 <- NULL
+      }
+      proxy |> add_layer_sp(layer_1, layer_2,
+        band_1 = sel_band_1, band_2 = sel_band_2, binary = TRUE
+      )
+      files_inuse$file_a <- layer_1
+      files_inuse$file_b <- layer_2
+    } else {
+      proxy |> clean_proxy()
+    }
+    # Habitat tab
+  } else if (active_tab$current == "habitat") {
+    if (select_params$habitat$habitat != "") {
+      layer_1 <- db_info$habitat |>
+        extract_hab(
+          th = select_params$habitat$threshold_h,
+          pt = select_params$habitat$model_h,
+          ty = select_params$habitat$bintype_h,
+          sc = select_params$habitat$scenario_h,
+          pe = select_params$habitat$decade_h
+        )
+
+      proxy |> add_layer_hab(layer_1)
+      files_inuse_habdiv$file_habitat <- layer_1
+    } else {
+      proxy |> clean_proxy()
+    }
+    # Diversity tab
+  } else if (active_tab$current == "diversity") {
+    if (select_params$diversity$metric != "") {
+      layer_1 <- db_info$diversity |>
+        extract_div(
+          gr = select_params$diversity$group,
+          th = select_params$diversity$threshold_d,
+          pt = select_params$diversity$posttreat_d,
+          ty = select_params$diversity$type_d,
+          sc = select_params$diversity$scenario_d,
+          pe = select_params$diversity$decade_d,
+          me = select_params$diversity$metric
+        )
+      legend_val <- ifelse(select_params$diversity$metric == "richness",
+                           "Number <br> of species", "LCBD")
+      proxy |> add_layer_div(layer_1, legend = legend_val)
+      files_inuse_habdiv$file_diversity <- layer_1
+    } else {
+      proxy |> clean_proxy()
+    }
+  } else if (active_tab$current == "atlas") {
+    proxy |> clean_proxy()
+  }
+}) |>
+  bindEvent(
+    select_params$species,
+    select_params$thermal,
+    select_params$habitat,
+    select_params$diversity,
+    active_tab$current,
+    input$ecspBoot,
+    input$ecspBin,
+    ignoreInit = TRUE
+  )
+
+
+# Mask layer ------
+# Create a reactive with mask state
+maskstate <- reactiveVal(TRUE)
+
+# Observe changes on tab
+observe({
+  mdebug("Changing mask state based on tab")
+  if (active_tab$current == "species" || active_tab$current == "thermal") {
+    maskstate(TRUE)
+  } else {
+    maskstate(FALSE)
+  }
+}) |> bindEvent(active_tab$current)
+
+# Observe changes via mask command (eye symbol)
+observe({
+  mdebug("Mask JS")
+  maskstate(!maskstate())
+}) |> bindEvent(input$jsMask)
+
+# Turn mask on or off based on mask state
+observe({
+  mdebug("Processing mask")
+
+  wMask$show()
+  on.exit({
+    wMask$hide()
+  })
+
+  proxy <- leafletProxy("mainMap")
+  remove_mask <- FALSE
+  mask_layer <- NULL
+
+  if (active_tab$current %in% c("species", "thermal")) {
+    if (active_tab$current == "species") {
+      if (is.null(db_info$species)) {
+        remove_mask <- TRUE
+      } else {
+        mask_layer <- db_info$species |>
+          select(-available_models) |>
+          tidyr::unnest(files) |>
+          filter(type == "mask") |>
+          pull()
+      }
+    } else if (active_tab$current == "thermal") {
+      if (is.null(db_info$thermal)) {
+        remove_mask <- TRUE
+      } else {
+        mask_layer <- db_info$thermal |>
+          select(-available_models) |>
+          tidyr::unnest(files) |>
+          filter(type == "mask") |>
+          pull()
       }
     }
+  } else {
+    remove_mask <- TRUE
   }
-  
-  # If the active tab is "thermal"
-  if (active_tab$current == "thermal") {
-    if (sp_info$species == "") {
-      proxy %>%
-        leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
-    } # With data state handled by thermaldata.R
-  }
-  
-  # If the active tab is "habitat"
-  if (active_tab$current == "habitat") {
-    if (sp_info$habitat == "") {
-      proxy %>%
-        leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
-    } else {
-      # Select the habitat file based on the scenario and decade
-      # Example: "habitat=bivalves_beds_model=mpaeu_method=ensemble_scen=current_type=bin_threshold=max_spec_sens_cog.tif"
-      sel_habitat <- paste0("https://mpaeu-dist.s3.amazonaws.com/results/habitat/habitat=", tolower(sp_info$habitat), "_model=", sp_info$acro_h,
-                            "_method=", sp_info$model_h,
-                            "_scen=", ifelse(sp_info$scenario_h == "current",
-                                             "current", paste0(sp_info$scenario_h, "_", sp_info$decade_h)),
-                            "_type=", sp_info$bintype_h, "_threshold=", sp_info$threshold_h,
-                            "_cog.tif")
-      mdebug(sel_habitat)
-      files_inuse_habdiv$file_habitat <- sel_habitat
-      # Disable the mask state
-      maskstate(FALSE)
 
-      pts_pal <- colorFactor("Blues", habitatpts()$species)
-      
-      # Add the habitat layer to the map and enable the toolbar for drawing and editing
-      tr <- terra::rast(sel_habitat)
-      terra::setMinMax(tr)
-      lims <- terra::minmax(tr)[,1]
-      proxy %>%
-        addGeotiff(file = sel_habitat, opacity = 1, layerId = "mapLayer1",
-                   colorOptions = colorOptions(palette = RColorBrewer::brewer.pal("PuRd", n = 9),
-                                               na.color = NA), autozoom = F) %>%
-        leaflegend::addLegendNumeric(
-          pal = colorNumeric(
-              domain = lims,
-              palette = RColorBrewer::brewer.pal("PuRd", n = 9),
-              na.color = NA
-          ), title = htmltools::HTML("Likelihood </br> of occurrence"), layerId = "legend", values = lims,
-          orientation = "horizontal", fillOpacity = .7, width = 75,
-          height = 15, position = "topright", labels = c("Low", "High")
-        ) %>%
-        addCircleMarkers(data = habitatpts(),
-                         clusterOptions = NULL, # markerClusterOptions(),
-                         group = "Points",
-                         weight = 2,
-                         radius = 2,
-                         opacity = 1,
-                         fillOpacity = 0.1,
-                         color = pts_pal(habitatpts()$species), #"black",#~pts_pal(species),
-                         popup = ~species) %>% 
-        hideGroup("Points") %>%
-        addPmToolbar(toolbarOptions = pmToolbarOptions(drawMarker = FALSE,
-                                                       drawPolyline = FALSE,
-                                                       drawCircle = FALSE,
-                                                       cutPolygon = FALSE,
-                                                       position = "topleft"),
-                     drawOptions = pmDrawOptions(snappable = FALSE, allowSelfIntersection = FALSE),
-                     editOptions = pmEditOptions(preventMarkerRemoval = FALSE, draggable = TRUE))
-
-    }
+  if (remove_mask) {
+    proxy |>
+      removeImage(layerId = "mapMask") |>
+      removeControl(layerId = "maskControl")
+      session$sendCustomMessage("removeEye", "nothing")
   }
   
-  # If the active tab is "diversity"
-  if (active_tab$current == "diversity") {
-    if (sp_info$metric == "") {
-      proxy %>%
-        leafem::addFeatures(starea, fillColor = "#184e77", fill = T)
-    } # With data state handled by diversitydata.R
+  if (!maskstate()) {
+    mdebug("Mask deactivated")
+    proxy |>
+      removeImage(layerId = "mapMask") |>
+      removeControl(layerId = "maskControl")
+  } else {
+    req(!is.null(mask_layer))
+    mdebug("Mask activated")
+    mask_layer <- gsub("what=what=", "what=", mask_layer) # TEMP - TO REMOVE
+    avmasks <- c(
+      "native_ecoregions", "fit_ecoregions", "fit_region",
+      "fit_region_max_depth", "convex_hull", "minbounding_circle", "buffer100m"
+    )
+    sel_mask <- input$ecspMask
+    which_band <- match(sel_mask, avmasks)
+    proxy |>
+      addGeotiff(
+        file = mask_layer,
+        opacity = 1,
+        layerId = "mapMask",
+        bands = which_band,
+        options = pathOptions(pane = "maskPane"),
+        colorOptions = colorOptions(
+          palette = c("#d4dadc", "#0a626500"),
+          domain = c(0, 1),
+          na.color = NA
+        ), autozoom = F
+      ) |>
+      addControl(tags$div(HTML('<span style="font-weight: bold; color: #184e77;">Mask active</span>')),
+        position = "topright", layerId = "maskControl"
+      )
   }
-})
+}) |>
+  bindEvent(
+    maskstate(),
+    input$ecspMask,
+    input$additionalInfo,
+    ignoreInit = TRUE
+  )
+
+
+observe({
+  mdebug("Processing realms")
+  proxy <- leafletProxy("mainMap")
+
+  if (input$ecspRealms) {
+    wShapes$show()
+    on.exit({
+      wShapes$hide()
+    })
+    proxy |> leaflet::addPolygons(
+      data = realms, color = "#454545", opacity = 0.3,
+      popup = ~ as.character(Realm), fillColor = ~ colorQuantile("YlOrRd", Realm)(Realm),
+      fillOpacity = 0.05, weight = 2, layerId = paste0("realmsShape", 1:nrow(realms)), options = pathOptions(pane = "extraPane")
+    )
+  } else {
+    proxy |> leaflet::removeShape(layerId = paste0("realmsShape", 1:nrow(realms)))
+  }
+}) |>
+  bindEvent(input$ecspRealms, ignoreInit = TRUE)
+
+observe({
+  mdebug("Processing EEZ")
+  proxy <- leafletProxy("mainMap")
+
+  if (input$ecspEEZ) {
+    wShapes$show()
+    on.exit({
+      wShapes$hide()
+    })
+    proxy |> leaflet::addPolygons(
+      data = eez, color = "#454545", opacity = 0.3,
+      popup = ~EEZ, fillColor = "#0d7edb",
+      fillOpacity = 0.05, weight = 2, layerId = paste0("eezShape", seq_len(nrow(eez))), options = pathOptions(pane = "extraPane")
+    )
+  } else {
+    proxy |> leaflet::removeShape(layerId = paste0("eezShape", seq_len(nrow(eez))))
+  }
+}) |>
+  bindEvent(input$ecspEEZ, ignoreInit = TRUE)

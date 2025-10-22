@@ -15,9 +15,9 @@ server: shiny
 ---
 
 <!-- Temporary announcement --->
-<div id="quarto-announcement" data-announcement-id="9616bfb5c47a60811ea96e08f2ae1bd0" class="alert alert-primary" style="display: flex; justify-content: space-between; padding-bottom: 0px !important; margin: 0px; padding-top: 5px !important;">
+<div id="quarto-announcement" data-announcement-id="9616bfb5c47a60811ea96e08f2ae1bd0" class="alert alert-success" style="display: flex; justify-content: space-between; padding-bottom: 0px !important; margin: 0px; padding-top: 5px !important;">
 <div style="display: flex;"><i class="bi bi-info-circle quarto-announcement-icon" style="padding-right: 15px;"></i><div class="quarto-announcement-content">
-<p><strong>Note</strong> - we are currently validating the model outputs and will soon launch an optimized version. In the meantime, you may explore the maps, but they should be carefully and critically assessed before drawing any conclusions. Public release of version 2 in September 2025.</p>
+<p><strong>Models were updated to version 2</strong></p>
 </div></div>
 <i class="bi bi-x-lg quarto-announcement-action" onclick='const element = document.getElementById("quarto-announcement"); element.remove();' style="cursor: pointer;"></i></div>
 
@@ -76,7 +76,10 @@ graph_div <- htmltools::tags$div(
 check_div <- htmltools::tags$div(
   id = "checkDiv",
   class = "checkDiv",
-  conditionalPanel("input.scenarioSelect != 'Current'",
+  conditionalPanel('(
+  ((input.jsValue?.id === "species" || input.jsValue == null) && input.scenarioSelect !== "Current") ||
+  (input.jsValue?.id === "thermal" && input.scenarioSelectThermal !== "Current")
+)',
                  tags$div(
                      id = "sideside_box",
                      class = "sideside_class",
@@ -142,6 +145,11 @@ combined
 {{< include quarto_components/_diversity.qmd >}}
 
 
+## ATLAS
+
+Available soon.
+
+
 :::
 :::
 
@@ -190,15 +198,6 @@ source("components/dataloaders.R", local = TRUE)
 
 ### Map reactive -----
 source("components/mapreactive.R", local = TRUE)
-
-### Map mask ----
-source("components/mapmask.R", local = TRUE)
-
-### Thermal data updater ----
-source("components/thermaldata.R", local = TRUE)
-
-### Diversity data updater ----
-source("components/diversitydata.R", local = TRUE)
   
 ### Contextual info ----
 source("components/contextualinfo.R", local = TRUE)

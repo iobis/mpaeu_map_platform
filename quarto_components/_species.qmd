@@ -5,7 +5,7 @@
 
 # Set model option
 model_options <- c(#"BRT" = "brt", 
-                  "MAXENT" = "maxent", "Random Forest" = "rf_classification_ds", 
+                  "MAXENT" = "maxent", "Random Forest" = "rf", 
                   "XGBoost" = "xgboost", #"GLM" = "glm",
                   #  "Elasticnet" = "elasticnet", 
                   "Ensemble" = "ensemble")
@@ -14,9 +14,9 @@ scenario_options <- c("Current", "SSP1" = "ssp126", "SSP2" = "ssp245",
 period_options <- c(2050, 2100)
 
 # Add selectors ----
-spSelectLab <- htmltools::div(htmltools::span(
-  "Search species", actionButton("filterSpecies", htmltools::HTML('<span><i class="bi bi-funnel"></i> Filter</span>'), style = "border: 0; font-size: 12px; margin-left: 10px; background: none;")
-))
+spSelectLab <- htmltools::div(
+  "Search species", actionButton("filterSpecies", htmltools::HTML('<span><i class="bi bi-funnel"></i> Filter</span>'), style = "border: 0; font-size: 12px; margin-left: 10px; background: none;"), shiny::uiOutput("filterActive", inline = TRUE), style = "display: flex; flex-direction: row;"
+)
 
 # Species selector
 tags$div(

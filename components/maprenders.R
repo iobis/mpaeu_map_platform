@@ -27,7 +27,7 @@ output$tableATitle <- renderText({ "Select a map to start" })
 
 welcome_message <- htmltools::tagList(
   htmltools::tags$style(htmltools::HTML("
-    .card {
+    .front-card {
       border: solid;
       margin-top: 15px;
       margin-bottom: 15px;
@@ -39,7 +39,7 @@ welcome_message <- htmltools::tagList(
       cursor: pointer;
       transition: background-color 0.2s ease;
     }
-    .card:hover {
+    .front-card:hover {
       background-color: #f0f0f0;
     }
     .card-icon {
@@ -71,7 +71,7 @@ welcome_message <- htmltools::tagList(
               htmltools::p("Species distribution models (SDMs) are valuable tools, but it's important to understand how to interpret their results correctly."),
               style = "text-align: left;")
           ),
-          class = "card",
+          class = "front-card",
           onclick = "window.open('https://iobis.github.io/mpaeu_docs/understanding.html', '_blank')" 
         ),
         # Card 2
@@ -87,7 +87,7 @@ welcome_message <- htmltools::tagList(
               htmltools::p("Explore the full details of the framework used to produce the range maps."),
               style = "text-align: left;")
           ),
-          class = "card",
+          class = "front-card",
           onclick = "window.open('https://iobis.github.io/mpaeu_docs/', '_blank')" 
         )#,
         # Card 3

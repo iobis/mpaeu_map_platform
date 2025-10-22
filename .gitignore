@@ -56,3 +56,5 @@ backup/
 *_bundle/
 
 index_files/
+
+stac/

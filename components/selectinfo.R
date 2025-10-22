@@ -5,108 +5,260 @@
 # Contact: s.principe@unesco.org
 #
 ######################### Main information from input ##########################
+db_info <- reactiveValues(
+  species = NULL,
+  thermal = NULL,
+  habitat = NULL,
+  diversity = NULL
+)
 
-# Reactive values to store species information and model in use
-sp_info <- reactiveValues(species = "", # Species
-                          model = "",
-                          scenario = "",
-                          decade = "",
-                          spkey = "",
-                          acro = "",
-                          # Thermal
-                          spkey_t = "",
-                          scenario_t = "",
-                          decade_t = "",
-                          acro_t = "",
-                          # Habitat
-                          habitat = "",
-                          acro_h = "mpaeu",
-                          scenario_h = "",
-                          decade_h = "",
-                          model_h = "",
-                          bintype_h = "",
-                          threshold_h = "",
-                          # Diversity
-                          metric = "",
-                          group = "",
-                          acro_d = "mpaeu",
-                          map_type = "",
-                          div_type = "",
-                          scenario_d = "",
-                          decade_d = "",
-                          model_d = "")
+# Objects *_db are loaded on serverstart.R
 
-model_inuse <- reactiveValues(model = NULL)
-
-# Observe changes and update species information and model based on the active tab
 observe({
-  
   # When the active tab is "species"
   if (active_tab$current == "species") {
-    # Update species information from input selections
-    sp_info$species <- input$speciesSelect
-    sp_info$model <- input$modelSelect
-    sp_info$scenario <- tolower(input$scenarioSelect)
-    sp_info$decade <- ifelse(is.null(input$periodSelect), NULL,
-                             ifelse(input$periodSelect == 2050, "dec50", "dec100"))
-    index <- match(input$speciesSelect, speciesinfo$species, nomatch = 0)
-    sp_info$spkey <- speciesinfo$key[index]
-    sp_info$acro <- speciesinfo$acro[index]
-    
     # Check available models for the selected species
     if (input$speciesSelect != "") {
-      available_models <- speciesinfo$model[speciesinfo$species == input$speciesSelect]
-      available_models <- strsplit(available_models, split = ";")[[1]]
-      
-      # Set the model in use based on availability and priority
-      if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
-        model_inuse$model <- input$modelSelect
-      } else {
-        priority <- c("ensemble", "maxent", "rf_classification_ds", "xgboost", "glm")
-        model_inuse$model <- sp_info$model <- priority[priority %in% available_models][1]
-      }
+      sel_obj <- species_db |>
+        select(-jsoncat) |>
+        filter(scientificName == input$speciesSelect) |>
+        collect()
+      db_info$species <- sel_obj
     }
   }
   
   # When the active tab is "thermal"
   if (active_tab$current == "thermal") {
-    # Update thermal species information from input selections
-    sp_info$species <- input$speciesSelectThermal
-    sp_info$scenario_t <- tolower(input$scenarioSelectThermal)
-    sp_info$decade_t <- ifelse(is.null(input$periodSelectThermal), NULL,
-                             ifelse(input$periodSelectThermal == 2050, "dec50", "dec100"))
-    index <- match(input$speciesSelectThermal, speciesinfo$species, nomatch = 0)
-    sp_info$spkey_t <- speciesinfo$key[index]
-    sp_info$acro_t <- speciesinfo$acro[index]
+   if (input$speciesSelectThermal != "") {
+      sel_obj <- species_db |>
+        select(-jsoncat) |>
+        filter(scientificName == input$speciesSelectThermal) |>
+        collect()
+      db_info$thermal <- sel_obj
+    }
   }
   
   # When the active tab is "habitat"
   if (active_tab$current == "habitat") {
-    # Update habitat information from input selections
-    sp_info$habitat <- input$habitatSelect
-    sp_info$scenario_h <- tolower(input$scenarioSelectHabitat)
-    sp_info$decade_h <- ifelse(is.null(input$periodSelectHabitat), NULL,
-                             ifelse(input$periodSelectHabitat == 2050, "dec50", "dec100"))
-    sp_info$model_h <- input$modelSelectHabitat
-    sp_info$bintype_h <- ifelse(input$habitatBinaryFull, "bin", "cont")
-    sp_info$threshold_h <- input$habitatBin
+    if (input$habitatSelect != "") {
+      sel_obj <- habitat_db |>
+        select(-jsoncat) |>
+        filter(habitat == input$habitatSelect) |>
+        collect()
+      db_info$habitat <- sel_obj
+    }
   }
   
   # When the active tab is "diversity"
   if (active_tab$current == "diversity") {
-    # Update diversity metric and model information from input selections
-    sp_info$metric <- input$diversitySelect
-    sp_info$group <- tolower(input$diversityGroup)
-    sp_info$model_d <- input$modelSelectDiversity
-    sp_info$scenario_d <- tolower(input$scenarioSelectDiversity)
-    sp_info$decade_d <- ifelse(is.null(input$periodSelectDiversity), NULL,
-                             ifelse(input$periodSelectDiversity == 2050, "dec50", "dec100"))
-    if (input$modelSelectDiversity == "raw") {
-      sp_info$map_type <- ""
-      sp_info$div_type <- input$diversityTypeRaw
-    } else {
-      sp_info$map_type <- paste0("_", input$diversityMode)
-      sp_info$div_type <- input$diversityType
+    if (input$diversitySelect != "") {
+      sel_obj <- diversity_db |>
+        select(-jsoncat) |>
+        filter(metric == input$diversitySelect) |>
+        collect()
+      db_info$diversity <- sel_obj
     }
   }
 })
+
+select_params <- reactiveValues(
+  species = list(
+    species = "",
+    model = "",
+    scenario = "",
+    decade = "",
+    spkey = "",
+    acro = "",
+    side_select = ""
+  ),
+  thermal = list(
+    species_t = "",
+    spkey_t = "",
+    scenario_t = "",
+    decade_t = "",
+    acro_t = "",
+    side_select_t = ""
+  ),
+  habitat = list(
+    habitat = "",
+    acro_h = "mpaeu",
+    scenario_h = "",
+    decade_h = "",
+    model_h = "",
+    bintype_h = "",
+    threshold_h = ""
+  ),
+  diversity = list(
+    metric = "",
+    group = "",
+    acro_d = "mpaeu",
+    type_d = "",
+    threshold_d = "",
+    posttreat_d = "",
+    scenario_d = "",
+    decade_d = ""
+  )
+)
+
+# Update side select to FALSE if tab changes
+observe({
+  updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
+}) |>
+  bindEvent(active_tab$current)
+
+# Select parameters
+observe({
+  mdebug("Triggered select_params")
+  # Species
+  if (!is.null(db_info$species$scientificName)) {
+    select_params$species$species <- db_info$species$scientificName
+    mdebug("Changing species options")
+    available_models <- db_info$species |>
+      pull(available_models) |>
+      unlist(use.names = F)
+
+    if (any(grepl(substr(input$modelSelect, 1, 3), available_models))) {
+      model_inuse <- input$modelSelect
+    } else {
+      priority <- c("ensemble", "maxent", "rf", "xgboost", "glm", "esm")
+      model_inuse <- priority[priority %in% available_models][1]
+    }
+
+    names_options <- dplyr::case_when(
+      available_models == "maxent" ~ "MAXENT",
+      available_models == "rf" ~ "Random Forest",
+      available_models == "glm" ~ "GLM",
+      available_models == "xgboost" ~ "XGboost",
+      available_models == "ensemble" ~ "Ensemble",
+      available_models == "esm" ~ "ESM",
+      .default = available_models
+    )
+
+    names(available_models) <- names_options
+    updateSelectInput(session, "modelSelect", choices = available_models, selected = model_inuse)
+
+    select_params$species$model <- model_inuse
+  }
+  select_params$species$spkey <- db_info$species$taxonid
+  select_params$species$acro <- global_acro
+  select_params$species$scenario <- tolower(input$scenarioSelect)
+  select_params$species$decade <- ifelse(is.null(input$periodSelect), NULL,
+    ifelse(input$periodSelect == 2050, "dec50", "dec100")
+  )
+
+  # Thermal
+  if (!is.null(db_info$thermal$scientificName)) {
+    select_params$thermal$species_t <- db_info$thermal$scientificName
+  }
+  select_params$thermal$spkey_t <- db_info$thermal$taxonid
+  select_params$thermal$acro_t <- global_acro
+  select_params$thermal$scenario_t <- tolower(input$scenarioSelectThermal)
+  select_params$thermal$decade_t <- ifelse(is.null(input$periodSelectThermal), NULL,
+    ifelse(input$periodSelectThermal == 2050, "dec50", "dec100")
+  )
+
+  # Side select species AND thermal
+  if (active_tab$current == "species") {
+    if (input$scenarioSelect == "Current") {
+      select_params$species$side_select <- FALSE
+      updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
+    } else {
+      select_params$species$side_select <- input$sideSelect
+    }
+  } else if (active_tab$current == "thermal") {
+    if (input$scenarioSelectThermal == "Current") {
+      select_params$thermal$side_select_t <- FALSE
+      updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
+    } else {
+      select_params$thermal$side_select_t <- input$sideSelect
+    }
+  } else {
+    select_params$species$side_select <- FALSE
+    select_params$thermal$side_select_t <- FALSE
+    updateCheckboxInput(session, inputId = "sideSelect", value = FALSE)
+  }
+
+  # Habitat
+  if (!is.null(db_info$habitat$habitat)) {
+    select_params$habitat$habitat <- db_info$habitat$habitat
+  }
+  select_params$habitat$acro_h <- global_acro
+  select_params$habitat$model_h <- input$modelSelectHabitat
+  select_params$habitat$scenario_h <- tolower(input$scenarioSelectHabitat)
+  select_params$habitat$decade_h <- ifelse(is.null(input$periodSelectHabitat), NULL,
+    ifelse(input$periodSelectHabitat == 2050, "dec50", "dec100")
+  )
+  select_params$habitat$bintype_h <- ifelse(input$habitatBinaryFull, "binary", "continuous")
+  select_params$habitat$threshold_h <- input$habitatBin
+
+  # Diversity
+  if (!is.null(db_info$diversity$metric)) {
+    select_params$diversity$metric <- db_info$diversity$metric
+  }
+  select_params$diversity$acro_d <- global_acro
+  select_params$diversity$group <- tolower(input$diversityGroup)
+  select_params$diversity$scenario_d <- tolower(input$scenarioSelectDiversity)
+  select_params$diversity$decade_d <- ifelse(is.null(input$periodSelectDiversity), NULL,
+    ifelse(input$periodSelectDiversity == 2050, "dec50", "dec100")
+  )
+  select_params$diversity$type_d <- input$diversityMode
+  select_params$diversity$threshold_d <- input$diversityType
+  select_params$diversity$posttreat_d <- input$diversityPostTreat
+}) |>
+  bindEvent(
+    # Species
+    db_info$species,
+    input$modelSelect,
+    input$scenarioSelect,
+    input$periodSelect,
+    # Thermal
+    db_info$thermal,
+    input$scenarioSelectThermal,
+    input$periodSelectThermal,
+    # Habitat
+    db_info$habitat,
+    input$modelSelectHabitat,
+    input$scenarioSelectHabitat,
+    input$periodSelectHabitat,
+    input$habitatBinaryFull,
+    input$habitatBin,
+    # Diversity
+    db_info$diversity,
+    input$diversityGroup,
+    input$scenarioSelectDiversity,
+    input$periodSelectDiversity,
+    input$diversityMode,
+    input$diversityType,
+    input$diversityPostTreat,
+    # General
+    input$sideSelect,
+    # Options
+    ignoreInit = TRUE
+  )
+
+# Triggers for contextual information
+context_param <- reactiveValues(
+  species = NULL,
+  thermal = NULL,
+  habitat = NULL,
+  diversity = NULL
+)
+
+observe({
+  if (active_tab$current == "species") {
+    context_param$species <- select_params$species$species
+  } else if (active_tab$current == "thermal") {
+    context_param$thermal <- select_params$thermal$species_t
+  } else if (active_tab$current == "habitat") {
+    context_param$habitat <- select_params$habitat$habitat
+  } else if (active_tab$current == "diversity") {
+    context_param$diversity <- select_params$diversity$metric
+  }
+}) |>
+  bindEvent(
+    select_params$species,
+    select_params$thermal,
+    select_params$habitat,
+    select_params$diversity,
+    ignoreInit = TRUE
+  )

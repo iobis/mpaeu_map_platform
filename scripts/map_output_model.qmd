@@ -16,64 +16,69 @@ mainfont: Noto Sans
 # Model for species _{SPECIES_NAME}_
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+library(terra)
 library(ggplot2)
 library(dplyr)
-source(file.path("{WD_PATH}", "/scripts/auxiliary_modelfit.R"))
-outfolder <- file.path("{WD_PATH}", "/data/maps")#"../data/maps/"
+setGDALconfig("AWS_NO_SIGN_REQUEST", "YES")
+setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+
+wd_path <- "{WD_PATH}"
+
+source(file.path(wd_path, "/scripts/auxiliary_modelfit.R"))
+outfolder <- file.path(wd_path, "/data/maps")#"../data/maps/"
 model_acro <- "{ACRO_CODE}"
-s3_list <- arrow::open_dataset(file.path("{WD_PATH}", "/data/s3_list.parquet"))
 
 sp <- {SPECIES_CODE}
 
-wrld <- rnaturalearth::ne_countries(returnclass = "sf")
-sf::st_crs(wrld) <- sf::st_crs("EPSG:4326")
+wrld <- terra::vect(file.path(wd_path, "data/world_shape.gpkg"))
 
-masks <- terra::rast(retrieve_s3(sp, "mask_cog.tif$", s3_list))
+mask_file <- paste0("/vsicurl/", "{MASK_FILE}")
+masks <- terra::rast(mask_file, lyrs = 4)
+terra::NAflag(masks) <- 0
 
-ecoreg <- sf::st_read(file.path("{WD_PATH}", "/data/MarineRealms_BO.shp"))
+e <- masks |>
+    trim(value = NA) |>
+    ext()
 
-logf <- jsonlite::read_json(retrieve_s3(sp, "log.json$", s3_list))
+wrld <- crop(wrld, e)
 
-ecoreg_sel <- ecoreg[ecoreg$Realm %in% unlist(logf$model_details$ecoregions_included),]
+logf <- jsonlite::read_json("{LOG_FILE}")
 
-sca <- function(limits, guide_title, ...) {
-  scale_fill_gradientn(
-    colours = rev(c("#7d1500", "#da4325", "#eca24e", "#e7e2bc", "#5cc3af", "#0a6265")),
-    limits = limits,
-    guide = guide_colorbar(title = guide_title,
-                           show.limits = TRUE,
-                           barheight = unit(0.12, "in"),
-                           barwidth = unit(3.5, "in"),
-                           ticks = F,
-                           ticks.colour = "grey20",
-                           frame.colour = "grey20",
-                           title.position = "top"),
-    ...#,
-    #labels = c("Low", "", "", "", "High")#,
-    #na.value = "#2b0700"
-  )
+plot_map <- function(r, wrld_pol = NULL, title = "Current", leg_title = "Habitat suitability", brewer_pal = "Blues") {
+    #layout(matrix(c(1, 2), ncol = 1), heights = c(9, 1))
+    layout(matrix(c(1, 2), ncol = 1), heights = c(4, 1))
+
+    e <- ext(r)
+    pal <- RColorBrewer::brewer.pal(9, brewer_pal)
+
+    plot(r,
+        col = pal,
+        axes = T, box = T, frame = FALSE,
+        legend = FALSE, #mar = c(0, 3.1, 4.1, 2.1),
+        main = title#, loc.main = c(e[1] - (e[1] * .1), e[4] + (e[4] * 0.05))
+    )
+    if (!is.null(wrld_pol)) {
+        plot(wrld, col = "grey80", add = TRUE)
+    }
+    
+    grid(col = rgb(0.5, 0.5, 0.5, 0.5), lty = 1, lwd = 1)
+
+    #par(mar = c(3.5, 20, 0.1, 20))
+    par(mar = c(5.1, 8.1, 0.1, 8.1), mgp=c(3,0.2,0))
+    pal <- colorRampPalette(pal)(200)
+    rng <- c(0, 100)
+    n <- length(pal)
+    z <- matrix(seq(rng[1], rng[2], length.out = n), ncol = 1)
+    xv <- seq(rng[1], rng[2], length.out = n + 1)
+    yv <- c(0, .1)
+
+    image(xv, yv, z, col = pal, axes = FALSE, xlab = "", ylab = "", useRaster = TRUE)
+    rect(rng[1], yv[1], rng[2], yv[2], border = "grey30")
+    axis(1, at = seq(rng[1], rng[2], by = 20), labels = seq(rng[1], rng[2], by = 20), lwd = 0, lwd.ticks = 1, cex.axis = 0.6, line = -0.05)
+    mtext(leg_title, side = 1, line = -2, cex = 0.7)
+    return(invisible(NULL))
 }
 
-# Temporary solution while log is not fixed
-# which_model <- names(logf$model_posteval)
-# which_model <- which_model[!which_model %in% c("niche", "hyperniche")]
-# 
-# which_model_f <- lapply(which_model, function(x) if (length(logf$model_posteval[[x]]) < 1) FALSE else TRUE )
-# 
-# which_model <- which_model[unlist(which_model_f)]
-# 
-# which_model <- gsub("maxent", "maxnet", which_model)
-# 
-# # Definitive
-# # which_model <- lapply(logf$model_result, function(x) if (length(x) > 0) x[[1]] else "failed")
-# # which_model <- which_model[which(which_model == "succeeded")]
-# # which_model <- names(which_model)
-# # which_model <- gsub("maxent", "maxnet", which_model)
-# 
-# tg_models <- c("ensemble", "maxnet", "rf", "xgboost", "glm")
-# which_model <- tg_models[tg_models %in% which_model][1]
-# 
-# which_model <- gsub("rf", "rf_classification_ds", which_model)
 which_model <- "{MODEL_CODE}"
 
 var_names <- unlist(logf$model_details$variables)
@@ -107,12 +112,12 @@ timings$diff[1] <- timings$time[1]
 ## Species data
 
 ```{r echo=FALSE}
-pts <- arrow::read_parquet(retrieve_s3(sp, "fitocc", s3_list))
+pts <- arrow::read_parquet("{PTS_FILE}")
 
 ext_dat <- terra::ext(terra::vect(pts, geom = c("decimalLongitude", "decimalLatitude"), crs = "EPSG:4326"))
 
 ggplot() +
-  geom_sf(data = wrld, color = "grey70", fill = "grey80") +
+  geom_sf(data = sf::st_as_sf(wrld), color = "grey70", fill = "grey80") +
   #geom_sf(data = ecoreg, color = "grey60", fill = NA) +
   geom_point(data = pts, aes(x = decimalLongitude, y = decimalLatitude), alpha = .4, size = 0.5,
              color = "darkblue") +
@@ -124,9 +129,10 @@ ggplot() +
 
 ## Model details
 
-**Species:** `r logf$scientificName[[1]]`   
+**Species:** _`r logf$scientificName[[1]]`_   
 **AphiaID:** `r logf$taxonID[[1]]`   
-**WoRMS link:** `r paste0('<a href="', "https://www.marinespecies.org/aphia.php?p=taxdetails&id=", logf$taxonID[[1]], '">', "https://www.marinespecies.org/aphia.php?p=taxdetails&id=", logf$taxonID[[1]], '</a>')`   
+**OBIS taxon page:** `r paste0('<a href="', "https://www.obis.org/taxon/", logf$taxonID[[1]], '">', "https://www.obis.org/taxon/", logf$taxonID[[1]], '</a>')`   
+**WoRMS link:** `r paste0('<a href="', "https://www.marinespecies.org/aphia.php?p=taxdetails&id=", logf$taxonID[[1]], '">', "https://marinespecies.org/aphia.php?p=taxdetails&id=", logf$taxonID[[1]], '</a>')`   
 **Run acronym:** `r logf$model_acro[[1]]`   
 **Date:** `r logf$model_date[[1]]`   
 **Number of records:** `r logf$model_fit_points[[1]]`    
@@ -135,14 +141,20 @@ ggplot() +
 **Models executed (succeeded):** `r paste(names(unlist(logf$model_result)[which(unlist(logf$model_result) == "succeeded")]), collapse = ", ")`   
 **Variables:** `r var_names`   
 **Time (in minutes):** Model fit - `r round(sum(timings$diff[timings$what %in% c("Model selection", "Model fit")]),1)` | Predictions - `r round(sum(timings$diff[timings$what %in% c("Model prediction")]),1)` | Others - `r round(sum(timings$diff[!timings$what %in% c("Model selection", "Model fit", "Model prediction")]),1)`   
+   
+::: {.callout-tip}
+## Learn how to interpret SDMs
+
+Species distribution models (SDMs) are valuable tools, but it's important to understand how to interpret their results correctly. Check [this article](https://iobis.github.io/mpaeu_docs/understanding.html) to learn more.
+:::
 
 ## Model evaluation
 
 ### Metrics
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-cv <- arrow::read_parquet(retrieve_s3(sp, paste0("method=",which_model,"_what=cvmetrics"), s3_list))
-if (which_model == "ensemble") {
+cv <- arrow::read_parquet("{CV_FILE}")
+if (which_model == "ensemble" | which_model == "esm") {
   cols <- colnames(cv)[!colnames(cv) %in% c("what", "origin")]
   cv <- cv %>%
     group_by(what, origin) %>%
@@ -155,6 +167,7 @@ if (which_model == "ensemble") {
 } else {
   cv <- cv %>% summarise(across(1:ncol(.), ~ round(mean(.x, na.rm = TRUE), 2)))
 }
+colnames(cv) <- toupper(gsub("_", " ", colnames(cv)))
 knitr::kable(cv)
 ```
 
@@ -162,14 +175,16 @@ knitr::kable(cv)
 ### Variable importance
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-imp <- arrow::read_parquet(retrieve_s3(sp, paste0("method=",which_model,"_what=varimp"), s3_list))
+imp <- arrow::read_parquet("{VARIMP_FILE}")
+colnames(imp) <- stringr::str_to_title(colnames(imp))
+colnames(imp) <- gsub("Sd", "SD", colnames(imp))
 knitr::kable(imp)
 ```
 
 ### Response curves
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-rc <- arrow::read_parquet(retrieve_s3(sp, paste0("method=",which_model,"_what=respcur"), s3_list))
+rc <- arrow::read_parquet("{RC_FILE}")
 obissdm:::plot.sdm_respcur(rc)
 ```
 
@@ -185,10 +200,10 @@ obissdm:::plot.sdm_respcur(rc)
 if (grepl("rf", which_model)) which_model <- "rf"
 if (grepl("maxnet", which_model)) which_model <- "maxent"
 
-D <- try(round(logf$model_posteval$niche[which(lapply(logf$model_posteval$niche, function(x) x[[1]]) == which_model)][[1]]$D,1), silent = T)
-I_m <- try(round(logf$model_posteval$niche[which(lapply(logf$model_posteval$niche, function(x) x[[1]]) == which_model)][[1]]$I,1), silent = T)
-jacc <- try(round(logf$model_posteval$hyperniche[which(lapply(logf$model_posteval$hyperniche, function(x) x$model) == which_model)][[1]]$hyperniche_jaccard,1), silent = T)
-sore <- try(round(logf$model_posteval$hyperniche[which(lapply(logf$model_posteval$hyperniche, function(x) x$model) == which_model)][[1]]$hyperniche_sorensen,1), silent = T)
+D <- try(round(unlist(logf$model_posteval$niche[which(unlist(lapply(logf$model_posteval$niche, function(x) x[[1]]), use.names = FALSE) == which_model)][[1]]$D, use.names = FALSE),1), silent = T)
+I_m <- try(round(unlist(logf$model_posteval$niche[which(unlist(lapply(logf$model_posteval$niche, function(x) x[[1]]), use.names = FALSE) == which_model)][[1]]$D, use.names = FALSE),1), silent = T)
+jacc <- try(round(unlist(logf$model_posteval$hyperniche[which(unlist(lapply(logf$model_posteval$hyperniche, function(x) x$model), use.names = FALSE) == which_model)][[1]]$hyperniche_jaccard, use.names = FALSE),1), silent = T)
+sore <- try(round(unlist(logf$model_posteval$hyperniche[which(unlist(lapply(logf$model_posteval$hyperniche, function(x) x$model), use.names = FALSE) == which_model)][[1]]$hyperniche_sorensen, use.names = FALSE),1), silent = T)
 
 if (inherits(D, "try-error")) {
   D <- "Not available"
@@ -206,8 +221,8 @@ if (inherits(sore, "try-error")) {
 ```
 
 
-**Thermal range (Q0.05 / Q0.95):** `r round(logf$model_posteval[[which_model]]$thermal_range[[2]],1)` / `r round(logf$model_posteval[[which_model]]$thermal_range[[4]], 1)`   
-**Inside thermal envelope?** `r ifelse(grepl("inside", logf$model_posteval[[which_model]]$thermal_envelope), "Yes", "No")` (`r logf$model_posteval[[which_model]]$thermal_envelope[[1]]$percentage`%)   
+**Thermal range (Q0.05 / Q0.95):** `r round(unlist(logf$model_posteval[[which_model]]$thermal_range[[2]], use.names = FALSE),1)` / `r round(unlist(logf$model_posteval[[which_model]]$thermal_range[[4]], use.names = FALSE), 1)`   
+**Inside thermal envelope?** `r ifelse(grepl("inside", unlist(logf$model_posteval[[which_model]]$thermal_envelope[[1]]$status, use.names = FALSE)), "Yes", "No")` (`r unlist(logf$model_posteval[[which_model]]$thermal_envelope[[1]]$percentage, use.names = FALSE)`%)   
 **Niche metrics (overlay between points and predicted sample of points):**  
 
 * **D:** `r D`   
@@ -215,7 +230,21 @@ if (inherits(sore, "try-error")) {
 * **Jaccard (hypervolume):** `r jacc`   
 * **Sorensen (hypervolume):** `r sore`   
 
----
+<br>
+
+-----
+
 Produced by the [OBIS](https://obis.org/) team.  
-`obissdm` version `r logf$obissdm_version[[1]]`
-Note: for this report, raster layers are aggregated at 0.5 degree resolution.
+`obissdm` version `r logf$obissdm_version[[1]]`  
+
+<div style="font-size: smaller;">
+
+**MPA Europe project**  
+
+Using a holistic range of measures that include the range of biodiversity from species to ecosystems, including habitats, areas will be prioritised using systematic conservation planning software. This enables alternative weighting of variables and multiple scenarios and thus support wider marine spatial planning.
+
+Grant Agreement 101059988 – MPA Europe | MPA Europe project has been approved under HORIZON-CL6-2021-BIODIV-01-12 — Improved science based maritime spatial planning and identification of marine protected areas.
+
+Co-funded by the European Union. Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or UK Research and Innovation. Neither the European Union nor the granting authority can be held responsible for them.
+
+</div>
