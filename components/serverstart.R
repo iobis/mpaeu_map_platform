@@ -10,6 +10,7 @@
 library(leaflet)
 library(leafem)
 library(leafpm)
+library(leafgl)
 library(leaflet.extras2)
 library(leaflet.providers)
 library(dplyr)
@@ -31,6 +32,11 @@ mdebug <- function(text, toprint = debug) {
   }
   return(invisible(NULL))
 }
+# For logging, enable that - not in production!
+# Then use cmd + F3
+# reactlog::reactlog_enable()
+# Also this option is helpful:
+# options(shiny.trace = "send") # or TRUE
 
 # Global settings ------
 global_acro <- "mpaeu"
@@ -41,12 +47,12 @@ m <- leaflet() %>%
   # addTiles(group = "Open Street Maps", layerId = "baseid") %>%
   # addProviderTiles(providers$CartoDB.Positron, group = "CartoDB") %>%
   # addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark") %>%
-  addLayersControl(
-    overlayGroups = c("Points"),
-    baseGroups = c("Open Street Maps"),
-    options = layersControlOptions(collapsed = T),
-    position = "bottomright"
-  ) %>%
+  # addLayersControl(
+  #   overlayGroups = c("Points"),
+  #   #baseGroups = c("Open Street Maps"),
+  #   options = layersControlOptions(collapsed = FALSE),
+  #   position = "bottomright"
+  # ) %>%
   addEasyprint(options = easyprintOptions(
     title = 'Print map',
     position = 'bottomleft',
@@ -55,7 +61,8 @@ m <- leaflet() %>%
   addMapPane("left", zIndex = 0) %>%
   addMapPane("right", zIndex = 0) %>%
   addMapPane("maskPane", zIndex = 500) %>%
-  addMapPane("extraPane", zIndex = 600)
+  addMapPane("extraPane", zIndex = 600) %>%
+  addMapPane("pointsPane", zIndex = 1000)
 
 m$dependencies <- c(m$dependencies, leafpm::pmDependencies())
 

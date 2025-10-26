@@ -68,7 +68,15 @@ observe({
     session$sendCustomMessage("additionalInfoTrigger", "")
   })
 
-  proxy <- init_proxy()
+  state_debug(FALSE)
+  proxy <- init_proxy(
+    image_1 = previous_state$image_1,
+    image_2 = previous_state$image_2,
+    pm_toolbar = previous_state$pm_toolbar,
+    markers = previous_state$markers,
+    study_area = previous_state$study_area,
+    side_by_side = previous_state$side_by_side
+  )
 
   # Species tab
   if (active_tab$current == "species") {
@@ -101,14 +109,17 @@ observe({
             sc = select_params$species$scenario, pe = select_params$species$decade,
             me = select_params$species$model, ty = file_type
           )
+        pstate_side()
       } else {
         layer_2 <- NULL
+        pstate_single()
       }
       proxy |> add_layer_sp(layer_1, layer_2, min_val, uncertainty = unc)
       files_inuse$file_a <- layer_1
       files_inuse$file_b <- layer_2
     } else {
       proxy |> clean_proxy()
+      pstate_reset()
     }
     # Thermal tab
   } else if (active_tab$current == "thermal") {
@@ -132,6 +143,7 @@ observe({
           select_params$thermal$decade_t,
           sep = "_"
         ))
+        pstate_side()
       } else {
         if (select_params$thermal$scenario_t == "current") {
           sel_band_1 <- which(bands_list == "current")
@@ -144,6 +156,7 @@ observe({
         }
         sel_band_2 <- NULL
         layer_2 <- NULL
+        pstate_single()
       }
       proxy |> add_layer_sp(layer_1, layer_2,
         band_1 = sel_band_1, band_2 = sel_band_2, binary = TRUE
@@ -152,6 +165,7 @@ observe({
       files_inuse$file_b <- layer_2
     } else {
       proxy |> clean_proxy()
+      pstate_reset()
     }
     # Habitat tab
   } else if (active_tab$current == "habitat") {
@@ -167,8 +181,10 @@ observe({
 
       proxy |> add_layer_hab(layer_1)
       files_inuse_habdiv$file_habitat <- layer_1
+      pstate_single()
     } else {
       proxy |> clean_proxy()
+      pstate_reset()
     }
     # Diversity tab
   } else if (active_tab$current == "diversity") {
@@ -187,8 +203,11 @@ observe({
                            "Number <br> of species", "LCBD")
       proxy |> add_layer_div(layer_1, legend = legend_val)
       files_inuse_habdiv$file_diversity <- layer_1
+      pstate_single()
+      previous_state$markers <- FALSE
     } else {
       proxy |> clean_proxy()
+      pstate_reset()
     }
   } else if (active_tab$current == "atlas") {
     proxy |> clean_proxy()

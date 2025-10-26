@@ -1,16 +1,70 @@
 # Functions for mapreactive.R -------
+# Create state control object
+previous_state <- reactiveValues(
+  image_1 = FALSE,
+  image_2 = FALSE,
+  pm_toolbar = FALSE,
+  markers = FALSE,
+  study_area = TRUE,
+  side_by_side = FALSE
+)
+
+pstate_reset <- function() {
+  previous_state$image_1 <- FALSE
+  previous_state$image_2 <- FALSE
+  previous_state$pm_toolbar <- FALSE
+  previous_state$markers <- FALSE
+  previous_state$study_area <- TRUE
+  previous_state$side_by_side <- FALSE
+  return(invisible())
+}
+
+pstate_side <- function() {
+  previous_state$image_1 <- TRUE
+  previous_state$image_2 <- TRUE
+  previous_state$pm_toolbar <- TRUE
+  previous_state$markers <- TRUE
+  previous_state$study_area <- FALSE
+  previous_state$side_by_side <- TRUE
+  return(invisible())
+}
+
+pstate_single <- function() {
+  previous_state$image_1 <- TRUE
+  previous_state$image_2 <- FALSE
+  previous_state$pm_toolbar <- TRUE
+  previous_state$markers <- TRUE
+  previous_state$study_area <- FALSE
+  previous_state$side_by_side <- FALSE
+  return(invisible())
+}
+
+state_debug <- function(debug = TRUE) {
+  if (debug) {
+    act <- function(x) if (x) "\033[46mactive\033[49m" else "\033[45minactive\033[49m"
+    message(
+      glue::glue(
+        "image_1 is {act(previous_state$image_1)} / image_2 is {act(previous_state$image_2)} / pm_toolbar is {act(previous_state$pm_toolbar)}",
+        "/ markers is {act(previous_state$markers)} / study_area is {act(previous_state$study_area)} / side_by_side is {act(previous_state$side_by_side)}"
+      )
+    )
+  }
+  return(invisible())
+}
+
 # Init proxy object
-init_proxy <- function(map_name = "mainMap") {
+init_proxy <- function(image_1, image_2, pm_toolbar, markers, study_area, side_by_side, map_name = "mainMap") {
   mdebug("Cleaning proxy")
   leafletProxy(map_name) |>
-    clearMarkers() |>
-    clearShapes() |>
-    clearImages() |>
+    (\(x) if (markers) x |> leaflet::clearGroup("Records") |> removeLayersControl() else x)() |>
+    (\(x) if (study_area) x |>  clearShapes() else x)() |>
+    #clearImages() |>
     removeControl("legend") |>
-    removeImage(layerId = "mapLayer1") |>
-    removeImage(layerId = "mapLayer2") |>
-    leafpm::removePmToolbar() |>
-    leaflet.extras2::removeSidebyside("sidecontrols")
+    (\(x) if (image_1) x |> leaflet::clearGroup("geoLayers") else x)() |>
+    #(\(x) if (image_1) x |> removeImage(layerId = "mapLayer1") else x)() |>
+    #(\(x) if (image_2) x |> removeImage(layerId = "mapLayer2") else x)() |>
+    (\(x) if (pm_toolbar) x |> leafpm::removePmToolbar() else x)() |>
+    (\(x) if (side_by_side) x |> leaflet.extras2::removeSidebyside("sidecontrols") else x)()
 }
 
 # Create the proxy with study area
@@ -44,17 +98,28 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
   }
 
   proxy |>
-    addCircleMarkers(
-      data = speciespts(),
-      clusterOptions = NULL, # markerClusterOptions(),
-      group = "Points",
-      weight = 2,
-      radius = 2,
-      opacity = 1,
-      fillOpacity = 0.1,
-      color = "black"
+    # addCircleMarkers(
+    #   data = speciespts(),
+    #   clusterOptions = markerClusterOptions(maxClusterRadius = 5),
+    #   clusterId = "points_cluster",
+    #   group = "Records",
+    #   weight = 2,
+    #   radius = 2,
+    #   opacity = 1,
+    #   fillOpacity = 0.1,
+    #   color = "black"
+    # ) |>
+    (\(x) {
+      sf_pt <- sf::st_as_sf(speciespts(), coords = c(1,2), crs = "EPSG:4326")
+      leafgl::addGlPoints(x, data = sf_pt, group = "Records", weight = 2, radius = 8, opacity = 1, fillOpacity = 0.1, fillColor = "black", pane = "pointsPane") 
+    })()|>
+    addLayersControl(
+      overlayGroups = c("Records"),
+      #baseGroups = c("Open Street Maps"),
+      options = layersControlOptions(collapsed = FALSE),
+      position = "bottomright"
     ) |>
-    hideGroup("Points") |>
+    #hideGroup("Records") |>
     addEasyButton(easyButton(
       icon = "fa-eye", title = "Activate/deactivate native mask",
       onClick = JS('
@@ -75,7 +140,7 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
       ) |>
       addGeotiff(
         file = layer_1, layerId = "mapLayer1", opacity = 1,
-        colorOptions = col_opt,
+        colorOptions = col_opt, group = "geoLayers",
         options = pathOptions(pane = "left"), autozoom = F, bands = band_1
       ) |>
       addTiles(
@@ -84,14 +149,14 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
       ) |>
       addGeotiff(
         file = layer_2, opacity = 1, layerId = "mapLayer2",
-        colorOptions = col_opt,
+        colorOptions = col_opt, group = "geoLayers",
         options = pathOptions(pane = "right"), autozoom = F, bands = band_2
       ) |>
       addSidebyside(layerId = "sidecontrols", rightId = "rightbaseid", leftId = "leftbaseid")
   } else {
     proxy |>
       addGeotiff(
-        file = layer_1, opacity = 1, layerId = "mapLayer1",
+        file = layer_1, opacity = 1, layerId = "mapLayer1", group = "geoLayers",
         colorOptions = col_opt, autozoom = F, bands = band_1
       )
 
@@ -149,7 +214,7 @@ add_layer_hab <- function(proxy, layer_1) {
   # lims <- terra::minmax(tr)[,1]
   proxy |>
     addGeotiff(
-      file = layer_1, opacity = 1, layerId = "mapLayer1",
+      file = layer_1, opacity = 1, layerId = "mapLayer1", group = "geoLayers",
       colorOptions = col_opt, autozoom = F
     ) |>
     leaflegend::addLegendNumeric(
@@ -161,18 +226,29 @@ add_layer_hab <- function(proxy, layer_1) {
       orientation = "horizontal", fillOpacity = .7, width = 75,
       height = 15, position = "topright", labels = c("Low", "High")
     ) |>
-    addCircleMarkers(
-      data = habitatpts(),
-      clusterOptions = NULL, # markerClusterOptions(),
-      group = "Points",
-      weight = 2,
-      radius = 2,
-      opacity = 1,
-      fillOpacity = 0.1,
-      color = pts_pal(habitatpts()$species), # "black",#~pts_pal(species),
-      popup = ~species
+    # addCircleMarkers(
+    #   data = habitatpts(),
+    #   clusterOptions = markerClusterOptions(maxClusterRadius = 5),
+    #   clusterId = "points_cluster",
+    #   group = "Records",
+    #   weight = 2,
+    #   radius = 2,
+    #   opacity = 1,
+    #   fillOpacity = 0.1,
+    #   color = pts_pal(habitatpts()$species), # "black",#~pts_pal(species),
+    #   popup = ~species
+    # ) |>
+    (\(x) {
+      sf_pt <- sf::st_as_sf(habitatpts(), coords = c(1,2), crs = "EPSG:4326")
+      leafgl::addGlPoints(x, data = sf_pt, group = "Records", weight = 2, radius = 8, opacity = 1, fillOpacity = 0.1, fillColor = pts_pal(habitatpts()$species), popup = habitatpts()$species, pane = "pointsPane") 
+    })()|>
+    addLayersControl(
+      overlayGroups = c("Records"),
+      #baseGroups = c("Open Street Maps"),
+      options = layersControlOptions(collapsed = FALSE),
+      position = "bottomright"
     ) |>
-    hideGroup("Points") |>
+    #hideGroup("Records") |>
     addPmToolbar(
       toolbarOptions = pmToolbarOptions(
         drawMarker = FALSE,
@@ -199,7 +275,7 @@ add_layer_div <- function(proxy, layer_1, legend) {
   # lims <- terra::minmax(tr)[,1]
   proxy |>
     addGeotiff(
-      file = layer_1, opacity = 1, layerId = "mapLayer1",
+      file = layer_1, opacity = 1, layerId = "mapLayer1", group = "geoLayers",
       colorOptions = col_opt, autozoom = F
     ) |>
     leaflegend::addLegendNumeric(

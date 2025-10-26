@@ -1,16 +1,16 @@
 download_local_files <- function() {
     cat("Downloading diversity lists\n")
     download.file(
-        "https://mpaeu-dist.s3.amazonaws.com/results/diversity/metric=richness_model=mpaeu_what=splist.parquet",
+        "https://obis-maps.s3.amazonaws.com/sdm/diversity/model=mpaeu/metric=richness_model=mpaeu_what=splist.parquet",
         "data/metric=richness_model=mpaeu_what=splist.parquet"
     )
     cat("Downloading citation lists\n")
     download.file(
-        "https://mpaeu-dist.s3.amazonaws.com/source/citations/reg_datasets_context.parquet",
+        "https://obis-maps.s3.amazonaws.com/sdm/source/model=mpaeu/reg_datasets_context.parquet",
         "data/reg_datasets_context.parquet"
     )
     download.file(
-        "https://mpaeu-dist.s3.amazonaws.com/source/citations/reg_datasets_species.parquet",
+        "https://obis-maps.s3.amazonaws.com/sdm/source/model=mpaeu/reg_datasets_species.parquet",
         "data/reg_datasets_species.parquet"
     )
     cat("Download concluded.\n")
