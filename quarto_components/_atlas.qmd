@@ -4,8 +4,8 @@ The atlas section is still under development.
 
 ```{r}
 # Load/set options ----
-source("scripts/customTreeInput.R")
-source("scripts/layerStyleInput.R")
+source("scripts/custom_inputs/customTreeInput.R")
+source("scripts/custom_inputs/layerStyleInput.R")
 suppressPackageStartupMessages(library(dplyr))
 habitat_db <- arrow::open_dataset("data/habitat_db.parquet")
 diversity_db <- arrow::open_dataset("data/diversity_db.parquet")
