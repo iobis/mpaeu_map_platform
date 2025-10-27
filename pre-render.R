@@ -243,7 +243,8 @@ if (!file.exists("data/app_splist.rds") || force) {
         "app_bundle.zip",
         c("data/app_splist.rds",
           "data/studyarea.fgb",
-          "data/EEZ_IHO_simp_edited.parquet"),
+          "data/EEZ_IHO_simp_edited.parquet",
+          "data/world_shape.gpkg"),
         mode = "cherry-pick"
     )
 

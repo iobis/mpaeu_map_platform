@@ -210,20 +210,20 @@ build_catalogue <- function(cleanup = TRUE) {
 build_catalogue()
 
 # Get world shape for plots
-get_world <- function() {
-    message("Getting world shapefile")
-    suppressPackageStartupMessages(require(terra))
-    base_rast <- rast("data/thetao_baseline_depthsurf_mean_cog.tif")
-    base_rast[is.na(base_rast)] <- -999999
-    base_rast[base_rast != -999999] <- NA
-    base_rast <- as.polygons(base_rast)
-    base_rast <- base_rast[,-1]
-    writeVector(base_rast, "data/world_shape.gpkg", overwrite = TRUE)
-    message("Concluded")
-    return(invisible())
-}
+# get_world <- function() {
+#     message("Getting world shapefile")
+#     suppressPackageStartupMessages(require(terra))
+#     base_rast <- rast("data/thetao_baseline_depthsurf_mean_cog.tif")
+#     base_rast[is.na(base_rast)] <- -999999
+#     base_rast[base_rast != -999999] <- NA
+#     base_rast <- as.polygons(base_rast)
+#     base_rast <- base_rast[,-1]
+#     writeVector(base_rast, "data/world_shape.gpkg", overwrite = TRUE)
+#     message("Concluded")
+#     return(invisible())
+# }
 
-get_world()
+# get_world()
 
 # Unzip bundle
 message("Unzipping app bundle")
