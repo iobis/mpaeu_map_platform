@@ -16,6 +16,7 @@ output$selectedSpecies <- renderText({
 output$contextSpecies <- renderText({
   req(!is.null(db_info$species))
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelect,]
+  selinf <- selinf[1,]
   if (input$speciesSelect != "") {
     spmodinfo <- db_info$species |>
       select(-available_models) |>
@@ -100,7 +101,7 @@ output$contextSpeciesThermal <- renderText({
   req(!is.null(db_info$thermal))
   selinf <- speciesinfo[speciesinfo$species == input$speciesSelectThermal,]
   if (input$speciesSelectThermal != "") {
-    spmodinfo <- db_info$species |>
+    spmodinfo <- db_info$thermal |>
       select(-available_models) |>
       tidyr::unnest(files) |>
       filter(type == "log") |>

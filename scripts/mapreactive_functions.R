@@ -6,7 +6,8 @@ previous_state <- reactiveValues(
   pm_toolbar = FALSE,
   markers = FALSE,
   study_area = TRUE,
-  side_by_side = FALSE
+  side_by_side = FALSE,
+  atlas_vals = NULL
 )
 
 pstate_reset <- function() {
@@ -16,6 +17,7 @@ pstate_reset <- function() {
   previous_state$markers <- FALSE
   previous_state$study_area <- TRUE
   previous_state$side_by_side <- FALSE
+  previous_state$atlas_vals <- NULL
   return(invisible())
 }
 
@@ -26,6 +28,7 @@ pstate_side <- function() {
   previous_state$markers <- TRUE
   previous_state$study_area <- FALSE
   previous_state$side_by_side <- TRUE
+  previous_state$atlas_vals <- NULL
   return(invisible())
 }
 
@@ -36,6 +39,18 @@ pstate_single <- function() {
   previous_state$markers <- TRUE
   previous_state$study_area <- FALSE
   previous_state$side_by_side <- FALSE
+  previous_state$atlas_vals <- NULL
+  return(invisible())
+}
+
+pstate_atlas <- function(atlas_vals) {
+  previous_state$image_1 <- FALSE
+  previous_state$image_2 <- FALSE
+  previous_state$pm_toolbar <- FALSE
+  previous_state$markers <- FALSE
+  previous_state$study_area <- FALSE
+  previous_state$side_by_side <- FALSE
+  previous_state$atlas_vals <- atlas_vals
   return(invisible())
 }
 
@@ -53,10 +68,18 @@ state_debug <- function(debug = TRUE) {
 }
 
 # Init proxy object
-init_proxy <- function(image_1, image_2, pm_toolbar, markers, study_area, side_by_side, map_name = "mainMap") {
+init_proxy <- function(image_1, image_2, pm_toolbar, markers, study_area, side_by_side, atlas_vals, map_name = "mainMap") {
   mdebug("Cleaning proxy")
   leafletProxy(map_name) |>
     (\(x) if (markers) x |> leaflet::clearGroup("Records") |> removeLayersControl() else x)() |>
+    (\(x) if (!is.null(atlas_vals[1])) {
+      for (idx in seq_along(atlas_vals)) {
+        x <- x |> leaflet::clearGroup(atlas_vals[idx])
+      }
+      x |> removeLayersControl()
+    } else {
+      x
+    })() |>
     (\(x) if (study_area) x |>  clearShapes() else x)() |>
     #clearImages() |>
     removeControl("legend") |>
@@ -199,7 +222,7 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
   }
 }
 
-add_layer_hab <- function(proxy, layer_1) {
+add_layer_hab <- function(proxy, layer_1, min_range = 0, max_range = 1) {
   session$sendCustomMessage("removeEye", "nothing")
   maskstate(FALSE)
 
@@ -222,9 +245,10 @@ add_layer_hab <- function(proxy, layer_1) {
         domain = c(0, 1),
         palette = hab_palette,
         na.color = NA
-      ), title = htmltools::HTML("Likelihood </br> of occurrence"), layerId = "legend", values = c(0, 1),
-      orientation = "horizontal", fillOpacity = .7, width = 75,
-      height = 15, position = "topright", labels = c("Low", "High")
+      ), title = htmltools::HTML("<span style='font-size: smaller;'>Sum of </br>species' likelihood </br>of occurrence</span>"), layerId = "legend", values = c(0, 1),
+      orientation = "horizontal", fillOpacity = .7, width = 75, 
+      labels = round(c(min_range, max_range), 0),
+      height = 15, position = "topright"
     ) |>
     # addCircleMarkers(
     #   data = habitatpts(),
@@ -262,7 +286,7 @@ add_layer_hab <- function(proxy, layer_1) {
     )
 }
 
-add_layer_div <- function(proxy, layer_1, legend) {
+add_layer_div <- function(proxy, layer_1, legend, min_range = 0, max_range = 1) {
   session$sendCustomMessage("removeEye", "nothing")
   maskstate(FALSE)
 
@@ -285,7 +309,7 @@ add_layer_div <- function(proxy, layer_1, legend) {
         na.color = NA
       ), title = htmltools::HTML(legend), layerId = "legend", values = c(0, 1),
       orientation = "horizontal", fillOpacity = .7, width = 75,
-      height = 15, position = "topright", labels = c("Low", "High")
+      height = 15, position = "topright", labels = round(c(min_range, max_range), 0)
     ) |>
     addPmToolbar(
       toolbarOptions = pmToolbarOptions(
@@ -300,6 +324,40 @@ add_layer_div <- function(proxy, layer_1, legend) {
     )
 }
 
+add_atlas_layer <- function(proxy, file, alpha, palette, group) {
+  
+  if (is.null(palette) || is.na(palette)) palette <- "Blues"
+  if (is.null(alpha) || is.na(alpha)) alpha <- 1
+
+  message(glue::glue(
+    "File: {file} | Alpha: {alpha} | Palette: {palette}"
+  ))
+
+  sel_palette <- RColorBrewer::brewer.pal(palette, n = 9)
+  
+  col_opt <- colorOptions(
+    palette = sel_palette, na.color = NA
+  )
+
+  proxy <- proxy |>
+    addGeotiff(
+      file = file, opacity = alpha, layerId = paste0("layer_atlas_", group),
+      group = group,
+      colorOptions = col_opt, autozoom = F
+    )
+    # |>
+    # leaflegend::addLegendNumeric(
+    #   pal = colorNumeric(
+    #     domain = c(0, 1),
+    #     palette = div_palette,
+    #     na.color = NA
+    #   ), title = htmltools::HTML(group), layerId = "legend", values = c(0, 1),
+    #   orientation = "horizontal", fillOpacity = .7, width = 75,
+    #   height = 15, position = "topright", labels = c("Low", "High")
+    # )
+  
+  return(proxy)
+}
 
 # Function to pull info from the DBs
 extract_sp <- function(.data, ty = "prediction", sc = "current", me = NULL, pe = NULL) {
@@ -325,7 +383,10 @@ extract_hab <- function(.data, th = "p10", pt = "std", ty = "continuous", sc = "
   if (!is.null(pe) & sc != "current") {
     sld <- sld |> filter(period == pe)
   }
-  return(sld |> pull(file) |> (\(x) paste0("/vsicurl/", x))())
+  return(data.frame(
+    layer = sld |> pull(file) |> (\(x) paste0("/vsicurl/", x))(),
+    min_range = sld |> pull(range_min), max_range = sld |> pull(range_max)
+  ))
 }
 
 extract_div <- function(.data, gr = "all", th = "p10", pt = "std", ty = "continuous", sc = "current", pe = NULL, me = "richness") {
@@ -344,7 +405,10 @@ extract_div <- function(.data, gr = "all", th = "p10", pt = "std", ty = "continu
   if (!is.null(pe) & sc != "current" & ty != "raw") {
     sld <- sld |> filter(period == pe)
   }
-  return(sld |> pull(file) |> (\(x) paste0("/vsicurl/", x))())
+  return(data.frame(
+    layer = sld |> pull(file) |> (\(x) paste0("/vsicurl/", x))(),
+    min_range = sld |> pull(range_min), max_range = sld |> pull(range_max)
+  ))
 }
 
 # Function to get threshold

@@ -121,9 +121,16 @@ build_catalogue <- function(cleanup = TRUE) {
             if (obj[["what"]] == "fitocc") {
                 scenario <- obj[["post_treatment"]] <- obj[["threshold"]] <- NA
             }
+            range_vals <- unlist(obj$values_range, use.names = FALSE)
+            range_min <- range_max <- NA
+            if (!is.null(range_vals[1])) {
+                range_min <- range_vals[1]
+                range_max <- range_vals[2]
+            }
             data.frame(threshold = obj[["threshold"]], post_treatment = obj[["post_treatment"]],
                        type = obj[["what"]],
-                       scenario = scenario, period = period, file = href)
+                       scenario = scenario, period = period, file = href,
+                       range_min = range_min, range_max = range_max)
         })
         cont <- tibble::tibble(dplyr::bind_rows(cont))
         habitat_table$files[[ts]] <- cont
@@ -156,6 +163,7 @@ build_catalogue <- function(cleanup = TRUE) {
         cont <- spj[["assets"]]
         cont <- lapply(seq_along(cont), \(x) {
             obj <- cont[[x]]
+            if (obj$what == "splist") return(NULL)
             scenario <- obj[["scenario"]]
             period <- NA
             if (!is.null(scenario) && scenario != "current") {
@@ -163,10 +171,20 @@ build_catalogue <- function(cleanup = TRUE) {
                 scenario <- strsplit(scenario, "_")[[1]][1]
             }
             href <- gsub("s3://obis-maps", "https://obis-maps.s3.us-east-1.amazonaws.com", obj[["href"]])
+            range_vals <- unlist(obj$values_range, use.names = FALSE)
+            range_min <- range_max <- NA
+            if (!is.null(range_vals[1])) {
+                if (obj[["what"]] == "continuous") {
+                    range_vals <- range_vals/100
+                }
+                range_min <- range_vals[1]
+                range_max <- range_vals[2]
+            }
             data.frame(group = obj[["group"]],
                        threshold = obj[["threshold"]], post_treatment = obj[["post_treatment"]],
                        type = obj[["what"]],
-                       scenario = scenario, period = period, file = href)
+                       scenario = scenario, period = period, file = href,
+                       range_min = range_min, range_max = range_max)
         })
         cont <- tibble::tibble(dplyr::bind_rows(cont))
         div_table$files[[ts]] <- cont

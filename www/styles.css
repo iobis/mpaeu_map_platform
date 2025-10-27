@@ -660,3 +660,93 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
     font-size: smaller;
   }
 }
+
+#atlasSelectorDiv {
+  height: 340px;
+  overflow: scroll;
+  scrollbar-color: #b0b0b0 #cccccc;
+  scrollbar-width: thin;
+  background: #eeeeee;
+  border-radius: 0px;
+  padding: 10px;
+}
+
+#atlasSelectorDiv .form-label, .shiny-input-container .control-label {
+    margin-bottom: .02rem;
+    font-size: smaller !important;
+}
+
+#atlasLayerSelectorDiv {
+  height: 340px;
+  overflow: scroll;
+  scrollbar-color: #b0b0b0 #cccccc;
+  scrollbar-width: thin;
+  background: #eeeeee;
+  border-radius: 0px;
+  padding: 10px;
+}
+
+#atlasLayerSelectorDiv .form-label, .shiny-input-container .control-label {
+    margin-bottom: .02rem;
+    font-size: smaller !important;
+}
+
+@media screen and (max-width: 600px) {
+  #atlasSelectorDiv {
+    height: 290px;
+  }
+
+  #atlasLayerSelectorDiv {
+    height: 290px;
+  }
+}
+
+#atlasTabs .nav-tabs {
+    border-bottom: 0px solid #ec279b;
+    background: #ffffff00;
+}
+
+#atlasTabs .nav-tabs .nav-item {
+    margin-right: 10px;
+}
+
+#atlasTabs .nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+    color: gray;
+    background-color: #e5e5e5 !important;
+    /* background-color: #ebebeb !important; */
+    /* border: 0px; */
+    /* border-radius: 5px; */
+    padding: 5px !important;
+    transition: none !important;
+    max-width: unset !important;
+    /* border-bottom: 0.15rem solid gray; */
+}
+
+#atlasTabs .nav-tabs .nav-link {
+    color: gray;
+    /* background-color: #2ea4c9 !important; */
+    /* border: 0px; */
+    /* border-radius: 5px; */
+    padding: 5px !important;
+    transition: none !important;
+    max-width: unset !important;
+    /* border-bottom: 0.15rem solid rgba(128, 128, 128, 0); */
+}
+
+#atlasTabs .nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus-visible {
+  max-width: unset !important;
+  color: rgb(183, 183, 183);
+  background-color: #e5e5e5 !important;
+}
+
+#atlasTabs .tab-content {
+    margin-top: 0px;
+    border-left: #e5e5e5 0.1rem solid;
+    border-right: #e5e5e5 0.1rem solid;
+    border-bottom: #e5e5e5 0.1rem solid;
+    border-top: #e5e5e5 0.1rem solid;
+    margin-left: 0;
+    padding: 0px !important;
+    margin-bottom: 0.2em;
+}

@@ -147,7 +147,7 @@ combined
 
 ## ATLAS
 
-Available soon.
+{{< include quarto_components/_atlas.qmd >}}
 
 
 :::

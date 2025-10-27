@@ -75,7 +75,8 @@ observe({
     pm_toolbar = previous_state$pm_toolbar,
     markers = previous_state$markers,
     study_area = previous_state$study_area,
-    side_by_side = previous_state$side_by_side
+    side_by_side = previous_state$side_by_side,
+    atlas_vals = previous_state$atlas_vals
   )
 
   # Species tab
@@ -170,7 +171,7 @@ observe({
     # Habitat tab
   } else if (active_tab$current == "habitat") {
     if (select_params$habitat$habitat != "") {
-      layer_1 <- db_info$habitat |>
+      hab_data <- db_info$habitat |>
         extract_hab(
           th = select_params$habitat$threshold_h,
           pt = select_params$habitat$model_h,
@@ -178,8 +179,9 @@ observe({
           sc = select_params$habitat$scenario_h,
           pe = select_params$habitat$decade_h
         )
+      layer_1 <- hab_data$layer
 
-      proxy |> add_layer_hab(layer_1)
+      proxy |> add_layer_hab(layer_1, min_range = hab_data$min_range, max_range = hab_data$max_range)
       files_inuse_habdiv$file_habitat <- layer_1
       pstate_single()
     } else {
@@ -189,7 +191,7 @@ observe({
     # Diversity tab
   } else if (active_tab$current == "diversity") {
     if (select_params$diversity$metric != "") {
-      layer_1 <- db_info$diversity |>
+      div_data <- db_info$diversity |>
         extract_div(
           gr = select_params$diversity$group,
           th = select_params$diversity$threshold_d,
@@ -199,9 +201,10 @@ observe({
           pe = select_params$diversity$decade_d,
           me = select_params$diversity$metric
         )
+      layer_1 <- div_data$layer
       legend_val <- ifelse(select_params$diversity$metric == "richness",
                            "Number <br> of species", "LCBD")
-      proxy |> add_layer_div(layer_1, legend = legend_val)
+      proxy |> add_layer_div(layer_1, legend = legend_val, min_range = div_data$min_range, max_range = div_data$max_range)
       files_inuse_habdiv$file_diversity <- layer_1
       pstate_single()
       previous_state$markers <- FALSE
@@ -210,7 +213,33 @@ observe({
       pstate_reset()
     }
   } else if (active_tab$current == "atlas") {
-    proxy |> clean_proxy()
+    atlas_values <- unlist(input$atlasSelector, use.names = TRUE)
+    nams_atlas_vals <- names(atlas_values)
+    if (!is.null(atlas_values)) {
+      files_atlas <- atlas_data |>
+        filter(layer %in% atlas_values) |>
+        pull(file)
+      names(files_atlas) <- nams_atlas_vals
+      atlas_styles <- input$atlasLayerStyle
+      
+      for (i in seq_along(nams_atlas_vals)) {
+        proxy <- proxy |> add_atlas_layer(
+          file = files_atlas[nams_atlas_vals[i]],
+          alpha = atlas_styles[nams_atlas_vals[i]][[1]]$alpha,
+          palette = atlas_styles[nams_atlas_vals[i]][[1]]$palette,
+          group = nams_atlas_vals[i] #Ignore at this moment
+        )
+      }
+      proxy |> addLayersControl(
+        overlayGroups = nams_atlas_vals,
+        options = layersControlOptions(collapsed = FALSE),
+        position = "bottomright"
+      )
+      pstate_atlas(nams_atlas_vals)
+    } else {
+      proxy |> clean_proxy()
+      pstate_reset()
+    }
   }
 }) |>
   bindEvent(
@@ -221,6 +250,8 @@ observe({
     active_tab$current,
     input$ecspBoot,
     input$ecspBin,
+    input$atlasSelector,
+    input$atlasLayerStyle,
     ignoreInit = TRUE
   )
 

@@ -19,6 +19,7 @@ library(plotly)
 library(ggplot2)
 library(spatstat.explore)
 library(shinyalert)
+library(shinyWidgets)
 setGDALconfig("AWS_NO_SIGN_REQUEST", "YES")
 setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
 
@@ -134,3 +135,23 @@ cit_general_ds <- arrow::open_dataset("data/reg_datasets_context.parquet")
 
 # Load diversity species list
 div_sp_list <- arrow::open_dataset("data/metric=richness_model=mpaeu_what=splist.parquet")
+
+# Load atlas data
+# temporary:
+sel_habs <- habitat_db |>
+  collect() |>
+  tidyr::unnest(files) |>
+  filter(type == "binary", scenario == "current", threshold == "p10", post_treatment == "const")
+lcbd <- diversity_db |>
+  collect() |>
+  tidyr::unnest(files) |>
+  filter(scenario == "current", threshold == "p10", post_treatment == "const", metric == "lcbd")
+richness <- diversity_db |>
+  collect() |>
+  tidyr::unnest(files) |>
+  filter(scenario == "current", threshold == "p10", post_treatment == "const", metric == "richness", type == "continuous")
+atlas_data <- data.frame(
+  group = c(rep("Habitat", nrow(sel_habs)), rep("Diversity", nrow(lcbd)), rep("Diversity", nrow(richness))),
+  layer = c(sel_habs$habitat_name, paste(lcbd$metric_name, "-", stringr::str_to_title(lcbd$group)), paste(richness$metric_name, "-", stringr::str_to_title(richness$group))),
+  file = c(sel_habs$file, lcbd$file, richness$file)
+)

@@ -1,0 +1,178 @@
+::: {.tabdiv}
+
+The atlas section is still under development.
+
+```{r}
+# Load/set options ----
+source("scripts/customTreeInput.R")
+source("scripts/layerStyleInput.R")
+suppressPackageStartupMessages(library(dplyr))
+habitat_db <- arrow::open_dataset("data/habitat_db.parquet")
+diversity_db <- arrow::open_dataset("data/diversity_db.parquet")
+sel_habs <- habitat_db |>
+  collect() |>
+  tidyr::unnest(files) |>
+  filter(type == "binary", scenario == "current", threshold == "p10", post_treatment == "const")
+lcbd <- diversity_db |>
+  collect() |>
+  tidyr::unnest(files) |>
+  filter(scenario == "current", threshold == "p10", post_treatment == "const", metric == "lcbd")
+richness <- diversity_db |>
+  collect() |>
+  tidyr::unnest(files) |>
+  filter(scenario == "current", threshold == "p10", post_treatment == "const", metric == "richness", type == "continuous")
+atlas_data <- data.frame(
+  group = c(rep("Habitat", nrow(sel_habs)), rep("Diversity", nrow(lcbd)), rep("Diversity", nrow(richness))),
+  layer = c(sel_habs$habitat_name, paste(lcbd$metric_name, "-", stringr::str_to_title(lcbd$group)), paste(richness$metric_name, "-", stringr::str_to_title(richness$group))),
+  file = c(sel_habs$file, lcbd$file, richness$file)
+)
+un_groups <- unique(atlas_data$group)
+choices_list <- lapply(un_groups, \(x) {
+  atlas_data$layer[atlas_data$group == x]
+}) 
+names(choices_list) <- un_groups
+rm(habitat_db, diversity_db, sel_habs, lcbd, richness)
+```
+
+
+``` {r}
+tree_input <- htmltools::div(
+  customTreeInput(
+    inputId = "atlasSelector",
+    label = "Select Options (only one per group):",
+    choices = choices_list
+  ), id = "atlasSelectorDiv"
+)
+
+layerstyle_input <- htmltools::div(
+  layerStyleInput(
+    inputId = "atlasLayerStyle",
+    label = "Configure Layer Styles (click on 'Apply styles' to apply changes):",
+    layers = c("Habitat", "Diversity"),
+    default_alpha = 0.8,
+    default_palette = "Blues"
+  ), id = "atlasLayerSelectorDiv"
+)
+
+htmltools::tags$div(
+  id = "atlasTabs",
+  htmltools::tags$div(
+    class = "panel-tabset",
+    # --- Nav tabs ---
+    htmltools::tags$ul(
+      class = "nav nav-tabs",
+      role = "tablist",
+      htmltools::tags$li(
+        class = "nav-item",
+        role = "presentation",
+        htmltools::tags$a(
+          class = "nav-link active",
+          id = "tabset-2-1-tab",
+          "data-bs-toggle" = "tab",
+          "data-bs-target" = "#tabset-2-1",
+          role = "tab",
+          "aria-controls" = "tabset-2-1",
+          "aria-selected" = "true",
+          href = "",
+          "Layers"
+        )
+      ),
+      htmltools::tags$li(
+        class = "nav-item",
+        role = "presentation",
+        htmltools::tags$a(
+          class = "nav-link",
+          id = "tabset-2-2-tab",
+          "data-bs-toggle" = "tab",
+          "data-bs-target" = "#tabset-2-2",
+          role = "tab",
+          "aria-controls" = "tabset-2-2",
+          "aria-selected" = "false",
+          href = "",
+          tabindex = "-1",
+          "Styling"
+        )
+      )
+    ),
+    # --- Tab content ---
+    htmltools::tags$div(
+      class = "tab-content",
+      htmltools::tags$div(
+        id = "tabset-2-1",
+        class = "tab-pane active",
+        role = "tabpanel",
+        "aria-labelledby" = "tabset-2-1-tab",
+        tree_input
+      ),
+      htmltools::tags$div(
+        id = "tabset-2-2",
+        class = "tab-pane",
+        role = "tabpanel",
+        "aria-labelledby" = "tabset-2-2-tab",
+        layerstyle_input
+      )
+    )
+  )
+)
+
+```
+
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-5}
+```{r}
+
+```
+:::
+
+::: {.g-col-4}
+```{r}
+
+```
+
+:::
+
+::: {.g-col-3}
+```{r}
+
+```
+
+:::
+
+:::
+</div>
+
+<div class="context-icons">
+
+```{r}
+button <- htmltools::tags$span(
+  bsicons::bs_icon("download"),
+  "DOWNLOAD THE DATA",
+  style = "color: #545454 !important;"
+)
+htmltools::div(
+  actionLink("downloadDataSpecies", label = button),
+  class = "context-icons-box"
+)
+```
+
+<div class="context-icons-box" onclick="location.href='https://github.com/iobis/mpaeu_sdm/blob/main/codes/model_fit.R';">{{< fa brands github >}} ACCESS THE CODE</div>
+
+```{r}
+button <- htmltools::tags$span(
+  bsicons::bs_icon("play-fill"),
+  "RUN THE MODEL",
+  style = "color: #545454 !important;"
+)
+htmltools::div(
+  actionLink("runModelSpecies", label = button),
+  class = "context-icons-box"
+)
+```
+
+</div>
+
+
+:::

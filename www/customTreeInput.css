@@ -1,0 +1,124 @@
+.custom-tree-input {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.tree-node {
+  margin-bottom: 15px;
+}
+
+.tree-node:last-child {
+  margin-bottom: 0;
+}
+
+.node-label {
+  font-weight: bold;
+  padding: 8px 8px 8px 30px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.node-label:before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid #999;
+  border-radius: 3px;
+  background-color: #fff;
+  transition: all 0.2s;
+}
+
+.node-label.has-selection:before {
+  background-color: #2196F3;
+  border-color: #2196F3;
+}
+
+.node-label.expanded.has-selection:after {
+  content: '\F633';
+  font-family: 'bootstrap-icons';
+  /* font-family: FontAwesome; */
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  transition: none;
+}
+
+/* .node-label.has-selection-icon:after {
+  content: '\F633';
+  font-family: 'bootstrap-icons';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  transition: none;
+} */
+
+.node-label:after {
+  content: '\25B6';
+  font-family: Arial, sans-serif;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: #555;
+  font-weight: normal;
+  transition: transform 0.2s;
+}
+
+.node-label.expanded:after {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.node-label:hover {
+  background-color: #e8e8e8;
+}
+
+.node-label.has-selection {
+  background-color: #e3f2fd;
+}
+
+.node-label.has-selection:hover {
+  background-color: #bbdefb;
+}
+
+.node-children {
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.node-children.collapsed {
+  display: none;
+}
+
+.tree-child {
+  padding: 5px 0;
+}
+
+.tree-child input[type='checkbox'] {
+  margin-right: 8px;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.tree-child label {
+  cursor: pointer;
+  margin: 0;
+}
