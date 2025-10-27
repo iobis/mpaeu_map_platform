@@ -19,7 +19,6 @@ library(plotly)
 library(ggplot2)
 library(spatstat.explore)
 library(shinyalert)
-library(shinyWidgets)
 setGDALconfig("AWS_NO_SIGN_REQUEST", "YES")
 setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
 
