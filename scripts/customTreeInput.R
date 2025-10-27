@@ -1,9 +1,11 @@
 customTreeInput <- function(inputId, label = NULL, choices) {
+
+  path <- normalizePath("./scripts/custom_inputs")
   
   treeDependency <- htmltools:::htmlDependency(
     name = "customTreeInput",
     version = "1.0.0",
-    src = c(file = "www"),
+    src = c(file = path),
     script = "customTreeInput.js",
     stylesheet = "customTreeInput.css"
   )

@@ -12,12 +12,14 @@ layerStyleInput <- function(inputId, label = NULL, layers,
     colors <- RColorBrewer::brewer.pal(n_colors, pal)
     list(name = pal, colors = paste(colors, collapse = ","))
   })
+
+  path <- normalizePath("./scripts/custom_inputs")
   
   # Create the HTML dependency
   styleDependency <- htmltools::htmlDependency(
     name = "layerStyleInput",
     version = "1.0.0",
-    src = c(file = "www"),
+    src = c(file = path),
     script = "layerStyleInput.js",
     stylesheet = "layerStyleInput.css"
   )
