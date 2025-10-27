@@ -248,6 +248,12 @@ if (!file.exists("data/app_splist.rds") || force) {
         mode = "cherry-pick"
     )
 
+    zip::zip(
+        "app_libraries.zip",
+        list.files("index_files/libs", recursive = T, full.names = T),
+        mode = "mirror"
+    )
+
 } else {
     cat("List already prepared. To force preparing set `force=TRUE` on `pre-render.R`")
 }

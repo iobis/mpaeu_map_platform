@@ -231,3 +231,7 @@ zip::unzip(
     "app_bundle.zip",
     exdir = "data/"
 )
+zip::unzip(
+    "app_libraries.zip",
+    exdir = "."
+)
