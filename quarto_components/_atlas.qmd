@@ -4,6 +4,10 @@ The atlas section is still under development.
 
 ```{r}
 # Load/set options ----
+includeCSS("www/custom_inputs/customTreeInput.css")
+includeScript("www/custom_inputs/customTreeInput.js")
+includeCSS("www/custom_inputs/layerStyleInput.css")
+includeScript("www/custom_inputs/layerStyleInput.js")
 source("scripts/custom_inputs/customTreeInput.R")
 source("scripts/custom_inputs/layerStyleInput.R")
 suppressPackageStartupMessages(library(dplyr))

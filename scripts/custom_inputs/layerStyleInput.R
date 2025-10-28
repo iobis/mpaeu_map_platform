@@ -13,16 +13,16 @@ layerStyleInput <- function(inputId, label = NULL, layers,
     list(name = pal, colors = paste(colors, collapse = ","))
   })
 
-  path <- normalizePath("./scripts/custom_inputs")
+  # path <- normalizePath("./scripts/custom_inputs")
   
-  # Create the HTML dependency
-  styleDependency <- htmltools::htmlDependency(
-    name = "layerStyleInput",
-    version = "1.0.0",
-    src = c(file = path),
-    script = "layerStyleInput.js",
-    stylesheet = "layerStyleInput.css"
-  )
+  # # Create the HTML dependency
+  # styleDependency <- htmltools::htmlDependency(
+  #   name = "layerStyleInput",
+  #   version = "1.0.0",
+  #   src = c(file = path),
+  #   script = "layerStyleInput.js",
+  #   stylesheet = "layerStyleInput.css"
+  # )
   
   # Generate HTML for each layer
   style_html <- htmltools::tags$div(
@@ -107,5 +107,6 @@ layerStyleInput <- function(inputId, label = NULL, layers,
   )
   
   # Attach the dependency and return
-  htmltools::attachDependencies(style_html, styleDependency)
+  #htmltools::attachDependencies(style_html, styleDependency)
+  style_html
 }
