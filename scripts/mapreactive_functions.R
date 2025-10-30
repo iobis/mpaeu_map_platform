@@ -339,12 +339,39 @@ add_atlas_layer <- function(proxy, file, alpha, palette, group) {
     palette = sel_palette, na.color = NA
   )
 
-  proxy <- proxy |>
-    addGeotiff(
-      file = file, opacity = alpha, layerId = paste0("layer_atlas_", group),
-      group = group,
-      colorOptions = col_opt, autozoom = F
-    )
+  if (grepl("\\.tif", file)) {
+    proxy <- proxy |>
+      addGeotiff(
+        file = file, opacity = alpha, layerId = paste0("layer_atlas_", group),
+        group = group,
+        colorOptions = col_opt, autozoom = F
+      )
+  } else {
+    if (grepl("points", file)) {
+      proxy <- proxy |>
+        (\(x) {
+          sf_pt <- sf::st_read(file)
+          content <- sf::st_drop_geometry(sf_pt[,1])[,1]
+          pts_pal <- colorFactor(palette, content)
+          leafgl::addGlPoints(x, data = sf_pt, group = group, weight = 2,
+            radius = 8, opacity = alpha, fillOpacity = 0.1,
+            fillColor = pts_pal(content),
+            popup = content, pane = "pointsPane") 
+      })()
+    } else {
+      proxy <- proxy |>
+        (\(x) {
+          sf_pt <- sf::st_read(file) #|> sf::st_cast("POLYGON")
+          content <- sf::st_drop_geometry(sf_pt[,1])[,1]
+          pts_pal <- colorFactor(palette, levels = unique(content))
+          leafem::addFeatures(x, data = sf_pt, group = group,
+            color = NA,
+            fillOpacity = alpha,
+            fillColor = pts_pal(content),
+            popup = content, pane = "extraPane") 
+      })()
+    }
+  }
     # |>
     # leaflegend::addLegendNumeric(
     #   pal = colorNumeric(

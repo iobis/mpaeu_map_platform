@@ -58,3 +58,5 @@ backup/
 index_files/
 
 stac/
+
+atlas_layers/

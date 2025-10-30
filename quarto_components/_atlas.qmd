@@ -36,6 +36,23 @@ choices_list <- lapply(un_groups, \(x) {
 }) 
 names(choices_list) <- un_groups
 rm(habitat_db, diversity_db, sel_habs, lcbd, richness)
+
+#choices_list$`RBA (available soon)` <- c("Available soon")
+
+choices_list$`Blue Carbon` <- c("EURO-CARBON points")
+
+choices_list$MSP <- c("Marine regions")
+
+choices_list$Physical <- c(
+  "Bathymetry", "Rugosity", "Seafloor geomorphic features", "Seabed slope",
+    "Wave fetch", "Current speed", "EUSEAMAP (2023) habitats", "River runoff", "Distance to coast"
+)
+
+choices_list$`Temperature/Chemical` <- c(
+  "Sea surface temperature", "Sea bottom temperature", "Air temperature", "Salinity", "pH", "Oxygen concentration",
+  "Sea ice cover", "Phytoplankton concentration", "Mixed layer depth", "Nitrate concentration", "Phosphate concentration",
+  "Diffuse attenuation coefficient", "Photosynthetically active radiation"
+)
 ```
 
 
@@ -52,7 +69,7 @@ layerstyle_input <- htmltools::div(
   layerStyleInput(
     inputId = "atlasLayerStyle",
     label = "Configure Layer Styles (click on 'Apply styles' to apply changes):",
-    layers = c("Habitat", "Diversity"),
+    layers = c("Habitat", "Diversity", "Blue Carbon", "MSP", "Physical", "Temperature/Chemical"),
     default_alpha = 0.8,
     default_palette = "Blues"
   ), id = "atlasLayerSelectorDiv"

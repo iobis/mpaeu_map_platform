@@ -154,3 +154,62 @@ atlas_data <- data.frame(
   layer = c(sel_habs$habitat_name, paste(lcbd$metric_name, "-", stringr::str_to_title(lcbd$group)), paste(richness$metric_name, "-", stringr::str_to_title(richness$group))),
   file = c(sel_habs$file, lcbd$file, richness$file)
 )
+
+blue_carbon <- data.frame(
+  group = "Blue Carbon",
+  layer = "EURO-CARBON points",
+  file = "data/atlas/euro_carbon_points.gpkg"
+)
+
+msp <- data.frame(
+  group = "MSP",
+  layer = "Marine regions",
+  file = "data/atlas/sea_basins.gpkg"
+)
+
+physical <- data.frame(
+  group = "Physical",
+  layer = c(
+    "Bathymetry", "Rugosity", "Seafloor geomorphic features", "Seabed slope",
+    "Wave fetch", "Current speed", "EUSEAMAP (2023) habitats", "River runoff", "Distance to coast"#,
+    #"Connectivity - Betweenness centrality", "Connectivity - Harmonic centrality", "Connectivity - Strength out centrality"
+  ),
+  file = c(
+    "data/atlas/bathymetry_mean.tif", "data/atlas/rugosity.tif", "data/atlas/geomorphicFeatures.tif",
+    "data/atlas/slope.tif", "data/atlas/wavefetch.tif", "data/atlas/sws_mean.tif", "data/atlas/euseamap.tif", "data/atlas/riverrunoff.tif",
+    "data/atlas/coastdist.tif"#, "betweennessCentrality.tif", "harmonicCentrality.tif", "strengthOutCentrality.tif"
+  )
+)
+
+temp <- data.frame(
+  group = "Temperature/Chemical",
+  layer = c(
+    "Sea surface temperature", "Sea bottom temperature", "Air temperature", "Salinity", "pH", "Oxygen concentration",
+    "Sea ice cover", "Phytoplankton concentration", "Mixed layer depth", "Nitrate concentration", "Phosphate concentration",
+    "Diffuse attenuation coefficient", "Photosynthetically active radiation"
+  ),
+  file = paste0("data/atlas/", c(
+    "thetao_mean.tif",
+    "thetao_mean_bottom.tif",
+    "tas_mean.tif",
+    "so_mean.tif",
+    "ph_mean.tif",
+    "o2_mean.tif",
+    "siconc_mean.tif",
+    "phyc_mean.tif",
+    "mlotst_mean.tif",
+    "no3_mean.tif",
+    "po4_mean.tif",
+    "KDPAR_mean_mean.tif",
+    "PAR_mean_mean.tif"
+  ))
+)
+
+
+atlas_data <- bind_rows(
+  atlas_data,
+  blue_carbon,
+  msp,
+  physical,
+  temp
+)
