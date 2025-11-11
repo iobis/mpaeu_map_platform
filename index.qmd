@@ -140,12 +140,13 @@ combined
 {{< include quarto_components/_habitat.qmd >}}
 
 
+<!-- Remove diversity tab, not core
 ## DIVERSITY
 
 {{< include quarto_components/_diversity.qmd >}}
+-->
 
-
-## ATLAS
+## ATLAS FOR MSP
 
 {{< include quarto_components/_atlas.qmd >}}
 

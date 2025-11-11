@@ -5,7 +5,7 @@
 
 # Add selectors ----
 spThermSelectLab <- htmltools::div(
-  "Search species", actionButton("filterThermalSpecies", htmltools::HTML('<span><i class="bi bi-funnel"></i> Filter</span>'), style = "border: 0; font-size: 12px; margin-left: 10px; background: none;"), shiny::uiOutput("filterActiveThermal", inline = TRUE), style = "display: flex; flex-direction: row;"
+  "Search species", actionButton("filterThermalSpecies", htmltools::HTML('<span><i class="bi bi-funnel"></i> Filter</span>'), style = "border: 0; font-size: 12px; margin-left: 10px; background: none; margin-top: -4px;"), shiny::uiOutput("filterActiveThermal", inline = TRUE), style = "display: flex; flex-direction: row;"
 )
 
 # Species selector

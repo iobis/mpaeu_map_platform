@@ -103,7 +103,7 @@ ul.task-list li input[type="checkbox"] {
 /* Tabs */
 .nav-tabs {
     border-bottom: 0px solid #ec279b;
-    background: #2da4c9;/*#168aad;*/
+    background: #168aad; /*#2da4c9;#168aad;*/
 }
 
 .nav-tabs .nav-item {
@@ -130,10 +130,10 @@ a#tabset-1-5-tab {
 
 .nav-link {
     display: block;
-    padding: .5rem 1rem;
+    padding: .5rem .6rem;
     color: #ffffff;
     text-decoration: none;
-    font-size: smaller;
+    font-size: 0.75rem;
     font-weight: 600;
     -webkit-text-decoration: none;
     -moz-text-decoration: none;
@@ -652,23 +652,20 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
       transform: rotate(360deg);
   }
 } 
-
+/* 
 :root{
-  --tab-collapsed: 2rem;     /* collapsed width (icons only) */
-  --tab-expanded: 12rem;       /* expanded width (icons + label) — adjust as needed */
+  --tab-collapsed: 2rem;
+  --tab-expanded: 12rem;
   --tab-transition: 260ms cubic-bezier(.2,.8,.2,1);
 }
 
-/* ensure the tab row never wraps (prevents the jumping line) */
 .nav-tabs {
-  display: flex;        /* bootstrap already uses flex but ensure these props */
-  flex-wrap: nowrap;    /* do NOT wrap items to the next line */
-  /*gap: 0.25rem;*/
-  overflow-x: auto;     /* allow horizontal scroll if there isn't enough room */
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* base collapsed state (animatable via max-width) */
 .nav-tabs .nav-link {
   display: inline-flex;
   align-items: center;
@@ -679,46 +676,38 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
   max-width: var(--tab-collapsed);
   padding: 0.375rem 0.5rem;
   transition: max-width var(--tab-transition), padding var(--tab-transition);
-  flex-shrink: 0;                 /* keep visual size stable */
+  flex-shrink: 0;
 }
 
-/* icon always visible (prevent shrinking) */
 .nav-tabs .nav-link i {
   flex: 0 0 auto;
   transition: transform var(--tab-transition);
 }
 
-/* label hidden by default (will fade/slide in) */
-/* to check */
 .nav-tabs .nav-link.active span {
   color: #184e77;
 }
 
 .nav-tabs .nav-link span {
   display: inline-block;
-  /*color: #57D8FF;*/
   opacity: 0;
   transform: translateX(-6px);
   transition: opacity 140ms linear, transform var(--tab-transition);
 }
 
-/* default: active tab expanded when nothing else is hovered */
 .nav-tabs .nav-link.active {
   max-width: var(--tab-expanded);
 }
 
-/* when the whole tab row is hovered, collapse all tabs first */
 .nav-tabs:hover .nav-link {
   max-width: var(--tab-collapsed);
 }
 
-/* expand hovered/ focused tab (this rule runs after the collapse rule above) */
 .nav-tabs .nav-link:hover,
 .nav-tabs .nav-link:focus-visible {
   max-width: var(--tab-expanded);
 }
 
-/* when a tab is expanded (hover/focus or active) show its label */
 .nav-tabs .nav-link:hover span,
 .nav-tabs .nav-link:focus-visible span,
 .nav-tabs .nav-link.active span {
@@ -726,16 +715,9 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
   transform: translateX(0);
 }
 
-/* small polish: nudge icon when expanding */
-/*.nav-tabs .nav-link:hover i,
-.nav-tabs .nav-link:focus i {
-  transform: translateX(4px);
-}*/
-
-/* ensure active hovered stays expanded (redundant but explicit) */
 .nav-tabs .nav-link.active:hover {
   max-width: var(--tab-expanded);
-}
+} */
 
 @media screen and (max-width: 600px) {
   #quality-box {
@@ -887,15 +869,25 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
             Shiny.onInputChange("jsValue", active_tab)
             
           } else if (tab.id === 'tabset-1-4-tab') {
+            // divs.forEach(function(div) {
+            //   div.style.color = '#168aad'; 
+            // });
+            // colorChangingDiv.style.backgroundColor = '#168aad'; 
+            
+            // // Change value in the app
+            // var active_tab = {id: "diversity", nonce: Math.random()};
+            // Shiny.onInputChange("jsValue", active_tab)
+
+            // Update to remove diversity tab
             divs.forEach(function(div) {
               div.style.color = '#168aad'; 
             });
             colorChangingDiv.style.backgroundColor = '#168aad'; 
             
             // Change value in the app
-            var active_tab = {id: "diversity", nonce: Math.random()};
+            var active_tab = {id: "atlas", nonce: Math.random()};
             Shiny.onInputChange("jsValue", active_tab)
-          } else if (tab.id === 'tabset-1-5-tab') {
+          } else if (tab.id === 'tabset-1-5-tab') { // ignored
             divs.forEach(function(div) {
               div.style.color = '#2da4c9'; 
             });
@@ -1020,7 +1012,7 @@ Shiny.addCustomMessageHandler('additionalInfoTrigger', function(value) {
 </div>
 <div class="g-col-md-4 g-col-12 colordiv">
 <div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href=""><i <i class="fa-solid fa-shrimp"></i> <span>SPECIES</span></a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href=""><i class="fa-solid fa-temperature-half" style="margin-left: 4px; margin-right: 1px;"></i> <span>THERMAL RANGE</span></a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href=""><i class="fa-solid fa-layer-group"></i> <span>HABITAT</span></a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-4" role="tab" aria-controls="tabset-1-4" aria-selected="false" href=""><i class="fa-solid fa-chart-simple"></i> <span>DIVERSITY</span></a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-5" role="tab" aria-controls="tabset-1-5" aria-selected="false" href=""><i class="fa-solid fa-earth-europe"></i> <span>ATLAS</span></a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href=""><i <i class="fa-solid fa-shrimp"></i> <span>SPECIES</span></a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href=""><i class="fa-solid fa-temperature-half" style="margin-left: 4px; margin-right: 1px;"></i> <span>THERMAL RANGE</span></a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href=""><i class="fa-solid fa-layer-group"></i> <span>HABITAT</span></a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-4" role="tab" aria-controls="tabset-1-4" aria-selected="false" href=""><i class="fa-solid fa-earth-europe"></i> <span>ATLAS</span> FOR MSP</a></li></ul>
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="tabdiv">
@@ -1031,7 +1023,7 @@ Shiny.addCustomMessageHandler('additionalInfoTrigger', function(value) {
 <label class="control-label" id="speciesSelect-label" for="speciesSelect">
 <div style="display: flex; flex-direction: row;">
 Search species
-<button id="filterSpecies" type="button" class="btn btn-default action-button" style="border: 0; font-size: 12px; margin-left: 10px; background: none;"><span><i class="bi bi-funnel"></i> Filter</span></button>
+<button id="filterSpecies" type="button" class="btn btn-default action-button" style="border: 0; font-size: 12px; margin-left: 10px; background: none; margin-top: -4px;"><span><i class="bi bi-funnel"></i> Filter</span></button>
 <span id="filterActive" class="shiny-html-output"></span>
 </div>
 </label>
@@ -1156,7 +1148,7 @@ RUN THE MODEL
 <label class="control-label" id="speciesSelectThermal-label" for="speciesSelectThermal">
 <div style="display: flex; flex-direction: row;">
 Search species
-<button id="filterThermalSpecies" type="button" class="btn btn-default action-button" style="border: 0; font-size: 12px; margin-left: 10px; background: none;"><span><i class="bi bi-funnel"></i> Filter</span></button>
+<button id="filterThermalSpecies" type="button" class="btn btn-default action-button" style="border: 0; font-size: 12px; margin-left: 10px; background: none; margin-top: -4px;"><span><i class="bi bi-funnel"></i> Filter</span></button>
 <span id="filterActiveThermal" class="shiny-html-output"></span>
 </div>
 </label>
@@ -1375,81 +1367,133 @@ DOWNLOAD THE DATA
 </div>
 </div>
 </div>
-</div>
-<div id="tabset-1-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-4-tab">
-<div class="tabdiv">
-<div class="cell">
-<div class="cell-output-display no-overflow-x">
+<!-- Remove diversity tab, not core
+## DIVERSITY
+
+
+::: {.tabdiv}
+
+
+::: {.cell}
+::: {.cell-output-display}
+
+
+```{=html}
 <div class="form-group shiny-input-container">
 <label class="control-label" id="diversitySelect-label" for="diversitySelect">Select metric</label>
 <div>
-<select id="diversitySelect" class="shiny-input-select"><option value="" selected="">Select a metric</option>
+<select id="diversitySelect" class="shiny-input-select"><option value="" selected>Select a metric</option>
 <option value="richness">Richness</option>
 <option value="lcbd">LCBD</option></select>
 <script type="application/json" data-for="diversitySelect">{"plugins":["selectize-plugin-a11y"]}</script>
 </div>
 </div>
-</div>
-<div class="cell-output-display no-overflow-x">
+```
+
+
+:::
+
+::: {.cell-output-display}
+
+
+```{=html}
 <div class="form-group shiny-input-container">
 <label class="control-label" id="diversityGroup-label" for="diversityGroup">Select level</label>
 <div>
-<select id="diversityGroup" class="shiny-input-select"><option value="" selected="">Select one</option></select>
+<select id="diversityGroup" class="shiny-input-select"><option value="" selected>Select one</option></select>
 <script type="application/json" data-for="diversityGroup">{"plugins":["selectize-plugin-a11y"]}</script>
 </div>
 </div>
-</div>
-<div class="cell-output-display">
+```
+
+
+:::
+
+::: {.cell-output-display}
+
+
+```{=html}
 <div id="diversity_title" class="rtitle_class" style="font-style: normal !important;">
 <div id="selectedMetric" class="shiny-text-output"></div>
 </div>
-</div>
-<div class="cell-output-display">
+```
+
+
+:::
+
+::: {.cell-output-display}
+
+
+```{=html}
 <div id="context_info_div" class="context_info">
 <div id="contextMetric" class="shiny-text-output"></div>
-<br>
+<br/>
 </div>
-</div>
-<div class="cell-output-display no-overflow-x">
-<div class="shiny-panel-conditional" data-display-if="input.diversitySelect == 'richness' &amp;&amp; input.diversityMode != 'raw'" data-ns-prefix="">
+```
+
+
+:::
+
+::: {.cell-output-display}
+
+
+```{=html}
+<div class="shiny-panel-conditional" data-display-if="input.diversitySelect == &#39;richness&#39; &amp;&amp; input.diversityMode != &#39;raw&#39;" data-ns-prefix="">
 <div id="scenario_box_diversity" class="scenario_class">
 <div class="form-group shiny-input-container">
 <label class="control-label" id="diversityType-label" for="diversityType">Threshold</label>
 <div>
-<select id="diversityType" class="shiny-input-select"><option value="p10" selected="">P10</option>
+<select id="diversityType" class="shiny-input-select"><option value="p10" selected>P10</option>
 <option value="mss">Sens+Spec</option></select>
 <script type="application/json" data-for="diversityType" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
 </div>
 </div>
 </div>
 </div>
-</div>
-<div class="cell-output-display no-overflow-x">
-<div class="shiny-panel-conditional" data-display-if="input.diversitySelect == 'richness' &amp;&amp; input.diversityMode != 'raw'" data-ns-prefix="">
+```
+
+
+:::
+
+::: {.cell-output-display}
+
+
+```{=html}
+<div class="shiny-panel-conditional" data-display-if="input.diversitySelect == &#39;richness&#39; &amp;&amp; input.diversityMode != &#39;raw&#39;" data-ns-prefix="">
 <div id="scenario_box_diversity2" class="scenario_class">
 <div class="form-group shiny-input-container">
 <label class="control-label" id="diversityPostTreat-label" for="diversityPostTreat">Post-treatment</label>
 <div>
-<select id="diversityPostTreat" class="shiny-input-select"><option value="std" selected="">Standard</option>
+<select id="diversityPostTreat" class="shiny-input-select"><option value="std" selected>Standard</option>
 <option value="const">Constrained</option></select>
 <script type="application/json" data-for="diversityPostTreat" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
 </div>
 </div>
 </div>
 </div>
-</div>
-</div>
-<div class="bottom-container">
-<div class="grid gridaltsm">
-<div class="g-col-5">
-<div class="cell">
-<div class="cell-output-display no-overflow-x">
-<div class="shiny-panel-conditional" data-display-if="input.diversitySelect == 'richness'" data-ns-prefix="">
+```
+
+
+:::
+:::
+
+
+<div class="bottom-container"> 
+::: {.grid .gridaltsm}
+
+::: {.g-col-5}
+
+::: {.cell}
+::: {.cell-output-display}
+
+
+```{=html}
+<div class="shiny-panel-conditional" data-display-if="input.diversitySelect == &#39;richness&#39;" data-ns-prefix="">
 <div id="scenario_box_diversity" class="scenario_class">
 <div class="form-group shiny-input-container">
 <label class="control-label" id="diversityMode-label" for="diversityMode">Mode</label>
 <div>
-<select id="diversityMode" class="shiny-input-select"><option value="raw" selected="">Raw</option>
+<select id="diversityMode" class="shiny-input-select"><option value="raw" selected>Raw</option>
 <option value="binary">Binary</option>
 <option value="continuous">Continuous</option>
 <option value="sesam">SESAM</option></select>
@@ -1458,21 +1502,27 @@ DOWNLOAD THE DATA
 </div>
 </div>
 </div>
-</div>
-</div>
-</div>
-<div class="g-col-4">
-<div class="cell">
-<div class="cell-output-display no-overflow-x">
-<div class="shiny-panel-conditional" data-display-if="(
-(input.diversitySelect == 'richness' &amp;&amp; input.diversityMode != 'raw') ||
-(input.diversitySelect != 'richness')
-)" data-ns-prefix="">
+```
+
+
+:::
+:::
+
+:::
+
+::: {.g-col-4}
+
+::: {.cell}
+::: {.cell-output-display}
+
+
+```{=html}
+<div class="shiny-panel-conditional" data-display-if="(&#10;(input.diversitySelect == &#39;richness&#39; &amp;&amp; input.diversityMode != &#39;raw&#39;) ||&#10;(input.diversitySelect != &#39;richness&#39;)&#10;)" data-ns-prefix="">
 <div id="scenario_box_diversity" class="scenario_class">
 <div class="form-group shiny-input-container">
 <label class="control-label" id="scenarioSelectDiversity-label" for="scenarioSelectDiversity">Scenario</label>
 <div>
-<select id="scenarioSelectDiversity" class="shiny-input-select"><option value="Current" selected="">Current</option>
+<select id="scenarioSelectDiversity" class="shiny-input-select"><option value="Current" selected>Current</option>
 <option value="ssp126">SSP1</option>
 <option value="ssp245">SSP2</option>
 <option value="ssp370">SSP3</option>
@@ -1483,53 +1533,80 @@ DOWNLOAD THE DATA
 </div>
 </div>
 </div>
-</div>
-</div>
-</div>
-<div class="g-col-3">
-<div class="cell">
-<div class="cell-output-display no-overflow-x">
-<div class="shiny-panel-conditional" data-display-if="(
-(input.diversitySelect == 'richness' &amp;&amp; input.diversityMode != 'raw') ||
-(input.diversitySelect != 'richness')
-)" data-ns-prefix="">
+```
+
+
+:::
+:::
+
+
+:::
+
+::: {.g-col-3}
+
+::: {.cell}
+::: {.cell-output-display}
+
+
+```{=html}
+<div class="shiny-panel-conditional" data-display-if="(&#10;(input.diversitySelect == &#39;richness&#39; &amp;&amp; input.diversityMode != &#39;raw&#39;) ||&#10;(input.diversitySelect != &#39;richness&#39;)&#10;)" data-ns-prefix="">
 <div id="scenario_box_diversity" class="scenario_class">
 <div class="form-group shiny-input-container">
 <label class="control-label" id="periodSelectDiversity-label" for="periodSelectDiversity">Period</label>
 <div>
-<select id="periodSelectDiversity" class="shiny-input-select"><option value="2050" selected="">2050</option>
+<select id="periodSelectDiversity" class="shiny-input-select"><option value="2050" selected>2050</option>
 <option value="2100">2100</option></select>
 <script type="application/json" data-for="periodSelectDiversity" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
 </div>
 </div>
 </div>
 </div>
+```
+
+
+:::
+:::
+
+
+:::
+
+:::
 </div>
-</div>
-</div>
-</div>
-</div>
+
 <div class="context-icons">
-<div class="cell">
-<div class="cell-output-display">
+
+
+::: {.cell}
+::: {.cell-output-display}
+
+
+```{=html}
 <div class="context-icons-box">
-<a id="downloadDataDiversity" class="shiny-download-link" href="" target="_blank" download="">
+<a id="downloadDataDiversity" class="shiny-download-link" href="" target="_blank" download>
 <span style="color: #545454 !important;">
-<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 16 16" class="bi bi-download " style="height:1em;width:1em;fill:currentColor;vertical-align:-0.125em;" aria-hidden="true" role="img"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"></path>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" class="bi bi-download " style="height:1em;width:1em;fill:currentColor;vertical-align:-0.125em;" aria-hidden="true" role="img" ><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"></path>
 <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"></path></svg>
 DOWNLOAD THE DATA
 </span>
 </a>
 </div>
+```
+
+
+:::
+:::
+
+
+<div class="context-icons-box" onclick="location.href='https://github.com/iobis/mpaeu_sdm/blob/main/codes/post_div_richness.R';"> ACCESS THE CODE</div>
+
 </div>
+
+:::
+
+
+-->
 </div>
-<div class="context-icons-box" onclick="location.href='https://github.com/iobis/mpaeu_sdm/blob/main/codes/post_div_richness.R';">
-<i class="fa-brands fa-github" aria-label="github"></i> ACCESS THE CODE
-</div>
-</div>
-</div>
-</div>
-<div id="tabset-1-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-5-tab">
+<div id="tabset-1-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-4-tab">
 <div class="tabdiv">
 <p>The atlas section is still under development.</p>
 <div class="cell">

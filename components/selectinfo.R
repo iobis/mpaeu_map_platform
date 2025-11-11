@@ -192,18 +192,21 @@ observe({
   select_params$habitat$threshold_h <- input$habitatBin
 
   # Diversity
-  if (!is.null(db_info$diversity$metric)) {
-    select_params$diversity$metric <- db_info$diversity$metric
+  # Ignore diversity for now, removed in the new version, but keeping code if return
+  if (FALSE) {
+    if (!is.null(db_info$diversity$metric)) {
+      select_params$diversity$metric <- db_info$diversity$metric
+    }
+    select_params$diversity$acro_d <- global_acro
+    select_params$diversity$group <- tolower(input$diversityGroup)
+    select_params$diversity$scenario_d <- tolower(input$scenarioSelectDiversity)
+    select_params$diversity$decade_d <- ifelse(is.null(input$periodSelectDiversity), NULL,
+      ifelse(input$periodSelectDiversity == 2050, "dec50", "dec100")
+    )
+    select_params$diversity$type_d <- input$diversityMode
+    select_params$diversity$threshold_d <- input$diversityType
+    select_params$diversity$posttreat_d <- input$diversityPostTreat
   }
-  select_params$diversity$acro_d <- global_acro
-  select_params$diversity$group <- tolower(input$diversityGroup)
-  select_params$diversity$scenario_d <- tolower(input$scenarioSelectDiversity)
-  select_params$diversity$decade_d <- ifelse(is.null(input$periodSelectDiversity), NULL,
-    ifelse(input$periodSelectDiversity == 2050, "dec50", "dec100")
-  )
-  select_params$diversity$type_d <- input$diversityMode
-  select_params$diversity$threshold_d <- input$diversityType
-  select_params$diversity$posttreat_d <- input$diversityPostTreat
 }) |>
   bindEvent(
     # Species

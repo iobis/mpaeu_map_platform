@@ -46,15 +46,25 @@ document.addEventListener('DOMContentLoaded', function() {
             Shiny.onInputChange("jsValue", active_tab)
             
           } else if (tab.id === 'tabset-1-4-tab') {
+            // divs.forEach(function(div) {
+            //   div.style.color = '#168aad'; 
+            // });
+            // colorChangingDiv.style.backgroundColor = '#168aad'; 
+            
+            // // Change value in the app
+            // var active_tab = {id: "diversity", nonce: Math.random()};
+            // Shiny.onInputChange("jsValue", active_tab)
+
+            // Update to remove diversity tab
             divs.forEach(function(div) {
               div.style.color = '#168aad'; 
             });
             colorChangingDiv.style.backgroundColor = '#168aad'; 
             
             // Change value in the app
-            var active_tab = {id: "diversity", nonce: Math.random()};
+            var active_tab = {id: "atlas", nonce: Math.random()};
             Shiny.onInputChange("jsValue", active_tab)
-          } else if (tab.id === 'tabset-1-5-tab') {
+          } else if (tab.id === 'tabset-1-5-tab') { // ignored
             divs.forEach(function(div) {
               div.style.color = '#2da4c9'; 
             });
