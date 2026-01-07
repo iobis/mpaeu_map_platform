@@ -60,3 +60,4 @@ index_files/
 stac/
 
 atlas_layers/
+**/*.quarto_ipynb

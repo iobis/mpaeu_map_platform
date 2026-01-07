@@ -158,13 +158,13 @@ atlas_data <- data.frame(
 blue_carbon <- data.frame(
   group = "Blue Carbon",
   layer = "EURO-CARBON points",
-  file = "data/atlas/euro_carbon_points.gpkg"
+  file = "data/euro_carbon_points.gpkg"
 )
 
 msp <- data.frame(
   group = "MSP",
   layer = "Marine regions",
-  file = "data/atlas/sea_basins.gpkg"
+  file = "data/sea_basins.gpkg"
 )
 
 physical <- data.frame(
@@ -175,9 +175,9 @@ physical <- data.frame(
     #"Connectivity - Betweenness centrality", "Connectivity - Harmonic centrality", "Connectivity - Strength out centrality"
   ),
   file = c(
-    "data/atlas/bathymetry_mean.tif", "data/atlas/rugosity.tif", "data/atlas/geomorphicFeatures.tif",
-    "data/atlas/slope.tif", "data/atlas/wavefetch.tif", "data/atlas/sws_mean.tif", "data/atlas/euseamap.tif", "data/atlas/riverrunoff.tif",
-    "data/atlas/coastdist.tif"#, "betweennessCentrality.tif", "harmonicCentrality.tif", "strengthOutCentrality.tif"
+    "data/bathymetry_mean.tif", "data/rugosity.tif", "data/geomorphicFeatures.tif",
+    "data/slope.tif", "data/wavefetch.tif", "data/sws_mean.tif", "data/euseamap.tif", "data/riverrunoff.tif",
+    "data/coastdist.tif"#, "betweennessCentrality.tif", "harmonicCentrality.tif", "strengthOutCentrality.tif"
   )
 )
 
@@ -188,7 +188,7 @@ temp <- data.frame(
     "Sea ice cover", "Phytoplankton concentration", "Mixed layer depth", "Nitrate concentration", "Phosphate concentration",
     "Diffuse attenuation coefficient", "Photosynthetically active radiation"
   ),
-  file = paste0("data/atlas/", c(
+  file = paste0("data/", c(
     "thetao_mean.tif",
     "thetao_mean_bottom.tif",
     "tas_mean.tif",
