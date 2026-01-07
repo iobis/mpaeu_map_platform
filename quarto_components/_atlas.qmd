@@ -17,7 +17,7 @@ sel_habs <- habitat_db |>
   collect() |>
   tidyr::unnest(files) |>
   filter(type == "binary", scenario == "current", threshold == "p10", post_treatment == "const")
-sel_habs <- bind_rows(sel_habs, data.frame(habitat_name = "EUSEAMAP2023 (simplified)", file = "data/euseamap2025_simplified.gpkg"))
+sel_habs <- bind_rows(sel_habs, data.frame(habitat_name = "EUSEAMAP2025 (simplified)", file = "data/euseamap2025_simplified.gpkg"))
 lcbd <- diversity_db |>
   collect() |>
   tidyr::unnest(files) |>
