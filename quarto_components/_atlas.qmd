@@ -81,7 +81,7 @@ layerstyle_input <- htmltools::div(
   layerStyleInput(
     inputId = "atlasLayerStyle",
     label = "Configure Layer Styles (click on 'Apply styles' to apply changes):",
-    layers = c("Habitat", "Diversity", "Blue Carbon", "MSP", "Physical", "Temperature/Chemical"),
+    layers = c("Habitat", "Diversity", "Blue Carbon", "MSP", "Prioritisation", "Physical", "Temperature/Chemical"),
     default_alpha = 0.8,
     default_palette = "Blues"
   ), id = "atlasLayerSelectorDiv"
