@@ -17,6 +17,7 @@ sel_habs <- habitat_db |>
   collect() |>
   tidyr::unnest(files) |>
   filter(type == "binary", scenario == "current", threshold == "p10", post_treatment == "const")
+sel_habs <- bind_rows(sel_habs, data.frame(habitat_name = "EUSEAMAP2023 (simplified)", file = "data/euseamap2025_simplified.gpkg"))
 lcbd <- diversity_db |>
   collect() |>
   tidyr::unnest(files) |>
@@ -41,11 +42,22 @@ rm(habitat_db, diversity_db, sel_habs, lcbd, richness)
 
 choices_list$`Blue Carbon` <- c("EURO-CARBON points")
 
-choices_list$MSP <- c("Marine regions")
+choices_list$MSP <- c("Marine regions", "MPA - Level of protection")
+
+choices_list$Prioritisation <- c(
+  "Prioritisation for Biodiversity Conservation - RBA",
+  "Prioritisation for Biodiversity Conservation - RBA - Top 10%",
+  "Prioritisation for Biodiversity Conservation - RBA - Top 30%",
+  "Prioritisation for Biodiversity Conservation - RBA - Top 50%",
+  "Priority areas for commercial fish - RBA",
+  "Priority areas for commercial fish - RBA - Top 10%",
+  "Priority areas for commercial fish - RBA - Top 30%",
+  "Priority areas for commercial fish - RBA - Top 50%"
+)
 
 choices_list$Physical <- c(
   "Bathymetry", "Rugosity", "Seafloor geomorphic features", "Seabed slope",
-    "Wave fetch", "Current speed", "EUSEAMAP (2023) habitats", "River runoff", "Distance to coast"
+    "Wave fetch", "Current speed", "River runoff", "Distance to coast"
 )
 
 choices_list$`Temperature/Chemical` <- c(

@@ -141,6 +141,8 @@ sel_habs <- habitat_db |>
   collect() |>
   tidyr::unnest(files) |>
   filter(type == "binary", scenario == "current", threshold == "p10", post_treatment == "const")
+sel_habs <- bind_rows(sel_habs, data.frame(habitat_name = "EUSEAMAP2023 (simplified)", file = "data/euseamap2025_simplified.gpkg"))
+
 lcbd <- diversity_db |>
   collect() |>
   tidyr::unnest(files) |>
@@ -161,22 +163,46 @@ blue_carbon <- data.frame(
   file = "data/euro_carbon_points.gpkg"
 )
 
+prioritisation <- data.frame(
+  group = "Prioritisation",
+  layer = c(
+    "Prioritisation for Biodiversity Conservation - RBA",
+    "Prioritisation for Biodiversity Conservation - RBA - Top 10%",
+    "Prioritisation for Biodiversity Conservation - RBA - Top 30%",
+    "Prioritisation for Biodiversity Conservation - RBA - Top 50%",
+    "Priority areas for commercial fish - RBA",
+    "Priority areas for commercial fish - RBA - Top 10%",
+    "Priority areas for commercial fish - RBA - Top 30%",
+    "Priority areas for commercial fish - RBA - Top 50%"
+  ),
+  file = c(
+    "data/mpaeu_rba_priority.tif",
+    "data/mpaeu_rba_top10.tif",
+    "data/mpaeu_rba_top30.tif",
+    "data/mpaeu_rba_top50.tif",
+    "data/abinaya_rba_priority.tif",
+    "data/abinaya_rba_top10.tif",
+    "data/abinaya_rba_top30.tif",
+    "data/abinaya_rba_top50.tif"
+  )
+)
+
 msp <- data.frame(
   group = "MSP",
-  layer = "Marine regions",
-  file = "data/sea_basins.gpkg"
+  layer = c("Marine regions", "MPA - Level of protection"),
+  file = c("data/sea_basins.gpkg", "data/mpaeurope_mpalevelprotection_hf.gpkg")
 )
 
 physical <- data.frame(
   group = "Physical",
   layer = c(
     "Bathymetry", "Rugosity", "Seafloor geomorphic features", "Seabed slope",
-    "Wave fetch", "Current speed", "EUSEAMAP (2023) habitats", "River runoff", "Distance to coast"#,
+    "Wave fetch", "Current speed", "River runoff", "Distance to coast"#,
     #"Connectivity - Betweenness centrality", "Connectivity - Harmonic centrality", "Connectivity - Strength out centrality"
   ),
   file = c(
     "data/bathymetry_mean.tif", "data/rugosity.tif", "data/geomorphicFeatures.tif",
-    "data/slope.tif", "data/wavefetch.tif", "data/sws_mean.tif", "data/euseamap.tif", "data/riverrunoff.tif",
+    "data/slope.tif", "data/wavefetch.tif", "data/sws_mean.tif", "data/riverrunoff.tif",
     "data/coastdist.tif"#, "betweennessCentrality.tif", "harmonicCentrality.tif", "strengthOutCentrality.tif"
   )
 )
@@ -210,6 +236,7 @@ atlas_data <- bind_rows(
   atlas_data,
   blue_carbon,
   msp,
+  prioritisation,
   physical,
   temp
 )
