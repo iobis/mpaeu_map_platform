@@ -189,7 +189,7 @@ prioritisation <- data.frame(
 
 msp <- data.frame(
   group = "MSP",
-  layer = c("Marine regions", "MPA - Level of protection"),
+  layer = c("MPA Europe regions", "MPA - Level of protection"),
   file = c("data/sea_basins.gpkg", "data/mpaeurope_mpalevelprotection_hf.gpkg")
 )
 

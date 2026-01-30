@@ -43,7 +43,7 @@ rm(habitat_db, diversity_db, sel_habs, lcbd, richness)
 
 choices_list$`Blue Carbon` <- c("EURO-CARBON points")
 
-choices_list$MSP <- c("Marine regions", "MPA - Level of protection")
+choices_list$MSP <- c("MPA Europe regions", "MPA - Level of protection")
 
 choices_list$Prioritisation <- c(
   "Prioritisation for Biodiversity Conservation - RBA",
