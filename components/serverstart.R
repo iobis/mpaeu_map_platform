@@ -152,7 +152,7 @@ richness <- diversity_db |>
   tidyr::unnest(files) |>
   filter(scenario == "current", threshold == "p10", post_treatment == "const", metric == "richness", type == "continuous")
 atlas_data <- data.frame(
-  group = c(rep("Habitat", nrow(sel_habs)), rep("Diversity", nrow(lcbd)), rep("Diversity", nrow(richness))),
+  group = c(rep("Species formed habitats", nrow(sel_habs)), rep("Diversity", nrow(lcbd)), rep("Diversity", nrow(richness))),
   layer = c(sel_habs$habitat_name, paste(lcbd$metric_name, "-", stringr::str_to_title(lcbd$group)), paste(richness$metric_name, "-", stringr::str_to_title(richness$group))),
   file = c(sel_habs$file, lcbd$file, richness$file)
 )
