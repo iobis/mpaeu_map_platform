@@ -317,7 +317,8 @@ observe({
 
   if (remove_mask) {
     proxy |>
-      removeImage(layerId = "mapMask") |>
+      #removeImage(layerId = "mapMask") |>
+      leaflet::clearGroup("maskLayers") |>
       removeControl(layerId = "maskControl")
       session$sendCustomMessage("removeEye", "nothing")
   }
@@ -325,7 +326,8 @@ observe({
   if (!maskstate()) {
     mdebug("Mask deactivated")
     proxy |>
-      removeImage(layerId = "mapMask") |>
+      #removeImage(layerId = "mapMask") |>
+      leaflet::clearGroup("maskLayers") |>
       removeControl(layerId = "maskControl")
   } else {
     req(!is.null(mask_layer))
@@ -342,13 +344,14 @@ observe({
         file = mask_layer,
         opacity = 1,
         layerId = "mapMask",
+        group = "maskLayers",
         bands = which_band,
         options = pathOptions(pane = "maskPane"),
         colorOptions = colorOptions(
           palette = c("#d4dadc", "#0a626500"),
           domain = c(0, 1),
           na.color = NA
-        ), autozoom = F
+        ), autozoom = F, imagequery = FALSE
       ) |>
       addControl(tags$div(HTML('<span style="font-weight: bold; color: #184e77;">Mask active</span>')),
         position = "topright", layerId = "maskControl"

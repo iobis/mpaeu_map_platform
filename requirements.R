@@ -8,7 +8,19 @@
 # Needed packages on CRAN
 req_packages <- c(
   "leaflegend",
-  "listviewer"
+  "listviewer",
+  "plotly",
+  "leaflet.extras2",
+  "waiter",
+  "bsicons",
+  "reactable",
+  "quarto",
+  "leafgl",
+  "spatstat",
+  "shinyalert",
+  "arrow",
+  "sfarrow",
+  "leaflegend"
 )
 
 # Needed packages on GitHub

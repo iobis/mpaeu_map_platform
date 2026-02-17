@@ -37,6 +37,12 @@ observe({
     continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
   } else if (active_tab$current == "diversity" & select_params$diversity$metric == "") {
     continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
+  } else if (active_tab$current == "atlas") {
+    atlas_values <- unlist(input$atlasSelector, use.names = TRUE)
+    nams_atlas_vals <- names(atlas_values)
+    if (is.null(atlas_values)) {
+      continfo$text <- continfo$tableA <- continfo$tableB <- continfo$plotA <- NULL
+    }
   }
   
   # If active is species
@@ -292,12 +298,17 @@ observe({
   
   # ATLAS -------
   } else if (active_tab$current == "atlas") {
-    req(!is.null(NULL)) # TEMPORARY
+    req(!is.null(atlas_values)) # TEMPORARY
+    files_atlas <- atlas_data |>
+      filter(layer %in% atlas_values) |>
+      select(Layer = layer, `Additional information` = add_info, Source = source)
     continfo$tableA <- data.frame(test = NA)
-    continfo$tableB <- data.frame(test = NA)
+    continfo$tableB <- files_atlas
     continfo$plotA <- plotly::ggplotly(ggplot2::ggplot(data.frame(x = 1, y = 1)) + ggplot2::geom_point(aes(x = x, y = y)))
-    continfo$text[[1]] <- ""
-    continfo$text[[2]] <- ""
+    continfo$text[[1]] <- "The MPA Europe online atlas for marine spatial planning"
+    continfo$text[[2]] <- "The atlas provides spatial information that can support marine spatial
+planning professionals and other stakeholders, both for straightforward consultation and for analyses
+related to marine protected area designation, pressure impacts on marine ecosystems, and more. See more on https://zenodo.org/records/17610687"
   }
   
 }) |>
@@ -308,4 +319,5 @@ observe({
     context_param$diversity,
     context_param$diversity_group,
     active_tab$current,
+    input$atlasSelector,
     ignoreInit = TRUE)

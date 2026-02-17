@@ -45,7 +45,7 @@ conditionalPanel(
 conditionalPanel(
   condition = "input.speciesSelectThermal !== '' && (input.jsValue?.id ?? 'thermal') === 'thermal'",
   tags$div(
-      shiny::selectInput("ecspMask", label_select_mask, masks_options, width = "360px"),
+      #shiny::selectInput("ecspMask", label_select_mask, masks_options, width = "360px"),
       bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
       bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),
       bslib::input_switch("ecspMPA", label_switch_mpa, FALSE),

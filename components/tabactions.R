@@ -29,6 +29,15 @@ observeEvent(input$jsValue, {
 })
 
 # Observe first input change
+# Special case of atlas
+atlas_active <- reactiveVal(FALSE)
+bindEvent(observe({
+  if (any(!unlist(lapply(input$atlasSelector, is.null), use.names = F))) {
+    atlas_active(TRUE)
+  }
+}), input$atlasSelector, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+# Others
 input_state <- reactiveValues(status = 0)
 bindEvent(observe({input_state$status <- 1}), input$speciesSelect,
           once = TRUE, ignoreInit = TRUE)
@@ -38,8 +47,8 @@ bindEvent(observe({input_state$status <- 3}), input$habitatSelect,
           once = TRUE, ignoreInit = TRUE)
 bindEvent(observe({input_state$status <- 4}), input$diversitySelect,
           once = TRUE, ignoreInit = TRUE)
-# bindEvent(observe({input_state$status <- 5}), input$diversitySelect,
-#           once = TRUE, ignoreInit = TRUE)
+bindEvent(observe({input_state$status <- 5}), atlas_active(),
+          once = TRUE, ignoreInit = TRUE, ignoreNULL = TRUE)
 
 # Create a reactive for titles
 title_state <- reactiveValues()
@@ -123,18 +132,17 @@ observe({
 
     # Atlas condition
     if (active_tab$current == "atlas") {
-      if (FALSE) {
-      #if (input$diversitySelect != "") {
-        title_state$current <- "diversity"
+      if (any(!unlist(lapply(input$atlasSelector, is.null), use.names = F))) {
+        title_state$current <- "atlas"
         title_state$to_print <- list(
-          tableA = "Diversity by areas",
-          graph = "Protected areas",
-          tableB = "Composition",
-          modelTitle = "Metric explanation"
+          tableA = "New",
+          graph = "New",
+          tableB = "Layer sources",
+          modelTitle = "Additional information"
         )
       } else {
         base_list_mod <- base_list
-        base_list_mod$tableB <- "Available soon"#base_list_mod$tableA
+        base_list_mod$tableB <- base_list_mod$tableA
         base_list_mod$tableA <- ""
         title_state$to_print <- base_list_mod
       }

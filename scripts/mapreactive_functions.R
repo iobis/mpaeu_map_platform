@@ -164,7 +164,7 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
       addGeotiff(
         file = layer_1, layerId = "mapLayer1", opacity = 1,
         colorOptions = col_opt, group = "geoLayers",
-        options = pathOptions(pane = "left"), autozoom = F, bands = band_1
+        options = pathOptions(pane = "left"), autozoom = F, bands = band_1, imagequery = FALSE
       ) |>
       addTiles(
         urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
@@ -173,14 +173,14 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
       addGeotiff(
         file = layer_2, opacity = 1, layerId = "mapLayer2",
         colorOptions = col_opt, group = "geoLayers",
-        options = pathOptions(pane = "right"), autozoom = F, bands = band_2
+        options = pathOptions(pane = "right"), autozoom = F, bands = band_2, imagequery = FALSE
       ) |>
       addSidebyside(layerId = "sidecontrols", rightId = "rightbaseid", leftId = "leftbaseid")
   } else {
     proxy |>
       addGeotiff(
         file = layer_1, opacity = 1, layerId = "mapLayer1", group = "geoLayers",
-        colorOptions = col_opt, autozoom = F, bands = band_1
+        colorOptions = col_opt, autozoom = F, bands = band_1, imagequery = FALSE
       )
 
     if (!binary) {
@@ -238,7 +238,7 @@ add_layer_hab <- function(proxy, layer_1, min_range = 0, max_range = 1) {
   proxy |>
     addGeotiff(
       file = layer_1, opacity = 1, layerId = "mapLayer1", group = "geoLayers",
-      colorOptions = col_opt, autozoom = F
+      colorOptions = col_opt, autozoom = F, imagequery = FALSE
     ) |>
     leaflegend::addLegendNumeric(
       pal = colorNumeric(
@@ -300,7 +300,7 @@ add_layer_div <- function(proxy, layer_1, legend, min_range = 0, max_range = 1) 
   proxy |>
     addGeotiff(
       file = layer_1, opacity = 1, layerId = "mapLayer1", group = "geoLayers",
-      colorOptions = col_opt, autozoom = F
+      colorOptions = col_opt, autozoom = F, imagequery = FALSE
     ) |>
     leaflegend::addLegendNumeric(
       pal = colorNumeric(
@@ -344,7 +344,7 @@ add_atlas_layer <- function(proxy, file, alpha, palette, group) {
       addGeotiff(
         file = file, opacity = alpha, layerId = paste0("layer_atlas_", group),
         group = group,
-        colorOptions = col_opt, autozoom = F
+        colorOptions = col_opt, autozoom = F, imagequery = FALSE
       )
   } else {
     if (grepl("points", file)) {

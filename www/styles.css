@@ -16,7 +16,7 @@
 /* Tabs */
 .nav-tabs {
     border-bottom: 0px solid #ec279b;
-    background: #168aad; /*#2da4c9;#168aad;*/
+    background: #1faf9a;/*#168aad; /*#2da4c9;#168aad;*/
 }
 
 .nav-tabs .nav-item {
@@ -35,10 +35,10 @@ a#tabset-1-3-tab {
     background: #1a759f;
 }
 a#tabset-1-4-tab {
-    background: #168aad;
+    background: #1faf9a;/*#168aad;*/
 }
 a#tabset-1-5-tab {
-    background: #2da4c9;
+    background: #1faf9a;/*#2da4c9;*/
 }
 
 .nav-link {
