@@ -732,3 +732,7 @@ button.jse-button.jse-group-button.jse-selected.svelte-497ud4 {
     padding: 0px !important;
     margin-bottom: 0.2em;
 }
+
+.sweet-alert button.cancel {
+    background-color: #989898;
+}
