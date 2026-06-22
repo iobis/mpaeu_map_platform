@@ -2595,7 +2595,7 @@ RUN THE MODEL
 <!-- add toolbar here -->
 <div class="cell">
 <div class="cell-output-display no-overflow-x">
-<div class="shiny-panel-conditional" data-display-if="input.speciesSelect !== '' &amp;&amp; (input.jsValue?.id ?? 'species') === 'species'" data-ns-prefix="">
+<div class="shiny-panel-conditional" data-display-if="input.speciesSelect !== '' &amp;&amp; (input.jsValue?.id == null || input.jsValue?.id === 'species')" data-ns-prefix="">
 <div class="ecsp-controls" width="100%">
 <div class="form-group shiny-input-container" style="width:360px;">
 <label class="control-label" id="ecspMask-label" for="ecspMask">
@@ -2709,7 +2709,7 @@ Show MPAs
 </div>
 </div>
 <div class="cell-output-display">
-<div class="shiny-panel-conditional" data-display-if="input.speciesSelectThermal !== '' &amp;&amp; (input.jsValue?.id ?? 'thermal') === 'thermal'" data-ns-prefix="">
+<div class="shiny-panel-conditional" data-display-if="input.speciesSelectThermal !== '' &amp;&amp; input.jsValue?.id === 'thermal'" data-ns-prefix="">
 <div class="ecsp-controls" width="100%">
 <div class="form-group shiny-input-container" data-require-bs-version="5" data-require-bs-caller="input_switch()">
 <div class="bslib-input-switch form-switch form-check">
@@ -2766,7 +2766,7 @@ Show MPAs
 </div>
 </div>
 <div class="cell-output-display">
-<div class="shiny-panel-conditional" data-display-if="input.habitatSelect !== '' &amp;&amp; (input.jsValue?.id ?? 'habitat') === 'habitat'" data-ns-prefix="">
+<div class="shiny-panel-conditional" data-display-if="input.habitatSelect !== '' &amp;&amp; input.jsValue?.id === 'habitat'" data-ns-prefix="">
 <div class="ecsp-controls" width="100%">
 <div class="form-group shiny-input-container" data-require-bs-version="5" data-require-bs-caller="input_switch()">
 <div class="bslib-input-switch form-switch form-check">
@@ -2823,7 +2823,7 @@ Show MPAs
 </div>
 </div>
 <div class="cell-output-display">
-<div class="shiny-panel-conditional" data-display-if="input.diversitySelect !== '' &amp;&amp; (input.jsValue?.id ?? 'diversity') === 'diversity'" data-ns-prefix="">
+<div class="shiny-panel-conditional" data-display-if="input.diversitySelect !== '' &amp;&amp; input.jsValue?.id === 'diversity'" data-ns-prefix="">
 <div class="ecsp-controls" width="100%">
 <div class="form-group shiny-input-container" data-require-bs-version="5" data-require-bs-caller="input_switch()">
 <div class="bslib-input-switch form-switch form-check">
