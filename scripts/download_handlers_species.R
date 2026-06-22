@@ -25,6 +25,7 @@ species_download_modal <- function(species, key, model, scenario, decade, acro) 
     } else {
         scenario_ed <- ifelse(grepl("current", scenario), "Current", toupper(scenario))
         model_ed <- ifelse(grepl("rf", model), "RandomForest", toupper(model))
+        dec_scen_mod <- ifelse(scenario_ed != 'Current', glue::glue(' and decade <b>{ifelse(grepl(50, decade), 2050, 2100)}</b>'), '')
 
         modalDialog(
             bslib::layout_column_wrap(
@@ -44,7 +45,7 @@ species_download_modal <- function(species, key, model, scenario, decade, acro) 
                             htmltools::HTML(
                                 paste0(
     glue::glue("The current species selected is <i><b>{species}</b></i> (AphiaID <b>{key}</b>) for model <b>{model_ed}</b>, "),
-    glue::glue("in the scenario <b>{scenario_ed}</b> and decade <b>{ifelse(grepl(50, decade), 2050, 2100)}</b>."),
+    glue::glue("in the scenario <b>{scenario_ed}</b>{dec_scen_mod}."),
     "<br>A partial download is approximately 2MB and a full download 140MB."
                                 )
                             ),
