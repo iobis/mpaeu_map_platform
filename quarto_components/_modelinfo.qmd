@@ -29,7 +29,7 @@ masks_options <- c("fit_region_max_depth", "native_ecoregions", "fit_region", "c
 names(masks_options) <- c("Fit area (max. depth)", "Native Realms", "Fit area", "Convex Hull", "Min. bounding circle", "Buffer 100m")
 
 conditionalPanel(
-  condition = "input.speciesSelect !== '' && (input.jsValue?.id ?? 'species') === 'species'",
+  condition = "input.speciesSelect !== '' && (input.jsValue?.id == null || input.jsValue?.id === 'species')",
   tags$div(
       shiny::selectInput("ecspMask", label_select_mask, masks_options, width = "360px"),
       shiny::selectInput("ecspBin", label_select_bin, c(
@@ -43,7 +43,7 @@ conditionalPanel(
 )
 
 conditionalPanel(
-  condition = "input.speciesSelectThermal !== '' && (input.jsValue?.id ?? 'thermal') === 'thermal'",
+  condition = "input.speciesSelectThermal !== '' && input.jsValue?.id === 'thermal'",
   tags$div(
       #shiny::selectInput("ecspMask", label_select_mask, masks_options, width = "360px"),
       bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
@@ -53,7 +53,7 @@ conditionalPanel(
 )
 
 conditionalPanel(
-  condition = "input.habitatSelect !== '' && (input.jsValue?.id ?? 'habitat') === 'habitat'",
+  condition = "input.habitatSelect !== '' && input.jsValue?.id === 'habitat'",
   tags$div(
       bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
       bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),
@@ -62,7 +62,7 @@ conditionalPanel(
 )
 
 conditionalPanel(
-  condition = "input.diversitySelect !== '' && (input.jsValue?.id ?? 'diversity') === 'diversity'",
+  condition = "input.diversitySelect !== '' && input.jsValue?.id === 'diversity'",
   tags$div(
       bslib::input_switch("ecspRealms", label_switch_realms, FALSE),
       bslib::input_switch("ecspEEZ", label_switch_eez, FALSE),
