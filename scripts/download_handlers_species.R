@@ -46,7 +46,7 @@ species_download_modal <- function(species, key, model, scenario, decade, acro) 
                                 paste0(
     glue::glue("The current species selected is <i><b>{species}</b></i> (AphiaID <b>{key}</b>) for model <b>{model_ed}</b>, "),
     glue::glue("in the scenario <b>{scenario_ed}</b>{dec_scen_mod}."),
-    "<br>A partial download is approximately 2MB and a full download 140MB."
+    "<br>A partial download is approximately 2MB and a full download 500MB. For downloading the full data, we strongly recommend using the AWS CLI or the R script."
                                 )
                             ),
                             style = "color: #097da5"

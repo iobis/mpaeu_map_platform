@@ -106,6 +106,43 @@ timings <- timings %>%
   mutate(diff = time - lag(time))
 timings$diff[1] <- timings$time[1]
 
+uf <- function(x) {unlist(x, recursive = TRUE, use.names = F)}
+
+new_plot_rc <- function (response_curves) {
+    if (!any(colnames(response_curves) %in% c("variable", "response", 
+        "base"))) {
+        stop("response_curves should be an object with columns 'variable', 'response' and 'base'")
+    }
+    require(ggplot2)
+    if ("in_range" %in% colnames(response_curves)) {
+        fake <- data.frame(x = c(0, 0), y = c(0, 0), rg = factor(c(0, 
+            1), levels = c(0, 1)))
+        rc_temp <- response_curves[response_curves$in_range == 
+            1, ]
+        ab_dat <- tapply(rc_temp$base, rc_temp$variable, function(x) data.frame(min = range(x)[1], 
+            max = range(x)[2]))
+        n_ab_dat <- names(ab_dat)
+        ab_dat <- do.call("rbind", ab_dat)
+        ab_dat$variable <- n_ab_dat
+        ggplot(response_curves) + geom_line(aes(x = base, y = response, 
+            color = in_range), show.legend = FALSE) + scale_color_gradientn(colors = c("darkblue", 
+            "#7AAC1D")) + geom_vline(data = ab_dat, aes(xintercept = min), 
+            color = "darkblue", linetype = 3, alpha = 0.5) + 
+            geom_vline(data = ab_dat, aes(xintercept = max), 
+                color = "darkblue", linetype = 3, alpha = 0.5) + 
+            geom_point(data = fake, aes(x = x, y = y, fill = rg), 
+                shape = 22, alpha = 0) + scale_fill_manual(values = c("darkblue", 
+            "#7AAC1D"), labels = c("Extrapolation", "Fit data"), 
+            drop = FALSE, name = "") + guides(fill = guide_legend(override.aes = list(alpha = 1, 
+            size = 4))) + theme_light() + xlab("Value") + ylab("Response") + 
+            facet_wrap(~variable, scales = "free")
+    }
+    else {
+        ggplot(response_curves) + geom_line(aes(x = base, y = response), 
+            color = "darkblue") + theme_light() + xlab("Value") + 
+            ylab("Response") + facet_wrap(~variable, scales = "free")
+    }
+}
 ```
 
 
@@ -129,14 +166,14 @@ ggplot() +
 
 ## Model details
 
-**Species:** _`r logf$scientificName[[1]]`_   
-**AphiaID:** `r logf$taxonID[[1]]`   
-**OBIS taxon page:** `r paste0('<a href="', "https://www.obis.org/taxon/", logf$taxonID[[1]], '">', "https://www.obis.org/taxon/", logf$taxonID[[1]], '</a>')`   
-**WoRMS link:** `r paste0('<a href="', "https://www.marinespecies.org/aphia.php?p=taxdetails&id=", logf$taxonID[[1]], '">', "https://marinespecies.org/aphia.php?p=taxdetails&id=", logf$taxonID[[1]], '</a>')`   
-**Run acronym:** `r logf$model_acro[[1]]`   
-**Date:** `r logf$model_date[[1]]`   
-**Number of records:** `r logf$model_fit_points[[1]]`    
-**Number of quadrature points:** `r logf$model_details$background_size[[1]]`   
+**Species:** _`r uf(logf$scientificName[[1]])`_   
+**AphiaID:** `r uf(logf$taxonID[[1]])`   
+**OBIS taxon page:** `r paste0('<a href="', "https://www.obis.org/taxon/", uf(logf$taxonID[[1]]), '">', "https://www.obis.org/taxon/", uf(logf$taxonID[[1]]), '</a>')`   
+**WoRMS link:** `r paste0('<a href="', "https://www.marinespecies.org/aphia.php?p=taxdetails&id=", uf(logf$taxonID[[1]]), '">', "https://marinespecies.org/aphia.php?p=taxdetails&id=", uf(logf$taxonID[[1]]), '</a>')`   
+**Run acronym:** `r uf(logf$model_acro[[1]])`   
+**Date:** `r uf(logf$model_date[[1]])`   
+**Number of records:** `r uf(logf$model_fit_points[[1]])`    
+**Number of quadrature points:** `r uf(logf$model_details$background_size[[1]])`   
 **Model selected (this page):** `r stringr::str_to_title(which_model)`  
 **Models executed (succeeded):** `r paste(names(unlist(logf$model_result)[which(unlist(logf$model_result) == "succeeded")]), collapse = ", ")`   
 **Variables:** `r var_names`   
@@ -185,7 +222,7 @@ knitr::kable(imp)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 rc <- arrow::read_parquet("{RC_FILE}")
-obissdm:::plot.sdm_respcur(rc)
+new_plot_rc(rc)
 ```
 
 

@@ -145,7 +145,7 @@ observe({
 }) |>
   bindEvent(input$downloadDataSpecies)
 
-downloadFiles <- reactiveValues(files = NULL)
+downloadFiles <- reactiveValues(files = NULL, tfold = NULL)
 
 observe({
   showModal(
@@ -165,35 +165,39 @@ observe({
   all_files <- db_info$species |>
       select(-available_models) |>
       tidyr::unnest(files)
-  tfold <- tempdir(check = TRUE)
-  all_files <- all_files$file
+  tfold <- fs::dir_create(file.path(tempdir(), paste0("taxonid=", select_params$species$spkey, "_", sample(1:10000, 1))))
+
   if (input$speciesDownloadType == "selected") {
-    model_f <- all_files[grepl(paste0("method=", select_params$species$model), all_files)]
-    model_scen_f <- model_f[grepl(select_params$species$scenario, model_f)]
+    model_scen_f <- all_files |>
+      filter(method == select_params$species$model) |>
+      filter(scenario == select_params$species$scenario)
     if (select_params$species$scenario != "current") {
-      model_scen_f <- model_scen_f[grepl(select_params$species$decade, model_scen_f)]
+      model_scen_f <- model_scen_f |>
+        filter(period == select_params$species$decade)
     }
-    model_f <- model_f[grepl("cvmetrics|respcurves|fullmetrics|varimp", model_f)]
-    other_f <- all_files[grepl("shape_|mess_|mask_|thresholds|log.j|fitocc", all_files)]
-    sel_files <- c(model_scen_f, model_f, other_f)
+    model_scen_f <- model_scen_f |> pull(file)
+    model_f <- all_files |>
+      filter(method == "ensemble") |>
+      filter(!type %in% c("prediction", "uncertainty")) |>
+      pull(file)
+    sel_files <- c(model_scen_f, model_f)
   } else {
-    sel_files <- all_files
+    sel_files <- all_files |> pull(file)
   }
   addr <- "https://obis-maps.s3.us-east-1.amazonaws.com/"
   sel_files_ed <- gsub(addr, "", sel_files)
-  directories <- dirname(sel_files_ed)
-  directories <- unique(gsub("sdm/species/", "", directories))
-  fs::dir_create(file.path(tfold, directories))
-  for (k in seq_along(sel_files)) {
-    download.file(sel_files[k], file.path(tfold, gsub("sdm/species/", "", sel_files_ed[k])))
-  }
-  #download.file(paste0(addr, sel_files), file.path(tfold, sel_files), method = "libcurl")
+  dest_files <- file.path(tfold, gsub("sdm/species/", "", sel_files_ed))
+  directories <- unique(dirname(dest_files))
+  fs::dir_create(directories)
+  batch_ids <- split(seq_along(sel_files), ceiling(seq_along(sel_files) / 20))
+  test <- do.call(rbind, lapply(batch_ids, function(i) {
+    curl::multi_download(sel_files[i], dest_files[i])
+  }))
   sel_files <- list.files(tfold, full.names = T)
-  sel_files <- sel_files[!grepl("vscode-R", sel_files)]
-  sel_files <- sel_files[grepl(paste0("taxonid=", select_params$species$spkey), sel_files)]
 
   # Assign to list
   downloadFiles$files <- sel_files
+  downloadFiles$tfold <- tfold
 
   removeModal()
 
@@ -211,7 +215,11 @@ output$downloadSpeciesAction <- downloadHandler(
     pf <- paste0("taxonid=", select_params$species$spkey)
     if (input$speciesDownloadType == "selected") {
       pf <- paste0(pf, "_model=", select_params$species$acro, "_method=", select_params$species$model, "_scenario=", select_params$species$scenario,
-      "_decade=", select_params$species$decade, ".zip")
+      ifelse(
+        select_params$species$scenario != "current",
+        "",
+        paste0("_decade=", select_params$species$decade)
+      ), ".zip")
     } else {
       pf <- paste0(pf, ".zip")
     }
@@ -220,7 +228,7 @@ output$downloadSpeciesAction <- downloadHandler(
   content = function(file) {
     on.exit({
       removeModal()
-      fs::dir_delete(downloadFiles$files)
+      if (!is.null(downloadFiles$tfold)) fs::dir_delete(downloadFiles$tfold)
     })
     zip::zip(file, downloadFiles$files, mode = "cherry-pick")
   }
@@ -260,28 +268,25 @@ output$downloadCodeSpeciesAction <- downloadHandler(
 # Thermal data download ------
 output$downloadDataThermal <- downloadHandler(
   filename = function() {
-    paste0("taxonid=", select_params$species$spkey_t, "_model=", select_params$species$acro_t, "_what=thermenvelope.parquet")
+    paste0("taxonid=", select_params$species$spkey_t, "_model=", select_params$species$acro_t, "_what=thermenvelope.tif")
   },
   content = function(file) {
     shinyalert(
       title = "Preparing your download",
-      text = paste("Downloading", file),
+      text = paste("Downloading", basename(file)),
       size = "xs", closeOnEsc = TRUE, closeOnClickOutside = TRUE, html = FALSE, type = "info",
       showConfirmButton = TRUE, showCancelButton = FALSE, confirmButtonText = "OK", confirmButtonCol = "#184E77",
       timer = 0, imageUrl = "", animation = TRUE
     )
     on.exit(shinyalert::closeAlert())
 
-    if (input$speciesSelectThermal != "" & active_tab$current == "thermal") {
-      thermal_envelope <- paste0(
-          "https://mpaeu-dist.s3.amazonaws.com/", "results/species/taxonid=", select_params$species$spkey_t, "/model=", select_params$species$acro_t, "/predictions/taxonid=",
-          select_params$species$spkey_t, "_model=", select_params$species$acro_t, "_what=thermenvelope.parquet"
-        )
-      p <- sfarrow::st_read_parquet(thermal_envelope)
-      sfarrow::st_write_parquet(p, file)
-    } else {
-      NULL
-    }
+    thermfile <- db_info$thermal |>
+        select(-available_models) |>
+        tidyr::unnest(files) |>
+        filter(type == "thermenvelope") |>
+        pull(file)
+    terra::rast(thermfile) |>
+      writeRaster(filename = file, overwrite = TRUE)
   }
 )
 
