@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: If you use this work, please cite it as below.
+title: MPA Europe map platform
+type: software
+abstract: A platform for hosting SDM maps produced by OBIS
+url: https://github.com/iobis/mpaeu_map_platform
+license: MIT
+authors:
+  - family-names: silasprincipe
+    orcid: "https://orcid.org/0000-0002-8059-6304"
+  - name: Intergovernmental Oceanographic Commission of UNESCO
+    alias: IOC-UNESCO
+    website: "https://obis.org"
+date-released: 2025-10-22
