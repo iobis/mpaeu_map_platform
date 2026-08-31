@@ -1,5 +1,12 @@
 /* css styles */
 
+/* Ocean background behind the OBIS vector-tile basemap (land/coastlines only
+   ship polygons, not a filled ocean), matching the OBIS_BASEMAP background
+   color used in the mpaeu_atlas project */
+.leaflet-container {
+  background: #e8ecf0;
+}
+
 /* Grid style */
 .colordiv {
   background-color: #f6f6f6;

@@ -42,8 +42,8 @@ mdebug <- function(text, toprint = debug) {
 global_acro <- "mpaeu"
 
 # Create leaflet object ----
-m <- leaflet() %>% 
-  addTiles(urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", layerId = "baseid") %>%
+m <- leaflet() %>%
+  add_obis_basemap(layerId = "baseid") %>%
   # addTiles(group = "Open Street Maps", layerId = "baseid") %>%
   # addProviderTiles(providers$CartoDB.Positron, group = "CartoDB") %>%
   # addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark") %>%

@@ -1,3 +1,13 @@
+# Add the OBIS vector-tile basemap (land + coastlines) to a leaflet map or
+# proxy, in place of Carto's basemaps, which are no longer free. Registered
+# under the "tile" layer category (see www/obis_basemap.js) so it plays
+# nicely with existing leaflet::removeTiles() / leaflet.extras2::addSidebyside()
+# calls that expect base layers to live in that category.
+add_obis_basemap <- function(map, layerId = NULL, pane = NULL) {
+  leaflet::invokeMethod(map, data = NULL, "addObisBasemap", layerId, pane)
+}
+
+
 gen_plotly_resp <- function(respcurves) {
   
   vars <- unique(respcurves$variable)

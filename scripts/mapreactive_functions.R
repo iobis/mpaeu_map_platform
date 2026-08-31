@@ -157,19 +157,13 @@ add_layer_sp <- function(proxy, layer_1, layer_2 = NULL,
     proxy |>
       removeTiles("baseid") |>
       removeLayersControl() |>
-      addTiles(
-        urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
-        group = "Open Street", layerId = "leftbaseid", options = pathOptions(pane = "left")
-      ) |>
+      add_obis_basemap(layerId = "leftbaseid", pane = "left") |>
       addGeotiff(
         file = layer_1, layerId = "mapLayer1", opacity = 1,
         colorOptions = col_opt, group = "geoLayers",
         options = pathOptions(pane = "left"), autozoom = F, bands = band_1, imagequery = FALSE
       ) |>
-      addTiles(
-        urlTemplate = "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
-        group = "Open Street B", layerId = "rightbaseid", options = pathOptions(pane = "right")
-      ) |>
+      add_obis_basemap(layerId = "rightbaseid", pane = "right") |>
       addGeotiff(
         file = layer_2, opacity = 1, layerId = "mapLayer2",
         colorOptions = col_opt, group = "geoLayers",

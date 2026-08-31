@@ -36,6 +36,8 @@ library(leaflet.extras2)
 library(leaflet.providers)
 
 includeCSS("www/styles.css")
+includeScript("www/libs/leaflet.vectorgrid.bundled.min.js")
+includeScript("www/obis_basemap.js")
 includeScript("www/addons.js")
 waiter::useWaiter()
 # 
